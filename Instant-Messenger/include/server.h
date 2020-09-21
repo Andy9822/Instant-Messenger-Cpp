@@ -1,0 +1,24 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h> 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <pthread.h>
+
+#define MAXBACKLOG SOMAXCONN
+
+	int sockfd;
+
+
+		int prepareConnection(struct sockaddr_in serv_addr);
+		int printPortNumber(struct sockaddr_in serv_addr);
+		int ConnectToClient(pthread_t *tid);
+		void* clientCommunication(void *newsocket);
+
+
+
+
