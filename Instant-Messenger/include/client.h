@@ -10,6 +10,20 @@
 #include <arpa/inet.h>
 
 
-int sockfd;
+class Client
+{
+	private:
+		int sockfd;
+
+
+	public:
+		Client();
+		int ConnectToServer(struct sockaddr_in serv_addr);
+		int clientCommunication();	
+};
+
+
+
+
 
 
