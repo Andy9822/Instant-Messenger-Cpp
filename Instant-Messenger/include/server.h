@@ -11,13 +11,24 @@
 
 #define MAXBACKLOG SOMAXCONN
 
-	int sockfd;
+
+class Server
+{
+	private:
+		int sockfd;
 
 
+	public:
+		Server();
 		int prepareConnection(struct sockaddr_in serv_addr);
 		int printPortNumber(struct sockaddr_in serv_addr);
 		int ConnectToClient(pthread_t *tid);
-		void* clientCommunication(void *newsocket);
+		static void* clientCommunication(void *newsocket);	
+};
+	
+
+
+		
 
 
 
