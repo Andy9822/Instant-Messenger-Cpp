@@ -27,4 +27,4 @@ class Message {
         string setTime(time_t time);
 
 };
-}  // namespace message
+}  //namespace message

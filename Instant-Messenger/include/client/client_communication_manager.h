@@ -21,4 +21,4 @@ class ClientCommunicationManager {
         void sendMessageToServer(string message);
 
 };
-}  // namespace clientcommunicationmanager
+}  //namespace clientcommunicationmanager
