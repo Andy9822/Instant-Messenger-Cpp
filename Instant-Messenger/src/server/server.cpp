@@ -1,6 +1,4 @@
-#include "../include/server.h"
-
-
+#include "../../include/server/server.h"
 
 Server::Server()
 {

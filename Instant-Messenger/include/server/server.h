@@ -25,11 +25,3 @@ class Server
 		int ConnectToClient(pthread_t *tid);
 		static void* clientCommunication(void *newsocket);	
 };
-	
-
-
-		
-
-
-
-
