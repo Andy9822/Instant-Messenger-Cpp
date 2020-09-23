@@ -7,4 +7,4 @@ ClientMessageManager::ClientMessageManager() {
 
 }
 
-} // namespace clientcommunicationmanager
+} // namespace clientmessagemanager

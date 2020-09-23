@@ -11,4 +11,4 @@ class UserInteface {
         UserInteface();
 
 };
-}  // namespace clientmessagemanager
+}  //namespace userinterface
