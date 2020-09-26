@@ -4,7 +4,11 @@
 #include <arpa/inet.h> 
 #include <unistd.h> 
 #include <string.h> 
+#include <iostream>
+
 #define PORT 8080 
+
+using namespace std;
 
 int main(int argc, char const *argv[]) 
 { 
@@ -33,9 +37,12 @@ int main(int argc, char const *argv[])
 		printf("\nConnection Failed \n"); 
 		return -1; 
 	} 
+	printf("IP address is: %s\n", inet_ntoa(serv_addr.sin_addr));
+	printf("port is: %d\n", (int) ntohs(serv_addr.sin_port));
 	send(sock , hello , strlen(hello) , 0 ); 
 	printf("Hello message sent\n"); 
 	valread = read( sock , buffer, 1024); 
-	printf("%s\n",buffer ); 
+	printf("Received from server: %s\n",buffer ); 
+	cout << "puta" << endl;
 	return 0; 
 }
