@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string.h>
 #include <unistd.h>
-#include <sys/types.h> 
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -15,13 +15,13 @@
 class Server
 {
 	private:
-		int sockfd;
-
+		int socket_fd;
+		struct sockaddr_in serv_addr;
 
 	public:
-		Server();
-		int prepareConnection(struct sockaddr_in serv_addr);
-		int printPortNumber(struct sockaddr_in serv_addr);
+		Server(int port);
+		void prepareConnection();
+		void printPortNumber();
 		int ConnectToClient(pthread_t *tid);
-		static void* clientCommunication(void *newsocket);	
+		static void* clientCommunication(void *newsocket);
 };
