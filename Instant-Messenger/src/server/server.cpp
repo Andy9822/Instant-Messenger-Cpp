@@ -1,4 +1,5 @@
 #include "../../include/server/server.h"
+#include "../../include/util/Packet.hpp"
 
 Server::Server(int port)
 {
@@ -79,25 +80,42 @@ void* Server::clientCommunication(void *newsocket)
 	int n;
 	int newsockfd = *(int *)newsocket;
 
+	int packetSize = sizeof(Packet);
+	void *packet = (void*) malloc(packetSize);
+
 	while(1)
 	{
 		bzero(buffer, 256);
-		n = read(newsockfd, buffer, 256);
+		int readBytes = 0;
+		// n = read(newsockfd, buffer, 256);
+		do {
+			n = read(newsockfd, (packet + readBytes), packetSize-readBytes);
 
-		if (n < 0)
-			std::cout << "ERROR reading from socket\n" << std::endl;
-		else if(n == 0)
-		{
-			std::cout << "End of connection with socket " << newsockfd << std::endl;
-			break;
-		}
 
-		std::cout << "Here is the message: " << buffer << std::endl;
+			readBytes += n;
+		} while ( n > 0);
 
-		n = write(newsockfd,"I got your message\n", 18);
+		// if (n < 0) {
+		// 	std::cout << "ERROR reading from socket\n" << std::endl;
+		// 	break;
+		// }
+		//
+		// if(n == 0)
+		// {
+		// 	std::cout << "End of connection with socket " << newsockfd << std::endl;
+		// 	break;
+		// }
 
-		if (n < 0)
+		Packet* receivedPacket = (Packet*) packet;
+		// cout << "Room: " << receivedPacket->group  << endl;
+		cout << "[Message]: " << receivedPacket->message  << endl;
+
+		Packet* sendingPacket = new Packet("Grupo dos guri", "Recebi sua mensagem!");
+		n = write(newsockfd, (void *) sendingPacket, sizeof(Packet));
+
+		if (n < 0) {
 			std::cout << "ERROR writing to socket\n" << std::endl;
+		}
 	}
 
 	close(newsockfd);
