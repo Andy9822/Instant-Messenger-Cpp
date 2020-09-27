@@ -20,11 +20,12 @@ class Client
 {
 	private:
 		int sockfd;
+		struct sockaddr_in serv_addr;
 		ClientCommunicationManager clientCommunicationManager;
 		ClientMessageManager clientMessageManager;
 		UserInteface userInteface;
 	public:
-		Client();
-		int ConnectToServer(struct sockaddr_in serv_addr);
+		Client(char *ip_address, char *port);
+		int ConnectToServer();
 		int clientCommunication();	
 };
