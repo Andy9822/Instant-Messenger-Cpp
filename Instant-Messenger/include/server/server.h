@@ -19,7 +19,7 @@ class Server
 		struct sockaddr_in serv_addr;
 
 	public:
-		Server(int port);
+		Server();
 		void prepareConnection();
 		void printPortNumber();
 		int ConnectToClient(pthread_t *tid);
