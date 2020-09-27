@@ -27,4 +27,4 @@ class FileSystemManager {
         void appendGroupMessage(Message message);
         std::vector<std::vector<std::string>> readGroupMessages(string groupName);        
 };
-}  //filesystemmanager directory;
+} // namespace filesystemmanager;
