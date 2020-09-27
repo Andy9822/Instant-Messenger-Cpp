@@ -20,8 +20,12 @@ class Server
 
 	public:
 		Server();
+		void setPort(int port);
 		void prepareConnection();
 		void printPortNumber();
 		int ConnectToClient(pthread_t *tid);
 		static void* clientCommunication(void *newsocket);
+		void closeConnections();
+		void closeSocket();
+		void closeServer();
 };
