@@ -3,6 +3,8 @@
 #include <sys/types.h>
 #include <ios>
 #include <fstream>
+#include <vector>
+
 
 
 #define MESSAGES_BASE_PATH "../../messages"
@@ -23,6 +25,6 @@ class FileSystemManager {
         FileSystemManager();
         void prepareDirectory();
         void appendGroupMessage(Message message);
-        
+        std::vector<std::vector<std::string>> readGroupMessages(string groupName);        
 };
 }  //filesystemmanager directory;
