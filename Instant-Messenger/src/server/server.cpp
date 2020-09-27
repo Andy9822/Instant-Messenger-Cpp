@@ -12,6 +12,22 @@ Server::Server()
 	socket_fd = 0;
 }
 
+void Server::closeConnections()
+{
+	cout << "Closing client connections..." << endl;
+}
+
+void Server::closeSocket()
+{
+	close(socket_fd);
+	cout << "Closing server socket..." << endl;
+}
+
+void Server::closeServer() 
+{
+	closeConnections();
+	closeSocket();
+}
 
 void Server::setPort(int port) 
 {
