@@ -1,6 +1,8 @@
 #include "../../include/server/server.h"
 #include "../../include/util/Packet.hpp"
 
+vector<int> Server::openSockets;
+
 Server::Server()
 {
 	// Configure server address properties
@@ -12,13 +14,24 @@ Server::Server()
 	socket_fd = 0;
 }
 
+void Server::closeClientConnection(int socket_fd)
+{
+	std::cout << "Closing socket: " << socket_fd << std::endl;
+	openSockets.erase(std::remove(openSockets.begin(), openSockets.end(), socket_fd), openSockets.end());
+	close(socket_fd);
+}
+
 void Server::closeConnections()
 {
-	cout << "Closing client connections..." << endl;
+	cout << "Number of client connections: " << openSockets.size() << endl;
+	// std::for_each(openSockets.begin(), openSockets.end(), close);
+	std::for_each(openSockets.begin(), openSockets.end(), closeClientConnection);
+	cout << "Number of client connections: " << openSockets.size() << endl;
 }
 
 void Server::closeSocket()
 {
+	std::cout << "server_socket_fd: " << socket_fd << std::endl;
 	close(socket_fd);
 	cout << "Closing server socket..." << endl;
 }
@@ -56,6 +69,8 @@ void Server::prepareConnection()
 		cout << "ERROR on listening\n" << endl;
 		exit(1);
 	}
+	
+	std::cout << "server_socket_fd preparedConnection: " << socket_fd << std::endl;
 }
 
 
@@ -77,64 +92,83 @@ void Server::printPortNumber()
 
 int Server::ConnectToClient(pthread_t *tid)
 {
-	int newsockfd;
+	// Allocate memory space to store value in heap and be able to use it after this function ends
+	int* newsockfd = (int *) calloc(1,sizeof(int));
 	struct sockaddr_in cli_addr;
 	socklen_t clilen = sizeof(struct sockaddr_in);
-	Packet *packet = new Packet();
 
-	if ((newsockfd = accept(socket_fd, (struct sockaddr *) &cli_addr, &clilen)) == -1)
+	if ((*newsockfd = accept(socket_fd, (struct sockaddr *) &cli_addr, &clilen)) == -1)
 	{
 		cout << "ERROR on accept\n" << endl;
 		return -1;
 	}
 
-	packet->clientSocket = newsockfd;
+	std::cout << "client connected  with socket: " << *newsockfd << std::endl;
+	// Store new socket crated in the vector of existing connections sockets
+	//TODO use semaphore when using openSockets vector
+	openSockets.push_back(*newsockfd);
 
-	pthread_create(tid, NULL, clientCommunication , packet);
+	// Send pointer to the previously allocated address and be able to access it's value in new thread's execution
+	pthread_create(tid, NULL, clientCommunication , newsockfd);
 
 	return 0;
 }
 
-void* Server::clientCommunication(void *packet)
+void* Server::clientCommunication(void *socket_pointer)
 {
-	Packet *receivedPacket = (Packet*)packet;
-	Packet *sendingPacket = new Packet((char*)"Grupo dos guri", (char*)"Recebi sua mensagem!");
-	char buffer[256] = {0};
-	int newsockfd = receivedPacket->clientSocket;
+	// Read value of received socket pointer and free the allocated memory in the main thread
+	int socket_fd = *(int *) socket_pointer;
+	free(socket_pointer);
+
 	int packetSize = sizeof(Packet);
+	void *incomingData = (void*) malloc(packetSize);
+	
+	bool connectedClient = true;
 	int n;
 
-	while(1)
+	while(connectedClient)
 	{
-		n = read(newsockfd, receivedPacket, packetSize);
-
-		if (n < 0) 
+		int receivedBytes = 0;
+		do {
+			n = read(socket_fd, (incomingData + receivedBytes), packetSize-receivedBytes);
+			if (n < 0) 
+			{
+				cout << "ERROR reading from socket\n" << endl;
+				break;
+			}
+			else if(n == 0) // Client closed connection
+			{
+				connectedClient = false;
+				cout << "End of connection with socket " << socket_fd << endl;
+				break;
+			}
+			receivedBytes += n;
+		} while ( receivedBytes != packetSize);
+		if (!connectedClient)
 		{
-			cout << "ERROR reading from socket\n" << endl;
 			break;
 		}
-		else if(n == 0) // Client exited with ctrl+d
-		{
-			cout << "End of connection with socket " << newsockfd << endl;
-			break;
-		}
+		
+		Packet* receivedPacket = (Packet*) incomingData;
 
 		cout << "Room: " << receivedPacket->group  << endl;
 		cout << "[Message]: " << receivedPacket->message  << endl;
 
-		n = write(newsockfd, (void *) sendingPacket, packetSize);
+		Packet* sendingPacket = new Packet("Grupo dos guri", "Recebi sua mensagem!");
+		n = write(socket_fd, (void *) sendingPacket, packetSize);
 
 		if (n < 0) 
 		{
 			cout << "ERROR writing to socket\n" << endl;
 		}
-
-		*receivedPacket = Packet();
 	}
 
-	delete sendingPacket;
-	delete (Packet*)packet;
-	close(newsockfd);
+	std::cout << "Freeing allocated memory and closing client connection thread" << std::endl;
+	//TODO use semaphore when using openSockets vector
+	openSockets.erase(std::remove(openSockets.begin(), openSockets.end(), socket_fd), openSockets.end());
+	free(incomingData);
+	std::cout << "Closing socket: " << socket_fd << std::endl;
+	close(socket_fd);
 
 	return 0;
 }
