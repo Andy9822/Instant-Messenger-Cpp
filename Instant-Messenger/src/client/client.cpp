@@ -3,14 +3,24 @@
 
 
 
-Client::Client()
+Client::Client(char *ip_address, char *port)
 {
 	sockfd = 0;
+
+	serv_addr.sin_family = AF_INET;     
+	serv_addr.sin_port = htons(atoi(port));    
+	
+	if(inet_pton(AF_INET, ip_address, &serv_addr.sin_addr)<=0) 
+	{ 
+		std::cout << "\nInvalid address/ Address not supported \n" << std::endl; 
+	} 
+
+	bzero(&(serv_addr.sin_zero), 8);  
 }
 
 
 
-int Client::ConnectToServer(struct sockaddr_in serv_addr)
+int Client::ConnectToServer()
 {
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
