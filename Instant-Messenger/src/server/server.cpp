@@ -5,7 +5,6 @@ Server::Server()
 {
 	// Configure server address properties
 	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_port = htons(0);
 	serv_addr.sin_addr.s_addr = INADDR_ANY;
 	bzero(&(serv_addr.sin_zero), 8);
 
@@ -14,6 +13,10 @@ Server::Server()
 }
 
 
+void Server::setPort(int port) 
+{
+	serv_addr.sin_port = htons(port);
+}
 
 void Server::prepareConnection()
 {
@@ -75,8 +78,6 @@ int Server::ConnectToClient(pthread_t *tid)
 
 	return 0;
 }
-
-
 
 void* Server::clientCommunication(void *packet)
 {
