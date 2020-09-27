@@ -38,7 +38,7 @@ std::vector<std::vector<std::string>> FileSystemManager::readGroupMessages(strin
     std::stringstream groupFile;
     groupFile << MESSAGES_BASE_PATH << PATH_SEPARATOR << groupName << FILE_EXTENSION; 
     std::ifstream  data(groupFile.str());
-    cout << endl << groupFile.str();
+
     while(std::getline(data,line))
     {
         cout << line << endl;
