@@ -3,20 +3,21 @@
 
 
 using namespace std;
-struct Packet {
 
+struct Packet 
+{
     int status;
-    char group[16];
-    char message[126];
+    char group[20];
+    char message[256];
+    int clientSocket;
 
     Packet() {}
 
     Packet(char* group, char* message) {
       this->status = 1440;
-      strncpy(this->group, group, 15);
-      strncpy(this->message, message, 125);
+      strncpy(this->group, group, 20);
+      strncpy(this->message, message, 256);
     }
-
 };
 
 #endif

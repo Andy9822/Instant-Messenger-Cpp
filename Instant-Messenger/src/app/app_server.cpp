@@ -1,13 +1,12 @@
 #include "../../include/server/server.h"
 
-#define PORT 4040
+//#define PORT 4040
 
 int main()
 {
 
-	Server server(PORT);
-
-	pthread_t tid[SOMAXCONN];
+	Server server;
+	pthread_t tid[MAXBACKLOG];
 	int i = 0;
 
 	server.prepareConnection();

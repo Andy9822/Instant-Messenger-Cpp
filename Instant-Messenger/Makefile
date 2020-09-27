@@ -13,8 +13,8 @@ build-server:
 build-client:
 	${CC} -pthread -o $(BUILD_DIR)/server.app $(SRC_DIR)/app/app_server.cpp $(SRC_DIR)/server/server.cpp
 
-run-client:
-	$(BUILD_DIR)/client.app 127.0.0.1 4040
+#run-client:
+#	$(BUILD_DIR)/client.app 127.0.0.1 4040
 
 run-server:
 	$(BUILD_DIR)/server.app
