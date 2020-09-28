@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
 
     Client client(ip_address, port);
   
-	if(client.ConnectToServer() < 0)
+	if(client.ConnectToServer(user) < 0)
 		return -1;
     
     if(client.clientCommunication() < 0)
@@ -44,7 +44,7 @@ int validateName(char *name)
     	for(int i=0; i<nameLength; i++)
     	{
 
-    		if((name[i] >= 'A' && name[i] <= 'Z') || (name[i] >= 'a' && name[i] <= 'z') || (name[i] == '.'))
+    		if((name[i] >= 'A' && name[i] <= 'Z') || (name[i] >= 'a' && name[i] <= 'z') || (name[i] == '.') || (name[i] >= '0' && name[i] <= '9'))
     		{
     			if(i == 0 && (name[i] == '.'))
     			{
@@ -54,7 +54,7 @@ int validateName(char *name)
     		}
     		else
     		{
-    			std::cout << "Invalid user/group name -> Name must have only letters and '.' " << std::endl;
+    			std::cout << "Invalid user/group name -> Name must have only letters, numbers and '.' " << std::endl;
     			return -1;
     		}
     	}

@@ -1,3 +1,6 @@
+#ifndef USER_HPP
+#define USER_HPP
+
 #include <string>
 #include <ctime>
 #include <list>
@@ -32,8 +35,10 @@ class User {
         * throws USER_SESSIONS_LIMIT_REACHED if the addition 
         * was not created due to limitation reached
         */
-        void registerSession(int socket);
+        int registerSession(int socket);
         void releaseSession(int socket);
         
 };
 }  //namespace user;
+
+#endif

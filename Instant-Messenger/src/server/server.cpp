@@ -3,6 +3,8 @@
 
 Server::Server()
 {
+	groupManager = new ServerGroupManager();
+
 	// Configure server address properties
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_port = htons(0);
@@ -56,9 +58,23 @@ void Server::printPortNumber()
 
 
 
+void* Server::getUserName(void *socket)
+{
+	int userSocket = *(int*)socket;
+	char *username = (char*) calloc (20,sizeof(char));
+
+	read(userSocket, username, 20);
+
+	return username;
+}
+
+
+
 int Server::ConnectToClient(pthread_t *tid)
 {
-	int newsockfd;
+	pthread_t getUserThread;
+	char *username;
+	int newsockfd, status;
 	struct sockaddr_in cli_addr;
 	socklen_t clilen = sizeof(struct sockaddr_in);
 	Packet *packet = new Packet();
@@ -68,6 +84,24 @@ int Server::ConnectToClient(pthread_t *tid)
 		cout << "ERROR on accept\n" << endl;
 		return -1;
 	}
+
+	// asking for user name
+	pthread_create(&getUserThread, NULL, getUserName , &newsockfd);
+	pthread_join(getUserThread, (void**) &username);
+	
+	// registering user to server
+	if(groupManager->registerUserToServer(newsockfd, (char*)username) < 0)
+	{
+		// user is not allowed to connect
+		status = -1;
+		write(newsockfd, &status, sizeof(int));
+		close(newsockfd);
+		return 0;
+	}
+
+	// user is allowed to connect
+	status = 0;
+	write(newsockfd, &status, sizeof(int));
 
 	packet->clientSocket = newsockfd;
 

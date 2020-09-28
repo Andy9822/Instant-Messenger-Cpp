@@ -26,6 +26,6 @@ class Client
 		UserInteface userInteface;
 	public:
 		Client(char *ip_address, char *port);
-		int ConnectToServer();
+		int ConnectToServer(char *username);
 		int clientCommunication();	
 };

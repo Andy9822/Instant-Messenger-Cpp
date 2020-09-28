@@ -20,8 +20,10 @@ Client::Client(char *ip_address, char *port)
 
 
 
-int Client::ConnectToServer()
+int Client::ConnectToServer(char *username)
 {
+	int success;
+
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
 		cout << "\n Socket creation error \n" << endl;
@@ -34,7 +36,14 @@ int Client::ConnectToServer()
         return -1;
 	}
 
-	return 0;
+	// Asking server if username already exists
+	write(sockfd, username, strlen(username));
+	read(sockfd, &success, sizeof(int));
+
+	if(success == -1)
+		cout << "You are already logged in 2 sessions" << endl;
+
+	return success;
 }
 
 
