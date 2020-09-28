@@ -11,15 +11,17 @@ using namespace std;
 using std::string;
 
 #define NUMBER_OF_SIMULTANEOUS_CONNECTIONS 2
+
+extern sem_t semaphore;
+
 namespace user {
 
 class User {
 
     private:
-        sem_t semaphore;
-        string username;
-        // this list of sockets can only have two items
+        string username;        // this list of sockets can only have two items
         int sockets[NUMBER_OF_SIMULTANEOUS_CONNECTIONS];
+        
         void init_semaphore();
         void wait_semaphore();
         void post_semaphore();
