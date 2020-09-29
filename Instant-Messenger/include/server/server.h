@@ -26,6 +26,7 @@ class Server
 		void prepareConnection();
 		void printPortNumber();
 		int ConnectToClient(pthread_t *tid);
+		int registerUser(int newsockfd);
 		static void* getUserName(void * socket);
 		static void* clientCommunication(void *newsocket);
 };

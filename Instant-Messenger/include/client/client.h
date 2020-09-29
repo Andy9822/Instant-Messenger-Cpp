@@ -11,6 +11,7 @@
 #include "client_communication_manager.h"
 #include "client_message_manager.h"
 #include "user_interface.h"
+#include "../util/message.hpp"
 
 using clientcommunicationmanager::ClientCommunicationManager;
 using clientmessagemanager::ClientMessageManager;
@@ -26,6 +27,8 @@ class Client
 		UserInteface userInteface;
 	public:
 		Client(char *ip_address, char *port);
-		int ConnectToServer(char *username);
-		int clientCommunication();	
+		int *ConnectToServer(Message userInfo);
+		//int clientCommunication();	
+		static void* writeToServer(void* socket);
+		static void* ReadFromServer(void* socket);
 };

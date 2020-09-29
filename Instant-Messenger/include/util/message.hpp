@@ -1,10 +1,47 @@
-#include <string>
+#ifndef MESSAGE_HPP
+#define MESSAGE_HPP
+
+//#include <string>
 #include <ctime>
+#include <string.h>
 
 using namespace std;
-using std::string;
+//using std::string;
 
-namespace message {
+
+struct Message
+{
+    char text[256];
+    char user[20];
+    char group[20];
+    long int time;
+
+    Message() {}
+
+    Message(char* text, char* user, char* group, long int time) 
+    {
+        strncpy(this->text, text, 256);
+        strncpy(this->user, user, 20);
+        strncpy(this->group, group, 20);
+        this->time = time;
+    }   
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*namespace message {
 
 class Message {
 
@@ -27,3 +64,5 @@ class Message {
         void setTime(long int time);
 };
 }  //namespace message
+*/
+#endif

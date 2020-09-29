@@ -2,7 +2,7 @@
 #include <sstream>
 #include <iostream>
 
-namespace message{
+//namespace message{
 
 
 Message::Message() {
@@ -16,7 +16,7 @@ Message::Message(string text, string user, string group, long int time) {
     this->time = time;
 }
 
-string Message::getText() {
+/*string Message::getText() {
     return this->text;
 }
 string Message::getUser() {
@@ -40,7 +40,7 @@ void Message::setGroup(string group) {
 }
 void Message::setTime(long int time) {
     this->time = time;
-}
+}*/
 
 
-} // namespace message;
+//} // namespace message;

@@ -61,19 +61,46 @@ void Server::printPortNumber()
 void* Server::getUserName(void *socket)
 {
 	int userSocket = *(int*)socket;
-	char *username = (char*) calloc (20,sizeof(char));
+	Message *userInfos = new Message();
 
-	read(userSocket, username, 20);
+	read(userSocket, userInfos, sizeof(Message));
 
-	return username;
+	return userInfos;
+}
+
+
+
+int Server::registerUser(int newsockfd)
+{
+	pthread_t getUserThread;
+	Message *userInfos;
+	int status;
+
+	// asking for user information
+	pthread_create(&getUserThread, NULL, getUserName , &newsockfd);
+	pthread_join(getUserThread, (void**) &userInfos);
+	
+	// registering user to server
+	if(groupManager->registerUserToServer(newsockfd, userInfos) < 0)
+	{
+		// user is not allowed to connect
+		status = -1;
+		write(newsockfd, &status, sizeof(int));
+		close(newsockfd);
+		return -1;
+	}
+
+	// user is allowed to connect
+	status = 0;
+	write(newsockfd, &status, sizeof(int));
+
+	return status;
 }
 
 
 
 int Server::ConnectToClient(pthread_t *tid)
 {
-	pthread_t getUserThread;
-	char *username;
 	int newsockfd, status;
 	struct sockaddr_in cli_addr;
 	socklen_t clilen = sizeof(struct sockaddr_in);
@@ -85,23 +112,8 @@ int Server::ConnectToClient(pthread_t *tid)
 		return -1;
 	}
 
-	// asking for user name
-	pthread_create(&getUserThread, NULL, getUserName , &newsockfd);
-	pthread_join(getUserThread, (void**) &username);
-	
-	// registering user to server
-	if(groupManager->registerUserToServer(newsockfd, (char*)username) < 0)
-	{
-		// user is not allowed to connect
-		status = -1;
-		write(newsockfd, &status, sizeof(int));
-		close(newsockfd);
+	if(registerUser(newsockfd) < 0)
 		return 0;
-	}
-
-	// user is allowed to connect
-	status = 0;
-	write(newsockfd, &status, sizeof(int));
 
 	packet->clientSocket = newsockfd;
 

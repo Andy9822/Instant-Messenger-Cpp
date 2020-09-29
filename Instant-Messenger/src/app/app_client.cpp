@@ -1,4 +1,5 @@
 #include "../../include/client/client.h"
+//#include "../../include/util/message.hpp"
 
 
 
@@ -8,6 +9,9 @@ int validateName(char *name);
 
 int main(int argc, char *argv[])
 {
+	pthread_t writeThread, readThread;
+	int *socket;
+
 	if(argc < 5)
     {
     	std::cout << "You forgot to include usename / group / IP address / PORT for the server connection!" << std::endl;
@@ -23,12 +27,18 @@ int main(int argc, char *argv[])
     	return -1;   
 
     Client client(ip_address, port);
+    Message userInfo((char*)"", user, group, 0);
   
-	if(client.ConnectToServer(user) < 0)
+	if(*(socket = client.ConnectToServer(userInfo)) < 0)
 		return -1;
     
-    if(client.clientCommunication() < 0)
-    	return -1;   
+    //if(client.clientCommunication() < 0)
+    	//return -1; 
+    pthread_create(&writeThread, NULL, client.writeToServer , socket);  
+    pthread_create(&readThread, NULL, client.ReadFromServer , socket);
+
+    pthread_join(writeThread, NULL);
+    pthread_join(readThread, NULL);
 
     return 0;
 }

@@ -20,35 +20,108 @@ Client::Client(char *ip_address, char *port)
 
 
 
-int Client::ConnectToServer(char *username)
+int *Client::ConnectToServer(Message userInfo)
 {
 	int success;
 
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
 		cout << "\n Socket creation error \n" << endl;
-		return -1;
+		sockfd = -1;
 	}
 
 	if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
 	{
         cout << "ERROR connecting\n" << endl;
-        return -1;
+        sockfd = -1;
 	}
 
 	// Asking server if username already exists
-	write(sockfd, username, strlen(username));
+	write(sockfd, &userInfo, sizeof(Message));
 	read(sockfd, &success, sizeof(int));
 
 	if(success == -1)
+	{
 		cout << "You are already logged in 2 sessions" << endl;
+		sockfd = -1;
+	}
 
-	return success;
+	return &sockfd;
 }
 
 
 
-int Client::clientCommunication()
+void* Client::writeToServer(void* socket)
+{
+	int sock_fd = *(int*)socket;
+	char buffer[256] = {0};
+	Packet *mypacket = new Packet((char*)"", buffer);
+	int packetSize = sizeof(Packet);
+	int n;
+
+	
+	while(1)
+	{
+		cout << "Enter the message: ";
+
+	    bzero(buffer, 256);
+
+	    if(fgets(buffer, 256, stdin) == NULL) // ctrl+d
+	    {
+	    	*mypacket = Packet((char*)"Grupo dos guri", buffer);
+	    	write(sock_fd, mypacket, packetSize);
+	    	break;
+	    }
+
+		*mypacket = Packet((char*)"Grupo dos guri", buffer);
+
+		n = write(sock_fd, mypacket, packetSize);
+
+		if (n < 0)
+		{
+			cout << "ERROR writing to socket\n" << endl;
+			break;
+		}
+	}
+
+	delete mypacket;
+	close(sock_fd);
+
+	return 0;
+}
+
+
+
+void* Client::ReadFromServer(void* socket)
+{
+	int sock_fd = *(int*)socket;
+	Packet *receivedPacket = new Packet();
+	int packetSize = sizeof(Packet);
+	int n;
+
+	while(1)
+	{
+		n = read(sock_fd, receivedPacket, packetSize);
+
+		cout << "\n[Server Message]: " << receivedPacket->message  << endl;
+
+		if (n < 0)
+		{
+			//cout << "\nERROR reading from socket\n" << endl;
+			break;
+		}
+
+		*receivedPacket = Packet();
+	}	
+
+	delete receivedPacket;
+	close(sock_fd);
+
+}
+
+
+
+/*int Client::clientCommunication()
 {
 	int n;
 	char buffer[256] = {0};
@@ -96,3 +169,4 @@ int Client::clientCommunication()
 
 	return 0;
 }
+*/

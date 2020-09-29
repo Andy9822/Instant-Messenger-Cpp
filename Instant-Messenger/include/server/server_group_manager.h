@@ -21,8 +21,8 @@ class ServerGroupManager {
 
     public:
         ServerGroupManager();
-        int registerUserToServer(int socket, string username);
- 		int addUserToGroup();
+        int registerUserToServer(int socket, Message *userInfos);
+ 		void addUserToGroup(User *user, string group);
 
         //void sendMessage(Message message, User* users);
  
