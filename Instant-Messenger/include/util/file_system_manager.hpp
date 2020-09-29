@@ -7,7 +7,6 @@
 #include "message.hpp"
 
 
-
 #define MESSAGES_BASE_PATH "../../messages"
 #define FILE_EXTENSION ".csv"
 #define FILE_SEPARATOR ","
@@ -18,8 +17,6 @@ using std::string;
 using namespace message;
 
 namespace filesystemmanager {
-
-
 
 class FileSystemManager {
     public: 
