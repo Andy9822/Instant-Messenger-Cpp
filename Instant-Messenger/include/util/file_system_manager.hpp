@@ -4,6 +4,7 @@
 #include <ios>
 #include <fstream>
 #include <vector>
+#include "message.hpp"
 
 
 
@@ -13,12 +14,12 @@
 #define PATH_SEPARATOR "/"
 
 using namespace std;
-
 using std::string;
+using namespace message;
 
 namespace filesystemmanager {
 
-using namespace message;
+
 
 class FileSystemManager {
     public: 
