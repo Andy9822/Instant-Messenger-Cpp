@@ -1,6 +1,7 @@
 #ifndef PACKET_HPP
 #define PACKET_HPP
 
+#include <string.h> 
 
 using namespace std;
 

@@ -1,5 +1,4 @@
 #include "../../include/server/server.h"
-#include "../../include/util/Packet.hpp"
 
 vector<int> Server::openSockets;
 sem_t Server::semaphore;
@@ -141,9 +140,6 @@ void* Server::clientCommunication(void *args)
 
 	// Free pair created for sending arguments
 	free(args_pair);
-
-	int packetSize = sizeof(Packet);
-	void *incomingData = (void*) malloc(packetSize);
 	
 	bool connectedClient = true;
 	int n;
@@ -151,34 +147,21 @@ void* Server::clientCommunication(void *args)
 	while(connectedClient)
 	{
 		
-		int receivedBytes = 0;
-		do {
-			n = read(client_socketfd, (incomingData + receivedBytes), packetSize-receivedBytes);
-			if (n < 0) 
-			{
-				cout << "ERROR reading from socket\n" << endl;
-				break;
-			}
-			else if(n == 0) // Client closed connection
-			{
-				connectedClient = false;
-				cout << "End of connection with socket " << client_socketfd << endl;
-				break;
-			}
-			receivedBytes += n;
-		} while ( receivedBytes != packetSize);
+		Packet* receivedPacket = _this->readPacket(client_socketfd, &connectedClient);
+		
 		if (!connectedClient)
 		{
+			// Free allocated memory for reading Packet
+			free(receivedPacket);
+			
 			break;
 		}
-		
-		Packet* receivedPacket = (Packet*) incomingData;
 
 		cout << "Room: " << receivedPacket->group  << endl;
 		cout << "[Message]: " << receivedPacket->message  << endl;
 
 		Packet* sendingPacket = new Packet(receivedPacket->group, "Recebi sua mensagem!");
-		n = write(client_socketfd, (void *) sendingPacket, packetSize);
+		n = write(client_socketfd, (void *) sendingPacket, sizeof(Packet));
 
 		if (n < 0) 
 		{
@@ -186,8 +169,7 @@ void* Server::clientCommunication(void *args)
 		}
 	}
 
-	// Free allocated memory for reading Packet
-	free(incomingData);
+	
 
 	// Close all properties related to client connection
 	_this->closeClientCommunication(client_socketfd); 
