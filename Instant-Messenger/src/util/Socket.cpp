@@ -22,7 +22,7 @@ Packet* Socket::readPacket(int client_socketfd, bool* connectedClient)
 			*connectedClient = false;
 			break;
 		}
-		else if(n == 0) // Client closed connection
+		else if(n == 0)
 		{
 			*connectedClient = false;
 			cout << "End of connection with socket " << client_socketfd << endl;
@@ -32,4 +32,14 @@ Packet* Socket::readPacket(int client_socketfd, bool* connectedClient)
 	} while ( receivedBytes != packetSize);
 
 	return (Packet*) incomingData;
+}
+
+int Socket::sendPacket(int socket_fd, Packet* mypacket)
+{
+    int n = write(socket_fd, mypacket, sizeof(Packet));
+    if (n < 0)
+    {
+        cout << "ERROR writing to socket\n" << endl;
+    }
+    return n >= 0;
 }
