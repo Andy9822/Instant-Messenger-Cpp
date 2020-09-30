@@ -6,25 +6,24 @@ using std::string;
 
 namespace message {
 
-#define BUFFER_SIZE 10
-
 class Message {
 
     private:
         string text;
         string user;
         string group;
-        time_t time;
+        long int time;
     
     public:
+        Message();
+        Message(string text, string user, string group, long int time);
         string getText();
-        string setText(string text);
         string getUser();
-        string setUser(string user);
         string getGroup();
-        string setGroup(string group);
-        string getTime();
-        string setTime(time_t time);
-
+        long int getTime();
+        void setText(string text);
+        void setUser(string user);
+        void setGroup(string group);
+        void setTime(long int time);
 };
 }  //namespace message
