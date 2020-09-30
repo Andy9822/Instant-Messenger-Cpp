@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 	if(client.ConnectToServer() < 0)
 		return -1;
     
-    if(client.clientCommunication() < 0)
+    if(client.clientCommunication(group) < 0)
     	return -1;   
 
     return 0;

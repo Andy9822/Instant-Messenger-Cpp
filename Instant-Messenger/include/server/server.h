@@ -11,11 +11,12 @@
 #include <vector>
 #include <algorithm>
 #include <semaphore.h>
+#include "../util/Socket.hpp"
 
 #define MAXBACKLOG SOMAXCONN
 
 
-class Server
+class Server: public Socket
 {
 	private:
 		int socket_fd;
