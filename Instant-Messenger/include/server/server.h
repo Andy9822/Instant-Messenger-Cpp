@@ -37,6 +37,8 @@ class Server
 		void closeSocket();
 		void closeServer();
 		void init_semaphore();
-		static void wait_semaphore();
-		static void post_semaphore();
+		void wait_semaphore();
+		void post_semaphore();
+	private:
+		void closeClientCommunication(int client_socket);
 };

@@ -109,22 +109,38 @@ int Server::handleClientConnection(pthread_t *tid)
 
 	std::cout << "client connected  with socket: " << *newsockfd << std::endl;
 
+	// Store new crated socket in the vector of existing connections sockets
 	wait_semaphore();
-	// Store new socket crated in the vector of existing connections sockets
 	openSockets.push_back(*newsockfd);
 	post_semaphore();
-	
-	// Send pointer to the previously allocated address and be able to access it's value in new thread's execution
-	pthread_create(tid, NULL, clientCommunication , newsockfd);
+
+	//Create a pair for sending more than 1 parameter to the new thread that we are about to create
+	std::pair <int*,Server*>* args = (std::pair <int*,Server*>*) calloc(1,sizeof(std::pair <int*,Server*>));
+	// Send pointer of the previously allocated address and be able to access it's value in new thread's execution
+	args->first = newsockfd;
+	// Also, send reference of this instance to the new thread
+	args->second = this;
+
+	pthread_create(tid, NULL, clientCommunication , (void*) args);
 
 	return 0;
 }
 
-void* Server::clientCommunication(void *socket_pointer)
+void* Server::clientCommunication(void *args)
 {
+	// We cast our receveid void* args to a pair*
+	std::pair <int*,Server*>* args_pair = (std::pair <int*,Server*> *) args;
+
 	// Read value of received socket pointer and free the allocated memory previously in the main thread
-	int socket_fd = *(int *) socket_pointer;
-	free(socket_pointer);
+	int client_socketfd = *(int *) args_pair->first;
+	free(args_pair->first);
+
+	// Create a reference of the instance in this thread
+	Server* _this = (Server *)  args_pair->second;
+	_this->printPortNumber();
+
+	// Free pair created for sending arguments
+	free(args_pair);
 
 	int packetSize = sizeof(Packet);
 	void *incomingData = (void*) malloc(packetSize);
@@ -134,9 +150,10 @@ void* Server::clientCommunication(void *socket_pointer)
 
 	while(connectedClient)
 	{
+		
 		int receivedBytes = 0;
 		do {
-			n = read(socket_fd, (incomingData + receivedBytes), packetSize-receivedBytes);
+			n = read(client_socketfd, (incomingData + receivedBytes), packetSize-receivedBytes);
 			if (n < 0) 
 			{
 				cout << "ERROR reading from socket\n" << endl;
@@ -145,7 +162,7 @@ void* Server::clientCommunication(void *socket_pointer)
 			else if(n == 0) // Client closed connection
 			{
 				connectedClient = false;
-				cout << "End of connection with socket " << socket_fd << endl;
+				cout << "End of connection with socket " << client_socketfd << endl;
 				break;
 			}
 			receivedBytes += n;
@@ -161,7 +178,7 @@ void* Server::clientCommunication(void *socket_pointer)
 		cout << "[Message]: " << receivedPacket->message  << endl;
 
 		Packet* sendingPacket = new Packet(receivedPacket->group, "Recebi sua mensagem!");
-		n = write(socket_fd, (void *) sendingPacket, packetSize);
+		n = write(client_socketfd, (void *) sendingPacket, packetSize);
 
 		if (n < 0) 
 		{
@@ -169,26 +186,36 @@ void* Server::clientCommunication(void *socket_pointer)
 		}
 	}
 
-	std::cout << "Freeing allocated memory and closing client connection thread" << std::endl;
-
-	Server::wait_semaphore();
-	openSockets.erase(std::remove(openSockets.begin(), openSockets.end(), socket_fd), openSockets.end());
-	Server::post_semaphore();
+	// Free allocated memory for reading Packet
 	free(incomingData);
+
+	// Close all properties related to client connection
+	_this->closeClientCommunication(client_socketfd); 
+
+	return 0;
+}
+
+void Server::closeClientCommunication(int client_socket) 
+{
+	std::cout << "Freeing allocated memory and closing client connection thread" << std::endl;
+	// std::cout << client_socket << " pediu SC" << std::endl;
+	wait_semaphore();
+	// std::cout << client_socket << " entrou SC" << std::endl;
+	openSockets.erase(std::remove(openSockets.begin(), openSockets.end(), client_socket), openSockets.end());
+	// std::cout << client_socket << " liberando SC" << std::endl;
+	post_semaphore();
 	
-	 if ( (close(socket_fd)) == 0 )
+	 if ( (close(client_socket)) == 0 )
 	 {
-		std::cout << "Closed socket: " << socket_fd << std::endl;
+		std::cout << "Closed socket: " << client_socket << std::endl;
 	 }
 	 else 
 	 {	
 		std::cout << "!!! Fatal error closing socket!!!!" << std::endl;
 	 }
-	 
-
-	return 0;
 }
 
+// TODO functions below may be moved to a binary semaphore class and just extend that class
 void Server::init_semaphore() {
     sem_init(&semaphore, 0, 1);
 }

@@ -14,6 +14,7 @@ struct sigaction sigIntHandler;
 void my_handler(int signal){
 	if (signal == 2)
 	{
+		//TODO have to investigate why even closing sockets still hang outs if there are open connections
 		server.closeServer();
 		exit(2);
 	}
