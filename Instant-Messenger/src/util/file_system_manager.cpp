@@ -16,7 +16,7 @@ void FileSystemManager::prepareDirectory() {
 
 }
 
-void FileSystemManager::appendGroupMessage(Message message) {
+void FileSystemManager::appendGroupMessageToHistory(Message message) {
     std::stringstream groupFile;
     std::stringstream messageContent;
 
@@ -28,15 +28,18 @@ void FileSystemManager::appendGroupMessage(Message message) {
     std::ofstream groupRepository(groupFile.str(), std::ios_base::app | std::ios_base::out);
     
     groupRepository << messageContent.str();
+    groupRepository.close();
 }
 
-std::vector<std::vector<std::string>> FileSystemManager::readGroupMessages(string groupName) {
+std::vector<std::vector<std::string>> FileSystemManager::readGroupHistoryMessages(string groupName) {
     
     std::string line;
     std::vector<std::vector<std::string> > parsedCsv;
     std::stringstream groupFile;
-    groupFile << MESSAGES_BASE_PATH << PATH_SEPARATOR << groupName << FILE_EXTENSION; 
-    std::ifstream  data(groupFile.str());
+    groupFile << MESSAGES_BASE_PATH << PATH_SEPARATOR << groupName << FILE_EXTENSION;
+    std::ifstream data;
+    
+    data.open(groupFile.str());
 
     while(std::getline(data,line))
     {
@@ -51,6 +54,8 @@ std::vector<std::vector<std::string>> FileSystemManager::readGroupMessages(strin
 
         parsedCsv.push_back(parsedRow);
     }
+
+    data.close();
 
     return parsedCsv;
 }

@@ -22,7 +22,7 @@ class FileSystemManager {
     public: 
         FileSystemManager();
         void prepareDirectory();
-        void appendGroupMessage(Message message);
-        std::vector<std::vector<std::string>> readGroupMessages(string groupName);        
+        void appendGroupMessageToHistory(Message message);
+        std::vector<std::vector<std::string>> readGroupHistoryMessages(string groupName);        
 };
 } // namespace filesystemmanager;
