@@ -39,26 +39,25 @@ int Client::ConnectToServer()
 
 
 
-int Client::clientCommunication()
+int Client::clientCommunication(char* group)
 {
 	int n;
-	char buffer[256] = {0};
-	Packet *mypacket = new Packet((char*)"", buffer);
-	Packet *receivedPacket = new Packet();
+	char messageBuffer[256] = {0};
+	char groupBuffer[256] = {0};
+	Packet *mypacket = new Packet((char*)"", messageBuffer);
 	int packetSize = sizeof(Packet);
+	bool connectedToServer = true;
+	string input;
 
-	while(1)
+	while(connectedToServer)
     {
     	cout << "Enter the message: ";
+		cin >> input;
 
-    	bzero(buffer, 256);
+		strncpy(messageBuffer, input.c_str(), 255);
+		strncpy(groupBuffer, group, 19);
 
-    	if(fgets(buffer, 256, stdin) == NULL) // ctrl+d
-    	{
-    		break;
-    	}
-
-		*mypacket = Packet((char*)"Grupo dos guri", buffer);
+		*mypacket = Packet(groupBuffer, messageBuffer);
 
 		n = write(sockfd, mypacket, packetSize);
 
@@ -68,7 +67,15 @@ int Client::clientCommunication()
 			return -1;
 	    }
 
-		n = read(sockfd, receivedPacket, packetSize);
+		Packet* receivedPacket = readPacket(sockfd, &connectedToServer);
+		
+		if (!connectedToServer)
+		{
+			// Free allocated memory for reading Packet
+			free(receivedPacket);
+			
+			break;
+		}
 
 		cout << "[Server Message]: " << receivedPacket->message  << endl;
 
@@ -81,8 +88,7 @@ int Client::clientCommunication()
 	    *receivedPacket = Packet();
 	}
 
-	delete mypacket;
-	delete receivedPacket;
+	free(mypacket);
 	close(sockfd);
 
 	return 0;
