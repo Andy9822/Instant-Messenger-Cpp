@@ -53,14 +53,14 @@ int main(int argc, char *argv[])
 	int i = 0;
 
 
-	int port = read_port(argc, argv); //Set default port to 0
+	int port = read_port(argc, argv);
 	server.setPort(port);
 	server.prepareConnection();
 	server.printPortNumber();
 
 	while(1)
 	{
-		if(server.ConnectToClient(&tid[i++]) < 0)
+		if(server.handleClientConnection(&tid[i++]) < 0)
 			return -1;
 	}
 

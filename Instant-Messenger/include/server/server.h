@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include <vector>
 #include <algorithm>
+#include <semaphore.h>
 
 #define MAXBACKLOG SOMAXCONN
 
@@ -22,15 +23,20 @@ class Server
 		//TODO maybe remove static and evaluate how to share vector between threads
 	public:
 		static std::vector <int> openSockets;
+		static sem_t semaphore;
+		
 	public:
 		Server();
 		void setPort(int port);
 		void prepareConnection();
 		void printPortNumber();
-		int ConnectToClient(pthread_t *tid);
+		int handleClientConnection(pthread_t *tid);
 		static void* clientCommunication(void *newsocket);
 		static void closeClientConnection(int socket_fd);
 		void closeConnections();
 		void closeSocket();
 		void closeServer();
+		void init_semaphore();
+		static void wait_semaphore();
+		static void post_semaphore();
 };
