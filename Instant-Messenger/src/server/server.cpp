@@ -1,5 +1,4 @@
 #include "../../include/server/server.h"
-#include "../../include/util/Packet.hpp"
 
 vector<int> Server::openSockets;
 sem_t Server::semaphore;
@@ -116,8 +115,10 @@ int Server::handleClientConnection(pthread_t *tid)
 
 	//Create a pair for sending more than 1 parameter to the new thread that we are about to create
 	std::pair <int*,Server*>* args = (std::pair <int*,Server*>*) calloc(1,sizeof(std::pair <int*,Server*>));
+
 	// Send pointer of the previously allocated address and be able to access it's value in new thread's execution
 	args->first = newsockfd;
+
 	// Also, send reference of this instance to the new thread
 	args->second = this;
 
@@ -131,7 +132,7 @@ void* Server::clientCommunication(void *args)
 	// We cast our receveid void* args to a pair*
 	std::pair <int*,Server*>* args_pair = (std::pair <int*,Server*> *) args;
 
-	// Read value of received socket pointer and free the allocated memory previously in the main thread
+	// Read value of the socket pointer and free the previously allocated memory in the main thread
 	int client_socketfd = *(int *) args_pair->first;
 	free(args_pair->first);
 
@@ -141,54 +142,30 @@ void* Server::clientCommunication(void *args)
 
 	// Free pair created for sending arguments
 	free(args_pair);
-
-	int packetSize = sizeof(Packet);
-	void *incomingData = (void*) malloc(packetSize);
 	
 	bool connectedClient = true;
-	int n;
-
 	while(connectedClient)
 	{
 		
-		int receivedBytes = 0;
-		do {
-			n = read(client_socketfd, (incomingData + receivedBytes), packetSize-receivedBytes);
-			if (n < 0) 
-			{
-				cout << "ERROR reading from socket\n" << endl;
-				break;
-			}
-			else if(n == 0) // Client closed connection
-			{
-				connectedClient = false;
-				cout << "End of connection with socket " << client_socketfd << endl;
-				break;
-			}
-			receivedBytes += n;
-		} while ( receivedBytes != packetSize);
+		// Listen for an incoming Packet from client
+		Packet* receivedPacket = _this->readPacket(client_socketfd, &connectedClient);
 		if (!connectedClient)
 		{
+			// Free allocated memory for reading Packet
+			free(receivedPacket);
+
 			break;
 		}
-		
-		Packet* receivedPacket = (Packet*) incomingData;
 
+		// TODO here communicate with group manager
 		cout << "Room: " << receivedPacket->group  << endl;
 		cout << "[Message]: " << receivedPacket->message  << endl;
 
 		Packet* sendingPacket = new Packet(receivedPacket->group, "Recebi sua mensagem!");
-		n = write(client_socketfd, (void *) sendingPacket, packetSize);
-
-		if (n < 0) 
-		{
-			cout << "ERROR writing to socket\n" << endl;
-		}
+		_this->sendPacket(client_socketfd, sendingPacket);
 	}
 
-	// Free allocated memory for reading Packet
-	free(incomingData);
-
+	
 	// Close all properties related to client connection
 	_this->closeClientCommunication(client_socketfd); 
 
@@ -215,7 +192,7 @@ void Server::closeClientCommunication(int client_socket)
 	 }
 }
 
-// TODO functions below may be moved to a binary semaphore class and just extend that class
+// TODO may be move functions below to a binary semaphore class and just extend that class
 void Server::init_semaphore() {
     sem_init(&semaphore, 0, 1);
 }

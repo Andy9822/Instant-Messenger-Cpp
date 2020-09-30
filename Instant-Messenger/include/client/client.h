@@ -11,12 +11,13 @@
 #include "client_communication_manager.h"
 #include "client_message_manager.h"
 #include "user_interface.h"
+#include "../util/Socket.hpp"
 
 using clientcommunicationmanager::ClientCommunicationManager;
 using clientmessagemanager::ClientMessageManager;
 using userinterface::UserInteface;
 
-class Client
+class Client : public Socket
 {
 	private:
 		int sockfd;
@@ -27,5 +28,5 @@ class Client
 	public:
 		Client(char *ip_address, char *port);
 		int ConnectToServer();
-		int clientCommunication();	
+		int clientCommunication(char* group);	
 };
