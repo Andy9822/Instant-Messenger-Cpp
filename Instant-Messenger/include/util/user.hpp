@@ -12,7 +12,6 @@ using std::string;
 
 #define NUMBER_OF_SIMULTANEOUS_CONNECTIONS 2
 
-extern sem_t semaphore;
 
 namespace user {
 
@@ -21,6 +20,7 @@ class User {
     private:
         string username;        // this list of sockets can only have two items
         int sockets[NUMBER_OF_SIMULTANEOUS_CONNECTIONS];
+    sem_t semaphore;
         
         void init_semaphore();
         void wait_semaphore();

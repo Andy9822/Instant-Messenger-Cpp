@@ -15,8 +15,8 @@ int ServerGroupManager::registerUserToServer(int socket, Message *userInfos)
 	bool userAlreadyExists = false;
 	User *newUser;
 	list<User*>::iterator user;
-	
-	for (user = list_users.begin(); user != list_users.end(); ++user)
+	std::cout << "vou registar username: " << username << std::endl;
+	for (user = list_users.begin(); user != list_users.end(); user++) //TODO ffix this shit
 	{
     	if((*user)->getUsername() == username)
     	{
@@ -29,15 +29,17 @@ int ServerGroupManager::registerUserToServer(int socket, Message *userInfos)
     		break;
     	}
 	}
-
+	std::cout << "sai do for" << username << std::endl;
 
 	if(userAlreadyExists == false)
 	{
+		std::cout << "vou newar" << std::endl;
 		newUser = new User(username);
 		
+		std::cout << "vou registerSessionei" << std::endl;
 		if(newUser->registerSession(socket) < 0)
 			return -1;
-		
+		std::cout << "registerSessionei" << std::endl;
 		addUserToGroup(newUser, userInfos->group);
 		list_users.push_back(newUser);
 	}

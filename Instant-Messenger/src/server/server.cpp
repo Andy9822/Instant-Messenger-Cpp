@@ -80,9 +80,12 @@ int Server::registerUser(int newsockfd)
 	pthread_create(&getUserThread, NULL, getUserName , &newsockfd);
 	pthread_join(getUserThread, (void**) &userInfos);
 	
+	std::cout << "vou registerUserToServer" << std::endl;
 	// registering user to server
 	if(groupManager->registerUserToServer(newsockfd, userInfos) < 0)
 	{
+		
+	std::cout << " registerUserToServerEI" << std::endl;
 		// user is not allowed to connect
 		status = -1;
 		write(newsockfd, &status, sizeof(int));
@@ -112,13 +115,18 @@ int Server::ConnectToClient(pthread_t *tid)
 		return -1;
 	}
 
-	if(registerUser(newsockfd) < 0)
+	std::cout << "entrei" << std::endl;
+	if(registerUser(newsockfd) < 0) 
+	{
+		std::cout << "sai no fininho" << std::endl;
 		return 0;
 
+	}
+	
+	std::cout << "NAO SAI" << std::endl;
 	packet->clientSocket = newsockfd;
 
 	pthread_create(tid, NULL, clientCommunication , packet);
-
 	return 0;
 }
 

@@ -2,17 +2,27 @@
 #include <sstream>
 #include <iostream>
 
-sem_t semaphore;
 
 namespace user{
 
 User::User() {
+    std::cout << "alo galera" << std::endl;
+    std::cout << "semaforo endereco: " << &semaphore << std::endl;
     init_semaphore();
     wait_semaphore();
     for (int i = 0; i < NUMBER_OF_SIMULTANEOUS_CONNECTIONS; i++) {
         this->sockets[i] = 0;
     }
     post_semaphore();
+
+    std::cout << "vou waitar" << std::endl;
+
+    wait_semaphore();
+    std::cout << "vou postar" << std::endl;
+    post_semaphore();
+    std::cout << "sla postou direito" << std::endl;
+
+    std::cout << "this: " << this << std::endl;
 }
 
 User::User(string username) {
@@ -35,7 +45,10 @@ void User::getActiveSockets(int* activeSocketsResult) {
 }
 
 int User::registerSession(int socket) {
+    std::cout << "vou waitar tua mae" << std::endl;
+    std::cout << "this: " << this << std::endl;
     wait_semaphore();
+    std::cout << "mentira waitei nada" << std::endl;
     for (int i = 0; i < NUMBER_OF_SIMULTANEOUS_CONNECTIONS; i++) {
         if (this->sockets[i] == 0){
             this->sockets[i] = socket;
@@ -61,15 +74,15 @@ void User::releaseSession(int socket) {
 }
 
 void User::init_semaphore() {
-    sem_init(/*&this->*/&semaphore, 0, 1);
+    sem_init(&semaphore, 0, 1);
 }
 
 void User::wait_semaphore() {
-    sem_wait(/*&this->*/&semaphore);
+    sem_wait(&semaphore);
 }
 
 void User::post_semaphore() {
-    sem_post(/*&this->*/&semaphore);
+    sem_post(&semaphore);
 }
 
 } // namespace user;
