@@ -37,58 +37,57 @@ int Client::ConnectToServer()
 	return 0;
 }
 
+string readInput()
+{
+	string input;
+	cout << "Enter the message: ";
+	cin >> input;
 
+	return input;
+}
+
+Packet buildPacket(char* group, string input)
+{
+	char messageBuffer[256] = {0};
+	char groupBuffer[256] = {0};
+
+	strncpy(groupBuffer, group, 19);
+	strncpy(messageBuffer, input.c_str(), 255); //Send message with maximum of 255 characters
+	return Packet(groupBuffer, messageBuffer);
+}
 
 int Client::clientCommunication(char* group)
 {
 	int n;
-	char messageBuffer[256] = {0};
-	char groupBuffer[256] = {0};
-	Packet *mypacket = new Packet((char*)"", messageBuffer);
+	Packet *sendingPacket = new Packet();
 	int packetSize = sizeof(Packet);
 	bool connectedToServer = true;
 	string input;
 
 	while(connectedToServer)
     {
-    	cout << "Enter the message: ";
-		cin >> input;
+		// Read input
+    	input = readInput();
 
-		strncpy(messageBuffer, input.c_str(), 255);
-		strncpy(groupBuffer, group, 19);
+		// Prepare Packet struct to be sent
+		*sendingPacket = buildPacket(group, input);
 
-		*mypacket = Packet(groupBuffer, messageBuffer);
+		//Send Packet struct via TCP socket
+		sendPacket(sockfd, sendingPacket);
 
-		n = write(sockfd, mypacket, packetSize);
 
-	    if (n < 0)
-	    {
-			cout << "ERROR writing to socket\n" << endl;
-			return -1;
-	    }
-
+		// Listen from TCP connection in case a Packet is received
 		Packet* receivedPacket = readPacket(sockfd, &connectedToServer);
-		
 		if (!connectedToServer)
 		{
 			// Free allocated memory for reading Packet
-			free(receivedPacket);
-			
+			free(sendingPacket);
 			break;
 		}
 
 		cout << "[Server Message]: " << receivedPacket->message  << endl;
-
-	    if (n < 0)
-	    {
-			cout << "ERROR reading from socket\n" << endl;
-			return -1;
-	    }
-
-	    *receivedPacket = Packet();
 	}
 
-	free(mypacket);
 	close(sockfd);
 
 	return 0;

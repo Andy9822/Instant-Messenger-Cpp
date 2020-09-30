@@ -9,4 +9,5 @@ class Socket
 	public:
 		Socket();
 		Packet* readPacket(int client_socketfd, bool* connectedClient);
+        int sendPacket(int socket_fd, Packet* mypacket);
 };
