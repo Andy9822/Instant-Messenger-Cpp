@@ -20,7 +20,45 @@ Client::Client(char *ip_address, char *port)
 
 
 
-int Client::ConnectToServer()
+Packet buildPacket(char* username, char* group, string input)
+{
+	char messageBuffer[255] = {0};
+	char groupBuffer[20] = {0};
+	char usernameBuffer[20] = {0};
+
+	strncpy(usernameBuffer, username, 20);
+	strncpy(groupBuffer, group, 20);
+	strncpy(messageBuffer, input.c_str(), 255); //Send message with maximum of 255 characters
+	return Packet(usernameBuffer, groupBuffer, messageBuffer);
+}
+
+
+
+int Client::registerToServer(char* username, char* group)
+{
+	bool connectedClient = true;
+	Packet *sendingPacket = new Packet();
+
+	*sendingPacket = buildPacket(username, group, "");
+
+	// Asking server if username already exists
+	sendPacket(sockfd, sendingPacket);
+	Packet *receivedPacket = readPacket(sockfd, &connectedClient);
+
+	if(receivedPacket->clientSocket == -1)
+	{
+		cout << "You are already logged in 2 sessions" << endl;
+		sockfd = -1;
+		delete sendingPacket;
+		close(sockfd);
+		return -1;
+	}
+	return 0;
+}
+
+
+
+int Client::ConnectToServer(char* username, char* group)
 {
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
@@ -34,24 +72,14 @@ int Client::ConnectToServer()
         return -1;
 	}
 
-	return 0;
+	return registerToServer(username, group);
+
+	//return 0;
 }
 
 
 
-Packet buildPacket(char* group, string input)
-{
-	char messageBuffer[256] = {0};
-	char groupBuffer[256] = {0};
-
-	strncpy(groupBuffer, group, 19);
-	strncpy(messageBuffer, input.c_str(), 255); //Send message with maximum of 255 characters
-	return Packet(groupBuffer, messageBuffer);
-}
-
-
-
-int Client::clientCommunication(char* group)
+int Client::clientCommunication(char* username, char* group)
 {
 	int n;
 	char input[255];
@@ -71,7 +99,7 @@ int Client::clientCommunication(char* group)
     	}
 
 		// Prepare Packet struct to be sent
-		*sendingPacket = buildPacket(group, input);
+		*sendingPacket = buildPacket(username, group, input);
 
 		//Send Packet struct via TCP socket
 		sendPacket(sockfd, sendingPacket);

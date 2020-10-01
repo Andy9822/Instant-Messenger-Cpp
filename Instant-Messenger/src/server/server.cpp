@@ -5,6 +5,8 @@ sem_t Server::semaphore;
 
 Server::Server()
 {
+	groupManager = new ServerGroupManager();
+
 	// Configure server address properties
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -105,8 +107,56 @@ void Server::printPortNumber()
 
 
 
+int Server::registerUser(int socket, char* username, char* group)
+{
+	return groupManager->registerUserToServer(socket, username, group);
+}
+
+
+
+void* Server::registerUserToServer(void* args)
+{
+	int *status = (int *) calloc(1,sizeof(int));
+	char username[20] = {0};
+	char group[20] = {0};
+	
+	std::pair <int*,Server*>* args_pair = (std::pair <int*,Server*> *) args;
+	int client_socketfd = *(int *) args_pair->first;
+	Server* _this = (Server *)  args_pair->second;
+	
+	bool connectedClient = true;
+	Packet *pack = new Packet();
+
+	// getting client info
+	Packet* receivedPacket = _this->readPacket(client_socketfd, &connectedClient);
+
+	strncpy(username, receivedPacket->username, 20);
+    strncpy(group, receivedPacket->group, 20);
+
+    // checking if there are already 2 users with the same name registered
+	if(_this->registerUser(client_socketfd, username, group) < 0)
+	{
+		pack->clientSocket = -1;
+		_this->sendPacket(client_socketfd, pack);
+		delete pack;
+		*status = -1;
+		return status;
+	}
+
+	pack->clientSocket = 0;
+	_this->sendPacket(client_socketfd, pack);
+	delete pack;
+
+	return status;
+}
+
+
+
 int Server::handleClientConnection(pthread_t *tid)
 {
+	pthread_t registerUserThread;
+	int *status;
+
 	// Allocate memory space to store value in heap and be able to use it after this function ends
 	int* newsockfd = (int *) calloc(1,sizeof(int));
 	struct sockaddr_in cli_addr;
@@ -116,6 +166,21 @@ int Server::handleClientConnection(pthread_t *tid)
 	{
 		cout << "ERROR on accept\n" << endl;
 		return -1;
+	}
+
+	// Registering user to server
+	std::pair <int*,Server*>* user = (std::pair <int*,Server*>*) calloc(1,sizeof(std::pair <int*,Server*>));
+	user->first = newsockfd;
+	user->second = this;
+	pthread_create(&registerUserThread, NULL, registerUserToServer , user);
+	pthread_join(registerUserThread, (void **) &status);
+	free(user);
+
+	// if there are already two users with the same name -> close and ignore connection
+	if(*status < 0)
+	{
+		close(*newsockfd);
+		return 0;
 	}
 
 	std::cout << "client connected  with socket: " << *newsockfd << std::endl;
@@ -175,7 +240,7 @@ void* Server::clientCommunication(void *args)
 		cout << "Room: " << receivedPacket->group  << endl;
 		cout << "[Message]: " << receivedPacket->message  << endl;
 
-		Packet* sendingPacket = new Packet(receivedPacket->group, (char*)"Recebi sua mensagem!");
+		Packet* sendingPacket = new Packet(receivedPacket->username, receivedPacket->group, (char*)"Recebi sua mensagem!");
 		_this->sendPacket(client_socketfd, sendingPacket);
 	}
 

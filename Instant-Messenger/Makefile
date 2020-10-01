@@ -11,7 +11,8 @@ build-client:
 	${CC} -std=c++11 -o $(BUILD_DIR)/client.app $(SRC_DIR)/util/Socket.cpp $(SRC_DIR)/app/app_client.cpp $(SRC_DIR)/client/*.cpp
 
 build-server:
-	${CC} -pthread -std=c++11 -o $(BUILD_DIR)/server.app $(SRC_DIR)/util/Socket.cpp $(SRC_DIR)/app/app_server.cpp $(SRC_DIR)/server/server.cpp
+	${CC} -pthread -std=c++11 -o $(BUILD_DIR)/server.app $(SRC_DIR)/util/Socket.cpp $(SRC_DIR)/app/app_server.cpp $(SRC_DIR)/server/server.cpp \
+	$(SRC_DIR)/server/server_group_manager.cpp $(SRC_DIR)/util/user.cpp 
 
 run-client:
 	$(BUILD_DIR)/client.app JohnnyUser SampleRoom 127.0.0.1 4040

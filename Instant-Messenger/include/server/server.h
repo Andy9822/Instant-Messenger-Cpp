@@ -11,6 +11,7 @@
 #include <vector>
 #include <algorithm>
 #include <semaphore.h>
+#include "server_group_manager.hpp"
 #include "../util/Socket.hpp"
 
 #define MAXBACKLOG SOMAXCONN
@@ -19,6 +20,7 @@
 class Server: public Socket
 {
 	private:
+		ServerGroupManager *groupManager;
 		int socket_fd;
 		struct sockaddr_in serv_addr;
 		//TODO maybe remove static and evaluate how to share vector between threads
@@ -31,6 +33,8 @@ class Server: public Socket
 		void setPort(int port);
 		void prepareConnection();
 		void printPortNumber();
+		static void* registerUserToServer(void* socket);
+		int registerUser(int socket, char* username, char* group);
 		int handleClientConnection(pthread_t *tid);
 		static void* clientCommunication(void *newsocket);
 		static void closeClientConnection(int socket_fd);
