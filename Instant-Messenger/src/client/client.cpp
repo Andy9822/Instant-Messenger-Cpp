@@ -37,14 +37,7 @@ int Client::ConnectToServer()
 	return 0;
 }
 
-string readInput()
-{
-	string input;
-	cout << "Enter the message: ";
-	cin >> input;
 
-	return input;
-}
 
 Packet buildPacket(char* group, string input)
 {
@@ -56,18 +49,26 @@ Packet buildPacket(char* group, string input)
 	return Packet(groupBuffer, messageBuffer);
 }
 
+
+
 int Client::clientCommunication(char* group)
 {
 	int n;
+	char input[255];
 	Packet *sendingPacket = new Packet();
 	int packetSize = sizeof(Packet);
 	bool connectedToServer = true;
-	string input;
 
 	while(connectedToServer)
     {
 		// Read input
-    	input = readInput();
+    	cout << "Enter the message: ";
+    	bzero(input, 255);
+
+    	if(fgets(input, 255, stdin) == NULL) // ctrl+d
+    	{
+    		break;
+    	}
 
 		// Prepare Packet struct to be sent
 		*sendingPacket = buildPacket(group, input);
@@ -78,6 +79,7 @@ int Client::clientCommunication(char* group)
 
 		// Listen from TCP connection in case a Packet is received
 		Packet* receivedPacket = readPacket(sockfd, &connectedToServer);
+
 		if (!connectedToServer)
 		{
 			// Free allocated memory for reading Packet
@@ -88,6 +90,7 @@ int Client::clientCommunication(char* group)
 		cout << "[Server Message]: " << receivedPacket->message  << endl;
 	}
 
+	cout << endl;
 	close(sockfd);
 
 	return 0;
