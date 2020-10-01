@@ -2,6 +2,8 @@
 #include <sstream>
 #include <iostream>
 
+sem_t semaphore;
+
 namespace user{
 
 User::User() {
@@ -32,17 +34,17 @@ void User::getActiveSockets(int* activeSocketsResult) {
     post_semaphore();
 }
 
-void User::registerSession(int socket) {
+int User::registerSession(int socket) {
     wait_semaphore();
     for (int i = 0; i < NUMBER_OF_SIMULTANEOUS_CONNECTIONS; i++) {
         if (this->sockets[i] == 0){
             this->sockets[i] = socket;
             post_semaphore();
-            return;
+            return 0;
         }
     }
     post_semaphore();
-    throw USER_SESSIONS_LIMIT_REACHED;
+    return  -1;
 }
 
 void User::releaseSession(int socket) {
@@ -58,15 +60,15 @@ void User::releaseSession(int socket) {
 }
 
 void User::init_semaphore() {
-    sem_init(&this->semaphore, 0, 1);
+    sem_init(&semaphore, 0, 1);
 }
 
 void User::wait_semaphore() {
-    sem_wait(&this->semaphore);
+    sem_wait(&semaphore);
 }
 
 void User::post_semaphore() {
-    sem_post(&this->semaphore);
+    sem_post(&semaphore);
 }
 
 } // namespace user;
