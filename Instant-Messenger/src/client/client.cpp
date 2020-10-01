@@ -20,7 +20,45 @@ Client::Client(char *ip_address, char *port)
 
 
 
-int Client::ConnectToServer()
+Packet buildPacket(char* username, char* group, string input)
+{
+	char messageBuffer[MESSAGE_MAX_SIZE] = {0};
+	char groupBuffer[GROUP_MAX_SIZE] = {0};
+	char usernameBuffer[USERNAME_MAX_SIZE] = {0};
+
+	strncpy(usernameBuffer, username, USERNAME_MAX_SIZE - 1);
+	strncpy(groupBuffer, group, GROUP_MAX_SIZE - 1);
+	strncpy(messageBuffer, input.c_str(), MESSAGE_MAX_SIZE - 1); //Send message with maximum of 255 characters
+	return Packet(usernameBuffer, groupBuffer, messageBuffer);
+}
+
+
+
+int Client::registerToServer(char* username, char* group)
+{
+	bool connectedClient = true;
+	Packet *sendingPacket = new Packet();
+
+	*sendingPacket = buildPacket(username, group, "");
+
+	// Asking server if username already exists
+	sendPacket(sockfd, sendingPacket);
+	Packet *receivedPacket = readPacket(sockfd, &connectedClient);
+
+	if(receivedPacket->clientSocket == -1)
+	{
+		cout << "You are already logged in 2 sessions" << endl;
+		sockfd = -1;
+		delete sendingPacket;
+		close(sockfd);
+		return -1;
+	}
+	return 0;
+}
+
+
+
+int Client::ConnectToServer(char* username, char* group)
 {
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
@@ -34,43 +72,34 @@ int Client::ConnectToServer()
         return -1;
 	}
 
-	return 0;
+	return registerToServer(username, group);
+
+	//return 0;
 }
 
-string readInput()
-{
-	string input;
-	cout << "Enter the message: ";
-	cin >> input;
 
-	return input;
-}
 
-Packet buildPacket(char* group, string input)
-{
-	char messageBuffer[256] = {0};
-	char groupBuffer[256] = {0};
-
-	strncpy(groupBuffer, group, 19);
-	strncpy(messageBuffer, input.c_str(), 255); //Send message with maximum of 255 characters
-	return Packet(groupBuffer, messageBuffer);
-}
-
-int Client::clientCommunication(char* group)
+int Client::clientCommunication(char* username, char* group)
 {
 	int n;
+	char input[255];
 	Packet *sendingPacket = new Packet();
 	int packetSize = sizeof(Packet);
 	bool connectedToServer = true;
-	string input;
 
 	while(connectedToServer)
     {
 		// Read input
-    	input = readInput();
+    	cout << "Enter the message: ";
+    	bzero(input, 255);
+
+    	if(fgets(input, 255, stdin) == NULL) // ctrl+d
+    	{
+    		break;
+    	}
 
 		// Prepare Packet struct to be sent
-		*sendingPacket = buildPacket(group, input);
+		*sendingPacket = buildPacket(username, group, input);
 
 		//Send Packet struct via TCP socket
 		sendPacket(sockfd, sendingPacket);
@@ -78,6 +107,7 @@ int Client::clientCommunication(char* group)
 
 		// Listen from TCP connection in case a Packet is received
 		Packet* receivedPacket = readPacket(sockfd, &connectedToServer);
+
 		if (!connectedToServer)
 		{
 			// Free allocated memory for reading Packet
@@ -88,6 +118,7 @@ int Client::clientCommunication(char* group)
 		cout << "[Server Message]: " << receivedPacket->message  << endl;
 	}
 
+	cout << endl;
 	close(sockfd);
 
 	return 0;

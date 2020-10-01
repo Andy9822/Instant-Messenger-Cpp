@@ -41,5 +41,6 @@ int Socket::sendPacket(int socket_fd, Packet* mypacket)
     {
         cout << "ERROR writing to socket\n" << endl;
     }
+
     return n >= 0;
 }
