@@ -14,12 +14,16 @@ Server::Server()
 	socket_fd = 0;
 }
 
+
+
 void Server::closeClientConnection(int socket_fd)
 {
 	std::cout << "Closing socket: " << socket_fd << std::endl;
 	openSockets.erase(std::remove(openSockets.begin(), openSockets.end(), socket_fd), openSockets.end());
 	close(socket_fd);
 }
+
+
 
 void Server::closeConnections()
 {
@@ -29,6 +33,8 @@ void Server::closeConnections()
 	cout << "Number of client connections: " << openSockets.size() << endl;
 }
 
+
+
 void Server::closeSocket()
 {
 	std::cout << "server_socket_fd: " << socket_fd << std::endl;
@@ -36,16 +42,22 @@ void Server::closeSocket()
 	cout << "Closing server socket..." << endl;
 }
 
+
+
 void Server::closeServer() 
 {
 	closeConnections();
 	closeSocket();
 }
 
+
+
 void Server::setPort(int port) 
 {
 	serv_addr.sin_port = htons(port);
 }
+
+
 
 void Server::prepareConnection()
 {
@@ -127,6 +139,8 @@ int Server::handleClientConnection(pthread_t *tid)
 	return 0;
 }
 
+
+
 void* Server::clientCommunication(void *args)
 {
 	// We cast our receveid void* args to a pair*
@@ -161,7 +175,7 @@ void* Server::clientCommunication(void *args)
 		cout << "Room: " << receivedPacket->group  << endl;
 		cout << "[Message]: " << receivedPacket->message  << endl;
 
-		Packet* sendingPacket = new Packet(receivedPacket->group, "Recebi sua mensagem!");
+		Packet* sendingPacket = new Packet(receivedPacket->group, (char*)"Recebi sua mensagem!");
 		_this->sendPacket(client_socketfd, sendingPacket);
 	}
 
@@ -171,6 +185,8 @@ void* Server::clientCommunication(void *args)
 
 	return 0;
 }
+
+
 
 void Server::closeClientCommunication(int client_socket) 
 {
@@ -191,6 +207,8 @@ void Server::closeClientCommunication(int client_socket)
 		std::cout << "!!! Fatal error closing socket!!!!" << std::endl;
 	 }
 }
+
+
 
 // TODO may be move functions below to a binary semaphore class and just extend that class
 void Server::init_semaphore() {

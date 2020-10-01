@@ -15,7 +15,7 @@ Packet* Socket::readPacket(int client_socketfd, bool* connectedClient)
 	int n;
 
 	do {
-		n = read(client_socketfd, (incomingData + receivedBytes), packetSize-receivedBytes);
+		n = read(client_socketfd, (Packet*)((uintptr_t) incomingData + receivedBytes), packetSize-receivedBytes);
 		if (n < 0) 
 		{
 			cout << "ERROR reading from socket\n" << endl;
@@ -41,5 +41,6 @@ int Socket::sendPacket(int socket_fd, Packet* mypacket)
     {
         cout << "ERROR writing to socket\n" << endl;
     }
+
     return n >= 0;
 }
