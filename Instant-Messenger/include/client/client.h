@@ -20,13 +20,21 @@ using userinterface::UserInteface;
 class Client : public Socket
 {
 	private:
+		string username;
 		int sockfd;
 		struct sockaddr_in serv_addr;
 		ClientCommunicationManager clientCommunicationManager;
 		ClientMessageManager clientMessageManager;
 		UserInteface userInteface;
+		
+		string readInput();
+		Packet buildPacket(string username, char* group, string input);
+		void showMessage(Packet* receivedPacket);
 	public:
 		Client(char *ip_address, char *port);
+        static void * receiveFromServer(void* args);
+        static void * sendToServer(void* args);
+		void setUsername(char* username);
 		int ConnectToServer(char* username, char* group);
 		int registerToServer(char* username, char* group);
 		int clientCommunication(char* username, char* group);	

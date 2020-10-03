@@ -20,18 +20,25 @@ Client::Client(char *ip_address, char *port)
 
 
 
-Packet buildPacket(char* username, char* group, string input)
+Packet Client::buildPacket(string username, char* group, string input)
 {
 	char messageBuffer[MESSAGE_MAX_SIZE] = {0};
 	char groupBuffer[GROUP_MAX_SIZE] = {0};
 	char usernameBuffer[USERNAME_MAX_SIZE] = {0};
 
-	strncpy(usernameBuffer, username, USERNAME_MAX_SIZE - 1);
+	strncpy(usernameBuffer, username.c_str(), USERNAME_MAX_SIZE - 1);
 	strncpy(groupBuffer, group, GROUP_MAX_SIZE - 1);
 	strncpy(messageBuffer, input.c_str(), MESSAGE_MAX_SIZE - 1); //Send message with maximum of 255 characters
-	return Packet(usernameBuffer, groupBuffer, messageBuffer);
+	
+	return Packet(usernameBuffer, groupBuffer, messageBuffer, time(0));
 }
 
+string Client::readInput()
+{
+	string input; 
+	cin >> input;
+	return input;
+}
 
 
 int Client::registerToServer(char* username, char* group)
@@ -39,7 +46,7 @@ int Client::registerToServer(char* username, char* group)
 	bool connectedClient = true;
 	Packet *sendingPacket = new Packet();
 
-	*sendingPacket = buildPacket(username, group, "");
+	*sendingPacket = buildPacket(this->username, group, "");
 
 	// Asking server if username already exists
 	sendPacket(sockfd, sendingPacket);
@@ -56,10 +63,14 @@ int Client::registerToServer(char* username, char* group)
 	return 0;
 }
 
-
+void Client::setUsername(char* username)
+{
+	this->username = username;
+}
 
 int Client::ConnectToServer(char* username, char* group)
 {
+	setUsername(username);
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
 		cout << "\n Socket creation error \n" << endl;
@@ -73,52 +84,79 @@ int Client::ConnectToServer(char* username, char* group)
 	}
 
 	return registerToServer(username, group);
-
-	//return 0;
 }
 
-
-
-int Client::clientCommunication(char* username, char* group)
+void Client::showMessage(Packet* receivedPacket)
 {
-	int n;
-	char input[255];
-	Packet *sendingPacket = new Packet();
-	int packetSize = sizeof(Packet);
+	string time, user, message;
+	if (strcmp(receivedPacket->username, this->username.c_str()) == 0)
+	{
+		user+= "[Você]:";
+	}
+
+	else
+	{
+		user+= "[";
+		user+= receivedPacket->username;
+		user+= "]:";
+	}
+
+	time_t timestamp = receivedPacket->timestamp;
+	tm *ltm = localtime(&timestamp);
+	time = to_string(ltm->tm_hour) + ":" + to_string(ltm->tm_min) + ":" + to_string(1 + ltm->tm_sec);
+
+	message+= time + " " + user + " " + receivedPacket->message;
+	cout << message << endl;
+}
+
+void * Client::receiveFromServer(void* args)
+{
+	Client* _this = (Client *) args;
 	bool connectedToServer = true;
 
 	while(connectedToServer)
     {
-		// Read input
-    	cout << "Enter the message: ";
-    	bzero(input, 255);
-
-    	if(fgets(input, 255, stdin) == NULL) // ctrl+d
-    	{
-    		break;
-    	}
-
-		// Prepare Packet struct to be sent
-		*sendingPacket = buildPacket(username, group, input);
-
-		//Send Packet struct via TCP socket
-		sendPacket(sockfd, sendingPacket);
-
-
 		// Listen from TCP connection in case a Packet is received
-		Packet* receivedPacket = readPacket(sockfd, &connectedToServer);
+		Packet* receivedPacket = _this->readPacket(_this->sockfd, &connectedToServer);
 
 		if (!connectedToServer)
 		{
-			// Free allocated memory for reading Packet
-			free(sendingPacket);
 			break;
 		}
 
-		cout << "[Server Message]: " << receivedPacket->message  << endl;
+		_this->showMessage(receivedPacket);
 	}
+}
 
-	cout << endl;
+void * Client::sendToServer(void* args)
+{
+	Client* _this = (Client *) args;
+	Packet *sendingPacket = new Packet();
+	while (true)
+	{
+		// Read input
+		string input = _this->readInput();
+
+		// Prepare Packet struct to be sent
+		*sendingPacket = _this->buildPacket(_this->username, "zimbaue", input);
+
+		//Send Packet struct via TCP socket
+		_this->sendPacket(_this->sockfd, sendingPacket);
+	}
+}
+
+int Client::clientCommunication(char* username, char* group)
+{
+	int n;
+	pthread_t receiverTid, senderTid;
+	char input[255];
+	int packetSize = sizeof(Packet);
+	bool connectedToServer = true;
+
+	pthread_create(&receiverTid, NULL, receiveFromServer, (void*) this);
+	pthread_create(&senderTid, NULL, sendToServer, (void*) this);
+	pthread_join(receiverTid, NULL);
+
 	close(sockfd);
 
 	return 0;
