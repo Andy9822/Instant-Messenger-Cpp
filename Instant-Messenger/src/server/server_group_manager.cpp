@@ -9,7 +9,7 @@ ServerGroupManager::ServerGroupManager()
 
 
 
-int ServerGroupManager::registerUserToServer(int socket, string username, string group)
+int ServerGroupManager::registerUserToGroup(int socket, string username, string group)
 {
 	bool userAlreadyExists = false;
 	User *newUser;
