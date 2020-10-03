@@ -153,7 +153,6 @@ int Server::registerUserToServer(void* args)
 
 int Server::handleClientConnection(pthread_t *tid)
 {
-	pthread_t registerUserThread;
 	int status;
 
 	// Allocate memory space to store value in heap and be able to use it after this function ends
