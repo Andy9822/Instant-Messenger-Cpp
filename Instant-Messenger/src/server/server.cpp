@@ -71,7 +71,7 @@ void Server::prepareConnection()
 	}
 
 	// Attach socket to server's port
-  if (bind(socket_fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
+  if (::bind(socket_fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
   {
 		cout << "ERROR on binding\n" << endl;
 		exit(1);
