@@ -1,5 +1,5 @@
 #include "../../include/client/client.h"
-
+#include "../../include/util/definitions.hpp"
 
 
 int validateName(char *name);
@@ -39,7 +39,7 @@ int validateName(char *name)
 {
     int nameLength = strlen(name);
 
-    if(nameLength > 3 && nameLength < 21)
+    if(nameLength > 3 && nameLength < USERNAME_MAX_SIZE + 1)
     {
         for(int i=0; i<nameLength; i++)
         {

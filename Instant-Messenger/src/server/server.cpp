@@ -116,8 +116,8 @@ int Server::registerUser(int socket, char* username, char* group)
 
 int Server::registerUserToServer(void* args)
 {
-	char username[20] = {0};
-	char group[20] = {0};
+	char username[USERNAME_MAX_SIZE] = {0};
+	char group[GROUP_MAX_SIZE] = {0};
 	
 	std::pair <int*,Server*>* args_pair = (std::pair <int*,Server*> *) args;
 	int client_socketfd = *(int *) args_pair->first;
@@ -129,8 +129,8 @@ int Server::registerUserToServer(void* args)
 	// getting client info
 	Packet* receivedPacket = _this->readPacket(client_socketfd, &connectedClient);
 
-	strncpy(username, receivedPacket->username, 20);
-    strncpy(group, receivedPacket->group, 20);
+	strncpy(username, receivedPacket->username, USERNAME_MAX_SIZE - 1);
+    strncpy(group, receivedPacket->group, GROUP_MAX_SIZE - 1);
 
     // checking if there are already 2 users with the same name registered
 	if(_this->registerUser(client_socketfd, username, group) < 0)

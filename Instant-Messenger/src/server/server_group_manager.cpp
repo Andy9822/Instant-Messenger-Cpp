@@ -20,8 +20,10 @@ int ServerGroupManager::registerUserToServer(int socket, string username, string
     	if((*user)->getUsername() == username)
     	{
     		if((*user)->registerSession(socket) < 0)
-    			return -1;
-
+			{
+				return -1;
+			}
+    			
     		addUserToGroup(*user, group);
     		userAlreadyExists = true;
 

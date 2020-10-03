@@ -22,13 +22,13 @@ Client::Client(char *ip_address, char *port)
 
 Packet buildPacket(char* username, char* group, string input)
 {
-	char messageBuffer[255] = {0};
-	char groupBuffer[20] = {0};
-	char usernameBuffer[20] = {0};
+	char messageBuffer[MESSAGE_MAX_SIZE] = {0};
+	char groupBuffer[GROUP_MAX_SIZE] = {0};
+	char usernameBuffer[USERNAME_MAX_SIZE] = {0};
 
-	strncpy(usernameBuffer, username, 20);
-	strncpy(groupBuffer, group, 20);
-	strncpy(messageBuffer, input.c_str(), 255); //Send message with maximum of 255 characters
+	strncpy(usernameBuffer, username, USERNAME_MAX_SIZE - 1);
+	strncpy(groupBuffer, group, GROUP_MAX_SIZE - 1);
+	strncpy(messageBuffer, input.c_str(), MESSAGE_MAX_SIZE - 1); //Send message with maximum of 255 characters
 	return Packet(usernameBuffer, groupBuffer, messageBuffer);
 }
 
