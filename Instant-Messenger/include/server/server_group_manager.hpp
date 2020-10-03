@@ -5,6 +5,7 @@
 #include <iostream>
 #include <map> 
 #include <list>
+#include <vector>
 
 using namespace std;
 
@@ -16,6 +17,7 @@ using namespace user;
 class ServerGroupManager {
 
 	private:
+    Semaphore semaphore;
 		list<User*> list_users;
 		multimap<string, User*> group;
     void addUserToGroup(User *user, string group);
@@ -23,9 +25,7 @@ class ServerGroupManager {
   public:
     ServerGroupManager();
     int registerUserToGroup(int socket, string username, string group);
-
-
-
+    std::vector<User*> getUsersByGroup(string group);
 
       //void sendMessage(Message message, User* users);
  
