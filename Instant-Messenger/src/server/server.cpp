@@ -109,7 +109,7 @@ void Server::printPortNumber()
 
 int Server::registerUser(int socket, char* username, char* group)
 {
-	return groupManager->registerUserToServer(socket, username, group);
+	return groupManager->registerUserToGroup(socket, username, group);
 }
 
 
