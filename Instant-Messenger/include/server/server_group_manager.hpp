@@ -1,23 +1,29 @@
+#include "../util/message.hpp"
+#include "../util/user.hpp"
+
 #include <string>
-#include "include/util/message.hpp"
-#include "include/util/user.hpp"
+#include <iostream>
+#include <map> 
+#include <list>
 
 using namespace std;
-using std::string;
-using namespace message;
-using namespace user;
-namespace servermessage {
 
-class ServerMessageManager {
+/*using std::string;
+using namespace message;*/
+using namespace user;
+
+
+class ServerGroupManager {
+
+	private:
+		list<User*> list_users;
+		multimap<string, User*> group;
 
     public:
-        ServerMessageManager();
- 
-        /*
-        * This method is responsible for sending the messages to the
-        * communication layer
-        */
-        void sendMessage(Message message, User* users);
+        ServerGroupManager();
+        int registerUserToServer(int socket, string username, string group);
+ 		void addUserToGroup(User *user, string group);
+
+        //void sendMessage(Message message, User* users);
  
 };
-}  //namespace clientmessagemanager

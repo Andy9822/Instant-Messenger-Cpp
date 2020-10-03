@@ -27,6 +27,7 @@ class Client : public Socket
 		UserInteface userInteface;
 	public:
 		Client(char *ip_address, char *port);
-		int ConnectToServer();
-		int clientCommunication(char* group);	
+		int ConnectToServer(char* username, char* group);
+		int registerToServer(char* username, char* group);
+		int clientCommunication(char* username, char* group);	
 };
