@@ -41,7 +41,7 @@ int User::registerSession(int socket) {
     for (int i = 0; i < NUMBER_OF_SIMULTANEOUS_CONNECTIONS; i++) {
         if (this->sockets[i] == 0){
             this->sockets[i] = socket;
-            this->semaphore.post();
+            // this->semaphore.post();
             return 0;
         }
     }
