@@ -18,12 +18,15 @@ class ServerGroupManager {
 	private:
 		list<User*> list_users;
 		multimap<string, User*> group;
+    void addUserToGroup(User *user, string group);
 
-    public:
-        ServerGroupManager();
-        int registerUserToServer(int socket, string username, string group);
- 		void addUserToGroup(User *user, string group);
+  public:
+    ServerGroupManager();
+    int registerUserToGroup(int socket, string username, string group);
 
-        //void sendMessage(Message message, User* users);
+
+
+
+      //void sendMessage(Message message, User* users);
  
 };
