@@ -33,7 +33,7 @@ class Server: public Socket
 		void setPort(int port);
 		void prepareConnection();
 		void printPortNumber();
-		static int registerUserToServer(void* socket);
+		int registerUserToServer(void* socket);
 		int registerUser(int socket, char* username, char* group);
 		int handleClientConnection(pthread_t *tid);
 		static void* clientCommunication(void *newsocket);
