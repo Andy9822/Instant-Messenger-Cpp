@@ -6,7 +6,6 @@ namespace user{
 
 
 User::User(string username) : semaphore(1) {
-    cout << "Semaphore number (User constructor): " << &this->semaphore << endl;
     this->initSessionList();
     this->username = username;
 }
@@ -35,7 +34,6 @@ void User::getActiveSockets(int* activeSocketsResult) {
 }
 
 int User::registerSession(int socket) {
-    cout << "Semaphore number (registerSession): " << &this->semaphore << endl;
     this->semaphore.wait();
     for (int i = 0; i < NUMBER_OF_SIMULTANEOUS_CONNECTIONS; i++) {
         if (this->sockets[i] == 0){
