@@ -1,5 +1,11 @@
 #include "../../include/server/server.h"
 
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <unistd.h>
+#endif
+
 vector<int> Server::openSockets;
 sem_t Server::semaphore;
 
@@ -200,6 +206,10 @@ int Server::handleClientConnection(pthread_t *tid)
 
 	pthread_create(tid, NULL, clientCommunication , (void*) args);
 
+	sleep(5);
+
+	groupManager->getUsersByGroup("SampleRoom");
+
 	return 0;
 }
 
@@ -224,7 +234,6 @@ void* Server::clientCommunication(void *args)
 	bool connectedClient = true;
 	while(connectedClient)
 	{
-		
 		// Listen for an incoming Packet from client
 		Packet* receivedPacket = _this->readPacket(client_socketfd, &connectedClient);
 		if (!connectedClient)
@@ -241,6 +250,8 @@ void* Server::clientCommunication(void *args)
 
 		Packet* sendingPacket = new Packet(receivedPacket->username, receivedPacket->group, (char*)"Recebi sua mensagem!");
 		_this->sendPacket(client_socketfd, sendingPacket);
+
+		
 	}
 
 	
