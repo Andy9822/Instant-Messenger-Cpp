@@ -114,9 +114,8 @@ int Server::registerUser(int socket, char* username, char* group)
 
 
 
-void* Server::registerUserToServer(void* args)
+int Server::registerUserToServer(void* args)
 {
-	int *status = (int *) calloc(1,sizeof(int));
 	char username[20] = {0};
 	char group[20] = {0};
 	
@@ -139,15 +138,15 @@ void* Server::registerUserToServer(void* args)
 		pack->clientSocket = -1;
 		_this->sendPacket(client_socketfd, pack);
 		delete pack;
-		*status = -1;
-		return status;
+		return -1;
+
 	}
 
 	pack->clientSocket = 0;
 	_this->sendPacket(client_socketfd, pack);
 	delete pack;
 
-	return status;
+	return 0;
 }
 
 
@@ -155,7 +154,7 @@ void* Server::registerUserToServer(void* args)
 int Server::handleClientConnection(pthread_t *tid)
 {
 	pthread_t registerUserThread;
-	int *status;
+	int status;
 
 	// Allocate memory space to store value in heap and be able to use it after this function ends
 	int* newsockfd = (int *) calloc(1,sizeof(int));
@@ -172,12 +171,13 @@ int Server::handleClientConnection(pthread_t *tid)
 	std::pair <int*,Server*>* user = (std::pair <int*,Server*>*) calloc(1,sizeof(std::pair <int*,Server*>));
 	user->first = newsockfd;
 	user->second = this;
-	pthread_create(&registerUserThread, NULL, registerUserToServer , user);
-	pthread_join(registerUserThread, (void **) &status);
+
+	status = this->registerUserToServer(user);
+	
 	free(user);
 
 	// if there are already two users with the same name -> close and ignore connection
-	if(*status < 0)
+	if(status < 0)
 	{
 		close(*newsockfd);
 		return 0;
