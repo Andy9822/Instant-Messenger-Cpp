@@ -1,3 +1,5 @@
+#ifndef MESSAGE_HPP
+#define MESSAGE_HPP
 #include <string>
 #include <ctime>
 
@@ -27,3 +29,6 @@ class Message {
         void setTime(long int time);
 };
 }  //namespace message
+
+
+#endif
