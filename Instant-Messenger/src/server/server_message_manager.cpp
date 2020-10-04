@@ -5,8 +5,9 @@ namespace servermessagemanager {
 
     void ServerMessageManager::broadcastMessageToUsers(Message message, std::list<User *> users)
     {
-        //todo: verify how to only call sockets for correct group
-        //todo: how to display message for the one who sent it
+        //todo: verify how to only call sockets for correct group,
+        // as we don't have information between groups and sockets at this moment
+
         Packet* sendingPacket = new Packet((char*)message.getUser().c_str(), (char*)message.getGroup().c_str(), (char*)message.getText().c_str());
         cout << "Packet: " << sendingPacket ->username << "  " << sendingPacket -> group << "  " << sendingPacket -> message << " TO--> \n";
 
@@ -17,7 +18,7 @@ namespace servermessagemanager {
             cout << "socket: " << activeSockets[0] << "  \n";
             cout << "socket: " << activeSockets[1] << "  \n";
             for (int i = 0; i < NUMBER_OF_SIMULTANEOUS_CONNECTIONS ; i++) {
-                if (activeSockets[i] != 0) {
+                if (activeSockets[i] != 0 && (*userItr)->getUsername() != message.getUser()) {
                     sendPacket(activeSockets[i], sendingPacket);
                 }
             }
