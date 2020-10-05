@@ -20,14 +20,14 @@ Client::Client(char *ip_address, char *port)
 
 
 
-Packet Client::buildPacket(string username, char* group, string input)
+Packet Client::buildPacket(string input)
 {
 	char messageBuffer[MESSAGE_MAX_SIZE] = {0};
 	char groupBuffer[GROUP_MAX_SIZE] = {0};
 	char usernameBuffer[USERNAME_MAX_SIZE] = {0};
 
-	strncpy(usernameBuffer, username.c_str(), USERNAME_MAX_SIZE - 1);
-	strncpy(groupBuffer, group, GROUP_MAX_SIZE - 1);
+	strncpy(usernameBuffer, this->username.c_str(), USERNAME_MAX_SIZE - 1);
+	strncpy(groupBuffer, this->group.c_str(), GROUP_MAX_SIZE - 1);
 	strncpy(messageBuffer, input.c_str(), MESSAGE_MAX_SIZE - 1); //Send message with maximum of 255 characters
 	
 	return Packet(usernameBuffer, groupBuffer, messageBuffer, time(0));
@@ -41,12 +41,12 @@ string Client::readInput()
 }
 
 
-int Client::registerToServer(char* username, char* group)
+int Client::registerToServer()
 {
 	bool connectedClient = true;
 	Packet *sendingPacket = new Packet();
 
-	*sendingPacket = buildPacket(this->username, group, "");
+	*sendingPacket = buildPacket("");
 
 	// Asking server if username already exists
 	sendPacket(sockfd, sendingPacket);
@@ -68,9 +68,14 @@ void Client::setUsername(char* username)
 	this->username = username;
 }
 
+void Client::setGroup(char* group) {
+	this->group = group;
+}
+
 int Client::ConnectToServer(char* username, char* group)
 {
 	setUsername(username);
+	setGroup(group);
 	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 	{
 		cout << "\n Socket creation error \n" << endl;
@@ -83,7 +88,7 @@ int Client::ConnectToServer(char* username, char* group)
         return -1;
 	}
 
-	return registerToServer(username, group);
+	return registerToServer();
 }
 
 void Client::showMessage(Packet* receivedPacket)
@@ -138,14 +143,14 @@ void * Client::sendToServer(void* args)
 		string input = _this->readInput();
 
 		// Prepare Packet struct to be sent
-		*sendingPacket = _this->buildPacket(_this->username, "zimbaue", input);
+		*sendingPacket = _this->buildPacket(input);
 
 		//Send Packet struct via TCP socket
 		_this->sendPacket(_this->sockfd, sendingPacket);
 	}
 }
 
-int Client::clientCommunication(char* username, char* group)
+int Client::clientCommunication()
 {
 	int n;
 	pthread_t receiverTid, senderTid;
