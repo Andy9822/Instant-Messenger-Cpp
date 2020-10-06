@@ -8,7 +8,7 @@ namespace servermessagemanager {
         //todo: verify how to only call sockets for correct group,
         // as we don't have information between groups and sockets at this moment
 
-        Packet* sendingPacket = new Packet((char*)message.getUser().c_str(), (char*)message.getGroup().c_str(), (char*)message.getText().c_str());
+        Packet* sendingPacket = new Packet((char*)message.getUser().c_str(), (char*)message.getGroup().c_str(), (char*)message.getText().c_str(), message.getTime());
         //cout << "Packet: " << sendingPacket ->username << "  " << sendingPacket -> group << "  " << sendingPacket -> message << " TO--> \n";
 
         for (auto userItr = users.begin(); userItr != users.end(); userItr++) {
@@ -18,7 +18,8 @@ namespace servermessagemanager {
             //cout << "socket: " << activeSockets[0] << "  \n";
             //cout << "socket: " << activeSockets[1] << "  \n";
             for (int i = 0; i < NUMBER_OF_SIMULTANEOUS_CONNECTIONS ; i++) {
-                if (activeSockets[i] != 0) {
+                //TODO: VERIFY IF SOCKET IS FROM SAME GROUP
+                if (activeSockets[i] != 0 /*activeSockets.value == message.getGroup()*/) {
                     sendPacket(activeSockets[i], sendingPacket);
                 }
             }

@@ -35,8 +35,14 @@ Packet Client::buildPacket(string input)
 
 string Client::readInput()
 {
-	string input; 
-	cin >> input;
+    char input[255];
+    bzero(input, 255);
+
+    if(fgets(input, 255, stdin) == NULL) // ctrl+d
+    {
+        exit(0);
+    }
+
 	return input;
 }
 

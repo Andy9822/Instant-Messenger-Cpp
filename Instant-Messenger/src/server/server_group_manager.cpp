@@ -69,9 +69,9 @@ namespace servergroupmanager {
         Message receivedMessage = Message(packet->message, packet->username, packet->group, std::time(0));
         std::list<User*> users = getUsersByGroup(receivedMessage.getGroup());
 
-        cout << "debug entering appendGroupMessageToHistory \n";
+        //cout << "debug entering appendGroupMessageToHistory \n";
         fileSystemManager->appendGroupMessageToHistory(receivedMessage);
-        cout << "debug entering broadcastMessageToUsers \n";
+        //cout << "debug entering broadcastMessageToUsers \n";
         messageManager->broadcastMessageToUsers(receivedMessage, users);
     }
 }
