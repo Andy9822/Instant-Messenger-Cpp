@@ -3,6 +3,7 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <boost/algorithm/string.hpp>
 
 using namespace std::chrono;
 
@@ -21,8 +22,7 @@ void FileSystemManager::appendGroupMessageToHistory(Message message) {
     std::stringstream groupFile;
     std::stringstream messageContent;
     string messageTextTreated = message.getText();
-    messageTextTreated.erase(std::remove(messageTextTreated.begin(), messageTextTreated.end(), '\n'), messageTextTreated.end());
-
+    boost::erase_all(messageTextTreated, "\n");
     groupFile << MESSAGES_BASE_PATH << PATH_SEPARATOR << message.getGroup() << FILE_EXTENSION;
     messageContent << message.getUser() << FILE_SEPARATOR;
     messageContent << messageTextTreated << FILE_SEPARATOR;
