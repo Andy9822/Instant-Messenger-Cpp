@@ -25,7 +25,7 @@ namespace user {
 
     int User::registerSession(pair<const int, basic_string<char>> socket) {
         this->semaphore.wait();
-        if (this->sockets->size() < 2) {
+        if (this->sockets->size() < NUMBER_OF_SIMULTANEOUS_CONNECTIONS) {
             this->sockets->insert(socket);
             this->semaphore.post();
             return 0;
