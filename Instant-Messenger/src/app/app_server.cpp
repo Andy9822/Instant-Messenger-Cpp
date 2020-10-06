@@ -1,4 +1,4 @@
-#include "../../include/server/server.h"
+#include "../../include/server/server.hpp"
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -7,15 +7,16 @@
 //#define PORT 4040
 
 using namespace std;
+using namespace server;
 
-Server server;
+Server serverApp;
 struct sigaction sigIntHandler;
 
 void my_handler(int signal){
 	if (signal == 2)
 	{
 		//TODO have to investigate why even closing sockets still hang outs if there are open connections
-		server.closeServer();
+        serverApp.closeServer();
 		exit(2);
 	}	
 }
@@ -54,13 +55,13 @@ int main(int argc, char *argv[])
 
 
 	int port = read_port(argc, argv);
-	server.setPort(port);
-	server.prepareConnection();
-	server.printPortNumber();
+    serverApp.setPort(port);
+    serverApp.prepareConnection();
+    serverApp.printPortNumber();
 
 	while(1)
 	{
-		if(server.handleClientConnection(&tid[i++]) < 0)
+		if(serverApp.handleClientConnection(&tid[i++]) < 0)
 			return -1;
 	}
 
