@@ -189,7 +189,7 @@ namespace server {
         return 0;
     }
 
-    std::cout << "client connected  with socket: " << *newsockfd << std::endl;
+    std::cout << "client connected with socket: " << *newsockfd << std::endl;
 
     // Store new crated socket in the vector of existing connections sockets
     wait_semaphore();
@@ -219,13 +219,13 @@ namespace server {
     // We cast our receveid void* args to a pair*
     std::pair <int*,Server*>* args_pair = (std::pair <int*,Server*> *) args;
 
-    // Read value of the socket pointer and free the previously allocated memory in the main thread
+    // Read socket pointer's value and free the previously allocated memory in the main thread
     int client_socketfd = *(int *) args_pair->first;
     free(args_pair->first);
 
     // Create a reference of the instance in this thread
     Server* _this = (Server *)  args_pair->second;
-    _this->printPortNumber();
+
 
     // Free pair created for sending arguments
     free(args_pair);
@@ -250,7 +250,6 @@ namespace server {
 
         /*cout << "Room: " << receivedPacket->group  << endl;
         cout << "[Message]: " << receivedPacket->message  << endl;
-
 
         Packet* sendingPacket = new Packet(receivedPacket->username, receivedPacket->group, (char*)"Recebi sua mensagem!");
         _this->sendPacket(client_socketfd, sendingPacket);*/
@@ -299,6 +298,4 @@ namespace server {
     {
     sem_post(&semaphore);
     }
-
-
 }

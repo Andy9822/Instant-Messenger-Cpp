@@ -18,8 +18,7 @@ void my_handler(int signal){
 		//TODO have to investigate why even closing sockets still hang outs if there are open connections
         serverApp.closeServer();
 		exit(2);
-	}
-	
+	}	
 }
 
 void capture_signals()
@@ -31,7 +30,8 @@ void capture_signals()
 }
 
 int read_port(int argc, char *argv[])
-{	int port = 0; //Set any available port as default
+{	
+	int port = 0; //Set any available port as default
 
 	if(argc == 2)
     {
@@ -47,7 +47,6 @@ int read_port(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-
 	// Capture and process SO signals
 	capture_signals();
 
