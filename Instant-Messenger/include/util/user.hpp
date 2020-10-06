@@ -4,6 +4,7 @@
 #include <string>
 #include <ctime>
 #include <list>
+#include <map>
 #include "exceptions.hpp"
 #include "Semaphore.hpp"
 
@@ -18,22 +19,20 @@ class User {
 
     private:
         string username;
-        // this list of sockets can only have two items
-        //TODO: CONVERT THIS TO A LIST OF OBJ OR MAP CONTAINING (GROUP, SOCKET_ID)
-        int sockets[NUMBER_OF_SIMULTANEOUS_CONNECTIONS];
+        std::map<int, string> *sockets;
         Semaphore semaphore;
     
     public:
         User(string username);
         string getUsername();
-        void getActiveSockets(int* activeSocketsResult);
+        std::map<int, std::string> * getActiveSockets();
 
         /*
         * Method to register a socket linked to a user
         * throws USER_SESSIONS_LIMIT_REACHED if the addition 
         * was not created due to limitation reached
         */
-        int registerSession(int socket);
+        int registerSession(pair<const int, basic_string<char>> socket);
         void releaseSession(int socket);
         void initSessionList();
 
