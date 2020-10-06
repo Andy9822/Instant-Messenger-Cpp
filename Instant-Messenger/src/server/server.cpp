@@ -244,17 +244,7 @@ namespace server {
         }
 
         _this->groupManager->processReceivedPacket(receivedPacket);
-
-        // CALL MESSAGE MANAGER TO MANAGE RECEIVED PACKETS
-        //ServerMessageManager::manageReceivedPacket(receivedPacket/*, _this*/);
-
-        /*cout << "Room: " << receivedPacket->group  << endl;
-        cout << "[Message]: " << receivedPacket->message  << endl;
-
-        Packet* sendingPacket = new Packet(receivedPacket->username, receivedPacket->group, (char*)"Recebi sua mensagem!");
-        _this->sendPacket(client_socketfd, sendingPacket);*/
     }
-
 
     // Close all properties related to client connection
     _this->closeClientCommunication(client_socketfd);
@@ -271,6 +261,14 @@ namespace server {
     wait_semaphore();
     // std::cout << client_socket << " entrou SC" << std::endl;
     openSockets.erase(std::remove(openSockets.begin(), openSockets.end(), client_socket), openSockets.end());
+
+    //TODO: REMOVE SOCKET FROM USER SOCKET LIST
+    //TODO: METHOD TO SEARCH FOR USER BASED ON SOCKET ID
+    //TODO: IF USER HAS NO MORE ACTIVE SOCKETS, REMOVE IT FROM GROUP LIST AND USER LIST
+
+    //todo: CLEAN GROUP AND USER LIST from this user
+    //TODO: IF STILL HAS ONE SESSION REMAINING, ONLY CLEAN GROUP LIST FOR THAT SPECIFIC SOCKET
+
     // std::cout << client_socket << " liberando SC" << std::endl;
     post_semaphore();
 

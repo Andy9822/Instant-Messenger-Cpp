@@ -19,6 +19,7 @@ class User {
     private:
         string username;
         // this list of sockets can only have two items
+        //TODO: CONVERT THIS TO A LIST OF OBJ OR MAP CONTAINING (GROUP, SOCKET_ID)
         int sockets[NUMBER_OF_SIMULTANEOUS_CONNECTIONS];
         Semaphore semaphore;
     
