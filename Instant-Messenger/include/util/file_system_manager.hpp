@@ -5,11 +5,12 @@
 #include <fstream>
 #include <vector>
 #include "message.hpp"
+#include "Semaphore.hpp"
 
 
-#define MESSAGES_BASE_PATH "../../messages"
+#define MESSAGES_BASE_PATH "messages"
 #define FILE_EXTENSION ".csv"
-#define FILE_SEPARATOR ","
+#define FILE_SEPARATOR ','
 #define PATH_SEPARATOR "/"
 
 using namespace std;
@@ -19,10 +20,14 @@ using namespace message;
 namespace filesystemmanager {
 
 class FileSystemManager {
+
+    private: 
+        Semaphore semaphore;
+
     public: 
         FileSystemManager();
         void prepareDirectory();
         void appendGroupMessageToHistory(Message message);
-        std::vector<std::vector<std::string>> readGroupHistoryMessages(string groupName);        
+        std::vector< std::vector<std::string> > readGroupHistoryMessages(string groupName);        
 };
 } // namespace filesystemmanager;
