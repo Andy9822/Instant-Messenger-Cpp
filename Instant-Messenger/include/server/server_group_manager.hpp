@@ -28,7 +28,7 @@ namespace servergroupmanager {
         FileSystemManager *fileSystemManager;
         Semaphore semaphore;
         list<User*> list_users;
-        multimap<string, User*> group;
+        multimap<string, User*> groups;
         void addUserToGroup(User *user, string group);
         std::list<User*> getUsersByGroup(string group);
 
