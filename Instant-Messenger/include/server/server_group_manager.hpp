@@ -31,11 +31,17 @@ namespace servergroupmanager {
         multimap<string, User*> groups;
         void addUserToGroup(User *user, string group);
         std::list<User*> getUsersByGroup(string group);
+        User * getUserBySocketId(int socketId);
+        void removeUserFromListOfUsers(User *user);
+        void disconnectSocket(User *user, int socketId);
 
       public:
         ServerGroupManager();
         int registerUserToGroup(int socket, string username, string groupName);
         void processReceivedPacket(Packet* packet);
+        void disconnectUser(int socketId);
+        void printListOfUsers();
+        void printListOfGroups();
     };
 }
 #endif

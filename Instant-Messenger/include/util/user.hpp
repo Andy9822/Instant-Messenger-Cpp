@@ -36,6 +36,10 @@ class User {
         void releaseSession(int socket);
         void initSessionList();
 
+        bool operator == (const User& s) const { return username == s.username; }
+        bool operator != (const User& s) const { return !operator==(s); }
+
+        void printSockets();
         
 };
 }  //namespace user;
