@@ -14,6 +14,8 @@ jobs:
         working-directory: Instant-Messenger
 
     steps:
+    - name: Install libboost-dev
+      run: sudo apt-get install libboost-dev
     - uses: actions/checkout@v2
     - name: make
       run: make
