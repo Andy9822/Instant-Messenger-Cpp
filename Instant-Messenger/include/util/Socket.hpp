@@ -1,3 +1,6 @@
+#ifndef SOCKET_HPP
+#define SOCKET_HPP
+
 #include <stdint.h>
 #include <sys/socket.h>
 #include <stdlib.h>
@@ -13,3 +16,5 @@ class Socket
 		Packet* readPacket(int client_socketfd, bool* connectedClient);
         int sendPacket(int socket_fd, Packet* mypacket);
 };
+
+#endif
