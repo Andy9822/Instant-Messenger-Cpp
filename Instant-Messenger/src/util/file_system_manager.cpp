@@ -22,7 +22,7 @@ void FileSystemManager::appendGroupMessageToHistory(Message message) {
     std::stringstream groupFile;
     std::stringstream messageContent;
     string messageTextTreated = message.getText();
-    boost::erase_all(messageTextTreated, "\n");
+
     groupFile << MESSAGES_BASE_PATH << PATH_SEPARATOR << message.getGroup() << FILE_EXTENSION;
     messageContent << message.getUser() << FILE_SEPARATOR;
     messageContent << messageTextTreated << FILE_SEPARATOR;

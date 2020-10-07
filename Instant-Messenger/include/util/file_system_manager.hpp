@@ -10,7 +10,7 @@
 
 #define MESSAGES_BASE_PATH "messages"
 #define FILE_EXTENSION ".csv"
-#define FILE_SEPARATOR ','
+#define FILE_SEPARATOR (char) 31
 #define PATH_SEPARATOR "/"
 
 using namespace std;
