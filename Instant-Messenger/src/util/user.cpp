@@ -2,60 +2,41 @@
 #include <sstream>
 #include <iostream>
 
-namespace user{
-
-
-User::User(string username) : semaphore(1) {
-    this->initSessionList();
-    this->username = username;
-}
-
-void User::initSessionList() {
-    this->semaphore.wait();
-    for (int i = 0; i < NUMBER_OF_SIMULTANEOUS_CONNECTIONS; i++) {
-        this->sockets[i] = 0;
+namespace user {
+    User::User(string username) : semaphore(1) {
+        this->initSessionList();
+        this->username = username;
     }
-    this->semaphore.post();
-}
 
-
-string User::getUsername() {
-    return this->username;
-}
-
-void User::getActiveSockets(int* activeSocketsResult) {
-    this->semaphore.wait();
-    for (int i = 0; i < NUMBER_OF_SIMULTANEOUS_CONNECTIONS ; i++) {
-        if (this->sockets[i] != 0) {
-            activeSocketsResult[i] = this->sockets[i];
-        }
+    void User::initSessionList() {
+        this->semaphore.wait();
+        this->sockets = new std::map<int, string>();
+        this->semaphore.post();
     }
-    this->semaphore.post();
-}
 
-int User::registerSession(int socket) {
-    this->semaphore.wait();
-    for (int i = 0; i < NUMBER_OF_SIMULTANEOUS_CONNECTIONS; i++) {
-        if (this->sockets[i] == 0){
-            this->sockets[i] = socket;
+
+    string User::getUsername() {
+        return this->username;
+    }
+
+    std::map<int, std::string> *User::getActiveSockets() {
+        return sockets;
+    }
+
+    int User::registerSession(pair<const int, basic_string<char>> socket) {
+        this->semaphore.wait();
+        if (this->sockets->size() < NUMBER_OF_SIMULTANEOUS_CONNECTIONS) {
+            this->sockets->insert(socket);
             this->semaphore.post();
             return 0;
         }
+        this->semaphore.post();
+        return -1;
     }
-    this->semaphore.post();
-    return  -1;
-}
 
-void User::releaseSession(int socket) {
-    this->semaphore.wait();
-    for (int i = 0; i < NUMBER_OF_SIMULTANEOUS_CONNECTIONS; i++) {
-        if (this->sockets[i] == socket){
-            this->sockets[i] = 0;
-            this->semaphore.post();
-            return;
+    void User::printSockets() {
+        for (auto const &socket : *sockets) {
+            cout << "printsockt::Socket: " << socket.first << " from group: " << socket.second << endl;
         }
     }
-    this->semaphore.post();
-}
-
 } // namespace user;
