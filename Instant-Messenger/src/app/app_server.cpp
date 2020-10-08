@@ -29,33 +29,40 @@ void capture_signals()
 	sigaction(SIGINT, &sigIntHandler, NULL);
 }
 
-int read_port(int argc, char *argv[])
+void read_args(int argc, char *argv[], int *port, int *maxNumberOfMessagesInHistory)
 {	
-	int port = 0; //Set any available port as default
+	*port = RANDOM_PORT_NUMBER; //Set any available port as default
+	*maxNumberOfMessagesInHistory = DEFAULT_NUMBER_OF_RECORDED_MESSAGES;
 
-	if(argc == 2)
+	if(argc == 3)
     {
 			try {
-				port = stoi(argv[1]); // In case it's received a specific port as argv
+				*port = stoi(argv[1]); // In case it's received a specific port as argv
+                *maxNumberOfMessagesInHistory = stoi(argv[2]);
 			}
 			catch(std::invalid_argument e) {
+                cout << "[ERROR] Invalid arguments" << endl;
 			}
-    }
+    } else {
+	    cout << "[WARNING] using random port and " << DEFAULT_NUMBER_OF_RECORDED_MESSAGES << "messages on history" << endl;
+	}
 
-	return port;
+    cout << "[DEBUG] BROOOOOOOOOOOO " << *maxNumberOfMessagesInHistory << "messages on history" << endl;
+
 }
 
 int main(int argc, char *argv[])
 {
-	// Capture and process SO signals
+    int i = 0;
+    int port, maxNumberOfMessagesInHistory;
+    // Capture and process SO signals
 	capture_signals();
 
 	pthread_t tid[MAXBACKLOG];
-	int i = 0;
 
-
-	int port = read_port(argc, argv);
+	read_args(argc, argv, &port, &maxNumberOfMessagesInHistory);
     serverApp.setPort(port);
+    serverApp.configureFilesystemManager(maxNumberOfMessagesInHistory);
     serverApp.prepareConnection();
     serverApp.printPortNumber();
 

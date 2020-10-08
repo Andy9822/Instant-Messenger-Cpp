@@ -28,44 +28,28 @@ namespace server {
         ServerGroupManager *groupManager;
         int socket_fd;
         struct sockaddr_in serv_addr;
+        void closeClientCommunication(int client_socket);
         //TODO maybe remove static and evaluate how to share vector between threads
-    public:
-        static std::vector<int> openSockets;
-        static sem_t semaphore;
 
     public:
         Server();
-
-        void setPort(int port);
-
-        void prepareConnection();
-
-        void printPortNumber();
-
-        int registerUserToServer(void *socket);
-
-        int registerUser(int socket, char *username, char *group);
-
-        int handleClientConnection(pthread_t *tid);
-
+        static std::vector<int> openSockets;
+        static sem_t semaphore;
         static void *clientCommunication(void *newsocket);
-
         static void closeClientConnection(int socket_fd);
-
+        void setPort(int port);
+        void prepareConnection();
+        void printPortNumber();
+        int registerUserToServer(void *socket);
+        int registerUser(int socket, char *username, char *group);
+        int handleClientConnection(pthread_t *tid);
         void closeConnections();
-
         void closeSocket();
-
         void closeServer();
-
         void init_semaphore();
-
         void wait_semaphore();
-
         void post_semaphore();
-
-    private:
-        void closeClientCommunication(int client_socket);
+        void configureFilesystemManager(int maxNumberOfMessagesInHistory);
     };
 }
 #endif
