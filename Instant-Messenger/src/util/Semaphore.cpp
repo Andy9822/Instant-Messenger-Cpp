@@ -12,7 +12,7 @@ Semaphore::Semaphore(int init) {
 
 void Semaphore::wait() {
     unique_lock<mutex> lck(m_mux);
-    // make us wait
+
     if (--m_value < 0) {
         m_waitcond.wait(lck);
     }
