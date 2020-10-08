@@ -131,6 +131,8 @@ namespace server {
         _this->sendPacket(client_socketfd, pack);
         delete pack;
 
+        groupManager->processReceivedPacket(receivedPacket);
+
         return 0;
     }
 
@@ -210,6 +212,7 @@ namespace server {
             // Listen for an incoming Packet from client
             Packet *receivedPacket = _this->readPacket(client_socketfd, &connectedClient);
             if (!connectedClient) {
+
                 // Free allocated memory for reading Packet
                 free(receivedPacket);
 
