@@ -144,4 +144,8 @@ namespace servergroupmanager {
             cout << "Group: " << group.first << " with User: " << group.second->getUsername() << endl;
         }
     }
+
+    void ServerGroupManager::configureFileSystemManager(int maxNumberOfMessagesOnHistory) {
+        this->fileSystemManager->setMaxNumberOfMessagesInHistory(maxNumberOfMessagesOnHistory);
+    }
 }

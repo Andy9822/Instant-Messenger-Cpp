@@ -28,7 +28,6 @@ namespace server {
         ServerGroupManager *groupManager;
         int socket_fd;
         struct sockaddr_in serv_addr;
-        int maxNumberOfMessagesInHistory;
         void closeClientCommunication(int client_socket);
         //TODO maybe remove static and evaluate how to share vector between threads
 
@@ -50,6 +49,7 @@ namespace server {
         void init_semaphore();
         void wait_semaphore();
         void post_semaphore();
+        void configureFilesystemManager(int maxNumberOfMessagesInHistory);
     };
 }
 #endif

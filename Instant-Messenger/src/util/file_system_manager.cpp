@@ -2,7 +2,6 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
-#include <chrono>
 
 using namespace std::chrono;
 
@@ -64,5 +63,13 @@ std::vector<std::vector<std::string> > FileSystemManager::readGroupHistoryMessag
 
     return parsedCsv;
 }
+
+    int FileSystemManager::getMaxNumberOfMessagesInHistory() {
+        return this->maxNumberOfMessagesInHistory;
+    }
+
+    void FileSystemManager::setMaxNumberOfMessagesInHistory(int value) {
+        this->maxNumberOfMessagesInHistory = value;
+    }
 
 } // namespace filesystemmanager;

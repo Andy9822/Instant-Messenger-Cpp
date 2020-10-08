@@ -2,6 +2,10 @@
 #define DEFAULT_NUMBER_OF_RECORDED_MESSAGES 10
 #endif
 
+#ifndef RANDOM_PORT_NUMBER
+#define RANDOM_PORT_NUMBER 0
+#endif
+
 #ifndef USERNAME_MAX_SIZE
 #define USERNAME_MAX_SIZE 20
 #endif
