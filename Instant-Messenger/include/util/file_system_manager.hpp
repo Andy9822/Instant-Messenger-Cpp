@@ -28,8 +28,9 @@ class FileSystemManager {
 
     public: 
         FileSystemManager();
+        void prepareDirectory();
         void appendGroupMessageToHistory(Message message);
-        std::vector< std::vector<std::string> > readGroupHistoryMessages(string groupName);
+        std::vector< Message > readGroupHistoryMessages(string groupName);
         int getMaxNumberOfMessagesInHistory();
         void setMaxNumberOfMessagesInHistory(int value);
 };
