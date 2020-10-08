@@ -34,6 +34,8 @@ void FileSystemManager::appendGroupMessageToHistory(Message message) {
     semaphore.post();
 }
 
+
+
 std::vector<Message> FileSystemManager::readGroupHistoryMessages(string groupName) {
     semaphore.wait();
     std::string line;
