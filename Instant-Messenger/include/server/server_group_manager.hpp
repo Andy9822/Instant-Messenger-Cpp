@@ -42,6 +42,7 @@ namespace servergroupmanager {
         void disconnectUser(int socketId);
         void printListOfUsers();
         void printListOfGroups();
+        void configureFileSystemManager(int maxNumberOfMessagesOnHistory);
     };
 }
 #endif

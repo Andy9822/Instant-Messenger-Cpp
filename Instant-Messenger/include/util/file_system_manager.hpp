@@ -23,11 +23,15 @@ class FileSystemManager {
 
     private: 
         Semaphore semaphore;
+        int maxNumberOfMessagesInHistory;
+        void cropToFileHistoryLimit(string group);
 
     public: 
         FileSystemManager();
         void prepareDirectory();
         void appendGroupMessageToHistory(Message message);
         std::vector< Message > readGroupHistoryMessages(string groupName);
+        int getMaxNumberOfMessagesInHistory();
+        void setMaxNumberOfMessagesInHistory(int value);
 };
 } // namespace filesystemmanager;
