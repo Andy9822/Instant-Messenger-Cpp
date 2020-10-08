@@ -3,7 +3,7 @@ INC_DIR=./include
 BIN_DIR=./bin
 SRC_DIR=./src
 BUILD_DIR=./build
-SERVER_PORT=4041
+SERVER_PORT=4040
 
 all: build-server build-client
 
@@ -18,7 +18,7 @@ run-client:
 	$(BUILD_DIR)/client.app JohnnyUser2 SampleRoom2 127.0.0.1 $(SERVER_PORT)
 
 run-server:
-	$(BUILD_DIR)/server.app $(SERVER_PORT) 32
+	$(BUILD_DIR)/server.app $(SERVER_PORT) 4
 
 clean:
 	rm -rf $(SRC_DIR)/*~ $(INC_DIR)/*~ client server *~

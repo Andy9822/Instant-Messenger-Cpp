@@ -24,10 +24,10 @@ class FileSystemManager {
     private: 
         Semaphore semaphore;
         int maxNumberOfMessagesInHistory;
+        void cropToFileHistoryLimit(string group);
 
     public: 
         FileSystemManager();
-        void prepareDirectory();
         void appendGroupMessageToHistory(Message message);
         std::vector< std::vector<std::string> > readGroupHistoryMessages(string groupName);
         int getMaxNumberOfMessagesInHistory();

@@ -3,15 +3,13 @@
 #include <iostream>
 #include <vector>
 
+using namespace std;
+
 using namespace std::chrono;
 
 namespace filesystemmanager{
 
 FileSystemManager::FileSystemManager() : semaphore(1) {
-
-}
-
-void FileSystemManager::prepareDirectory() {
 
 }
 
@@ -25,7 +23,9 @@ void FileSystemManager::appendGroupMessageToHistory(Message message) {
     messageContent << message.getUser() << FILE_SEPARATOR;
     messageContent << messageTextTreated << FILE_SEPARATOR;
     messageContent << message.getTime() << endl;
-    
+
+    cropToFileHistoryLimit(message.getGroup());
+
     std::ofstream groupRepository(groupFile.str(), std::ios_base::app | std::ios_base::out);
 
     groupRepository << messageContent.str();
@@ -63,13 +63,44 @@ std::vector<std::vector<std::string> > FileSystemManager::readGroupHistoryMessag
 
     return parsedCsv;
 }
+/**
+ * This method is responsible for preparing the file before it receives the new message
+ * We need to guarantee that we have up to N-1 messages per group file where N is the limit configured
+ */
+void FileSystemManager::cropToFileHistoryLimit(string group) {
+    std::stringstream groupFile, tempGroupFile;
+    groupFile << MESSAGES_BASE_PATH << PATH_SEPARATOR << group << FILE_EXTENSION;
+    tempGroupFile << groupFile.str() << "_temp";
+    ifstream oldFile(groupFile.str());
+    std::string line;
+    vector<std::string> lines;
 
-    int FileSystemManager::getMaxNumberOfMessagesInHistory() {
-        return this->maxNumberOfMessagesInHistory;
+    while (std::getline(oldFile, line)) {
+        lines.push_back(line);
     }
 
-    void FileSystemManager::setMaxNumberOfMessagesInHistory(int value) {
-        this->maxNumberOfMessagesInHistory = value;
+    if (lines.size() > getMaxNumberOfMessagesInHistory() - 1) {
+        std::ofstream newFile(tempGroupFile.str(), std::ios_base::app | std::ios_base::out);
+        for (int i = (lines.size() - getMaxNumberOfMessagesInHistory()) + 1; i < lines.size(); i++) {
+            if (i > 0) {
+                newFile << lines[i] << endl;
+            }
+        }
+
+        remove(groupFile.str().c_str());
+        rename(tempGroupFile.str().c_str(), groupFile.str().c_str());
+        newFile.close();
     }
+
+    oldFile.close();
+}
+
+int FileSystemManager::getMaxNumberOfMessagesInHistory() {
+    return this->maxNumberOfMessagesInHistory;
+}
+
+void FileSystemManager::setMaxNumberOfMessagesInHistory(int value) {
+    this->maxNumberOfMessagesInHistory = value;
+}
 
 } // namespace filesystemmanager;
