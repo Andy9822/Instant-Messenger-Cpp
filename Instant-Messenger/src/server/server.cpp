@@ -57,7 +57,6 @@ namespace server {
         serv_addr.sin_port = htons(port);
     }
 
-
     void Server::prepareConnection() {
         // Create socket file descriptor
         if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -255,5 +254,9 @@ namespace server {
 
     void Server::post_semaphore() {
         sem_post(&semaphore);
+    }
+
+    void Server::configureFilesystemManager(int maxNumberOfMessagesInHistory) {
+        groupManager->configureFileSystemManager(maxNumberOfMessagesInHistory);
     }
 }
