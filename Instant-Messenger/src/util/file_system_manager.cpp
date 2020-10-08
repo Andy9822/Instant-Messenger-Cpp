@@ -35,19 +35,18 @@ void FileSystemManager::appendGroupMessageToHistory(Message message) {
     semaphore.post();
 }
 
-std::vector<std::vector<std::string> > FileSystemManager::readGroupHistoryMessages(string groupName) {
+std::vector<Message> FileSystemManager::readGroupHistoryMessages(string groupName) {
     semaphore.wait();
     std::string line;
-    std::vector<std::vector<std::string> > parsedCsv;
     std::stringstream groupFile;
     groupFile << MESSAGES_BASE_PATH << PATH_SEPARATOR << groupName << FILE_EXTENSION;
     std::ifstream data;
-    
+    std::vector <Message> messages;
+
     data.open(groupFile.str());
 
     while(std::getline(data,line))
     {
-        cout << line << endl;
         std::stringstream lineStream(line);
         std::string cell;
         std::vector<std::string> parsedRow;
@@ -56,13 +55,20 @@ std::vector<std::vector<std::string> > FileSystemManager::readGroupHistoryMessag
             parsedRow.push_back(cell);
         }
 
-        parsedCsv.push_back(parsedRow);
+        stringstream intTime(parsedRow[2]);
+
+        long int time = 0;
+        intTime >> time;
+        Message message = Message((string) parsedRow[1], (string) parsedRow[0], groupName, time);
+
+        messages.push_back(message);
+
     }
 
     data.close();
     semaphore.post();
 
-    return parsedCsv;
+    return messages;
 }
 
 } // namespace filesystemmanager;
