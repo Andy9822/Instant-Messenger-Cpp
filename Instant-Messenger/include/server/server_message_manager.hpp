@@ -14,6 +14,7 @@ namespace servermessagemanager {
     class ServerMessageManager : public Socket{
         public:
         void broadcastMessageToUsers(Message message, std::list<User*> users);
+        void sendMessageToSocketId(Message message, int socketId);
     };
 }
 
