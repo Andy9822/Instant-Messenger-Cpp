@@ -22,8 +22,6 @@ using namespace servermessagemanager;
 namespace servergroupmanager {
 
     class ServerGroupManager {
-        std::list<int> threadQueue;
-
         private:
         ServerMessageManager *messageManager;
         FileSystemManager *fileSystemManager;
@@ -37,6 +35,8 @@ namespace servergroupmanager {
         void disconnectSocket(User *user, int socketId);
 
       public:
+        std::list<pthread_t> *threadQueue;
+
         ServerGroupManager();
         int registerUserToGroup(int socket, string username, string groupName);
         void processReceivedPacket(Packet* packet);
