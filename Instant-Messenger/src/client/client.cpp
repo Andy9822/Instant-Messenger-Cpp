@@ -35,14 +35,23 @@ Packet Client::buildPacket(string input)
 
 string Client::readInput()
 {
-    char input[255];
-    bzero(input, 255);
+    char input[MESSAGE_MAX_SIZE];
+    bzero(input, MESSAGE_MAX_SIZE);
 
-    if(fgets(input, 255, stdin) == NULL) // ctrl+d
+    if(fgets(input, MESSAGE_MAX_SIZE, stdin) == NULL) // ctrl+d
     {
         exit(0);
     }
 
+	// just a way to remove the \n
+	char *pos;
+	if ((pos=strchr(input, '\n')) != NULL) {
+		*pos = '\0';
+	}
+	else {
+		cout << "String is too long, cutting int to " << MESSAGE_MAX_SIZE - 1 << " chars." << endl;
+	}
+	fflush(stdin);
 	return input;
 }
 
