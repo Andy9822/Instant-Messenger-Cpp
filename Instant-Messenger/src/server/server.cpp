@@ -104,6 +104,7 @@ namespace server {
     int Server::registerUserToServer(void *args) {
         char username[USERNAME_MAX_SIZE] = {0};
         char group[GROUP_MAX_SIZE] = {0};
+        int registered;
 
         std::pair<int *, Server *> *args_pair = (std::pair<int *, Server *> *) args;
         int client_socketfd = *(int *) args_pair->first;
@@ -119,19 +120,24 @@ namespace server {
         strncpy(group, receivedPacket->group, GROUP_MAX_SIZE - 1);
 
         // checking if there are already 2 users with the same name registered
-        if (_this->registerUser(client_socketfd, username, group) < 0) {
+        registered = _this->registerUser(client_socketfd, username, group);
+        
+        // if there are already two users with the same name, we close the connection
+        if (registered < 0) {
             pack->clientSocket = -1;
             _this->sendPacket(client_socketfd, pack);
             delete pack;
             return -1;
 
         }
+        // if there was already one entry with the same username before, we don't print <entered the group> a second time 
+        else if(registered == 1)
+        {
+	        pack->clientSocket = 3;
+	        _this->sendPacket(client_socketfd, pack);
+	    }
 
-        pack->clientSocket = 0;
-        _this->sendPacket(client_socketfd, pack);
         delete pack;
-
-        groupManager->processReceivedPacket(receivedPacket);
 
         return 0;
     }
@@ -234,6 +240,7 @@ namespace server {
         wait_semaphore();
 
         openSockets.erase(std::remove(openSockets.begin(), openSockets.end(), client_socket), openSockets.end());
+        
         groupManager->disconnectUser(client_socket);
 
         post_semaphore();
