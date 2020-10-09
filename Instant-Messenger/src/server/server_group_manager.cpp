@@ -18,14 +18,16 @@ namespace servergroupmanager {
 
         for (user = list_users.begin(); user != list_users.end(); ++user) {
             if ((*user)->getUsername() == username) {
+            	
+            	userAlreadyExists = true;
+                
                 if ((*user)->registerSession(newSocket) < 0) {
+
                     result = -1;
                     break;
                 }
 
-                addUserToGroup(*user, group);
-                userAlreadyExists = true;
-
+                result = addUserToGroup(*user, group);
                 break;
             }
         }
@@ -37,9 +39,12 @@ namespace servergroupmanager {
             newUser = new User(username);
 
             if (newUser->registerSession(newSocket) < 0)
-                result = -1;
+            {
+            	this->semaphore.post();
+                return -1;
+            }
 
-            addUserToGroup(newUser, group);
+            result = addUserToGroup(newUser, group);
             list_users.push_back(newUser);
             this->semaphore.post();
         }
@@ -49,13 +54,28 @@ namespace servergroupmanager {
 
 
 
-    void ServerGroupManager::addUserToGroup(User *user, string userGroup) {
+    int ServerGroupManager::addUserToGroup(User *user, string userGroup) 
+    {
+        Packet *enteringPacket;
+
         std::list<User *> groupUsers = getUsersByGroup(userGroup);
         for (auto userItr = groupUsers.begin(); userItr != groupUsers.end(); userItr++) {
             if ((*userItr)->getUsername() == user->getUsername())
-                return;
+                return 1;
         }
         groups.insert(std::pair<string, User *>(userGroup, user));
+
+        // Send <user entered the group> message
+        char username[USERNAME_MAX_SIZE] = {0};
+        char group[GROUP_MAX_SIZE] = {0};
+
+        strncpy(username, user->getUsername().c_str(), USERNAME_MAX_SIZE - 1);
+        strncpy(group, userGroup.c_str(), GROUP_MAX_SIZE - 1);
+
+        enteringPacket = new Packet(username, group, (char*)"<Entered the group>", time(0));
+        processReceivedPacket(enteringPacket);
+
+        return 0;
     }
 
 
@@ -84,7 +104,7 @@ namespace servergroupmanager {
     void ServerGroupManager::disconnectUser(int socketId) {
         this->semaphore.wait();
         User *user = getUserBySocketId(socketId);
-        disconnectSocket(user, socketId);
+        string userGroup = disconnectSocket(user, socketId);
 
         if (user->getActiveSockets()->size() == 0) {
             removeUserFromListOfUsers(user);
@@ -97,7 +117,7 @@ namespace servergroupmanager {
 
 
 
-    void ServerGroupManager::disconnectSocket(User *user, int socketId) {
+    string ServerGroupManager::disconnectSocket(User *user, int socketId) {
         string groupBeingDisconnected = user->getActiveSockets()->find(socketId)->second;
         bool hasSimultaneousConnectionToRemovedGroup = false;
 
@@ -118,9 +138,21 @@ namespace servergroupmanager {
                     userGroupEntryToBeRemoved = itr;
                 }
             }
-
             groups.erase(userGroupEntryToBeRemoved);
+
+            // Send <user left the group> message
+            char username[USERNAME_MAX_SIZE] = {0};
+	        char group[GROUP_MAX_SIZE] = {0};
+
+	        strncpy(username, user->getUsername().c_str(), USERNAME_MAX_SIZE - 1);
+	        strncpy(group, groupBeingDisconnected.c_str(), GROUP_MAX_SIZE - 1);
+
+            Packet *exitingPacket = new Packet(username, group, (char*)"<Left the group>", time(0));
+			processReceivedPacket(exitingPacket);
+			delete exitingPacket;
         }
+
+        return groupBeingDisconnected;
     }
 
 

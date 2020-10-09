@@ -42,11 +42,6 @@ string Client::readInput()
 
     if(fgets(input, MESSAGE_MAX_SIZE, stdin) == NULL) // ctrl+d
     {
-    	Packet *sendingPacket = new Packet();
-		*sendingPacket = buildPacket("< Left the group >");
-		sendPacket(sockfd, sendingPacket);
-		delete sendingPacket;
-
         exit(0);
     }
 
@@ -69,7 +64,7 @@ int Client::registerToServer()
 	bool connectedClient = true;
 	Packet *sendingPacket = new Packet();
 
-	*sendingPacket = buildPacket("< Entered the group >");
+	*sendingPacket = buildPacket("<Entered the group>");
 
 	// Asking server if username already exists
 	sendPacket(sockfd, sendingPacket);
@@ -83,6 +78,11 @@ int Client::registerToServer()
 		close(sockfd);
 		return -1;
 	}
+
+	// print  <entered the group>
+	if(receivedPacket->clientSocket != 3)
+		showMessage(receivedPacket);
+
 	return 0;
 }
 

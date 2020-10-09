@@ -29,11 +29,11 @@ namespace servergroupmanager {
         Semaphore semaphore;
         list<User*> list_users;
         multimap<string, User*> groups;
-        void addUserToGroup(User *user, string group);
+        int addUserToGroup(User *user, string group);
         std::list<User*> getUsersByGroup(string group);
         User * getUserBySocketId(int socketId);
         void removeUserFromListOfUsers(User *user);
-        void disconnectSocket(User *user, int socketId);
+        string disconnectSocket(User *user, int socketId);
 
       public:
         ServerGroupManager();
