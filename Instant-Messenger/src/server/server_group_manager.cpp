@@ -18,14 +18,16 @@ namespace servergroupmanager {
 
         for (user = list_users.begin(); user != list_users.end(); ++user) {
             if ((*user)->getUsername() == username) {
+            	
+            	userAlreadyExists = true;
+                
                 if ((*user)->registerSession(newSocket) < 0) {
+
                     result = -1;
                     break;
                 }
 
-                addUserToGroup(*user, group);
-                userAlreadyExists = true;
-
+                result = addUserToGroup(*user, group);
                 break;
             }
         }
@@ -37,9 +39,12 @@ namespace servergroupmanager {
             newUser = new User(username);
 
             if (newUser->registerSession(newSocket) < 0)
-                result = -1;
+            {
+            	this->semaphore.post();
+                return -1;
+            }
 
-            addUserToGroup(newUser, group);
+            result = addUserToGroup(newUser, group);
             list_users.push_back(newUser);
             this->semaphore.post();
         }
@@ -47,14 +52,33 @@ namespace servergroupmanager {
         return result;
     }
 
-    void ServerGroupManager::addUserToGroup(User *user, string userGroup) {
+
+
+    int ServerGroupManager::addUserToGroup(User *user, string userGroup) 
+    {
+        Packet *enteringPacket;
+
         std::list<User *> groupUsers = getUsersByGroup(userGroup);
         for (auto userItr = groupUsers.begin(); userItr != groupUsers.end(); userItr++) {
             if ((*userItr)->getUsername() == user->getUsername())
-                return;
+                return 1;
         }
         groups.insert(std::pair<string, User *>(userGroup, user));
+
+        // Send <user entered the group> message
+        char username[USERNAME_MAX_SIZE] = {0};
+        char group[GROUP_MAX_SIZE] = {0};
+
+        strncpy(username, user->getUsername().c_str(), USERNAME_MAX_SIZE - 1);
+        strncpy(group, userGroup.c_str(), GROUP_MAX_SIZE - 1);
+
+        enteringPacket = new Packet(username, group, (char*)"<Entered the group>", time(0));
+        processReceivedPacket(enteringPacket);
+
+        return 0;
     }
+
+
 
     std::list<User *> ServerGroupManager::getUsersByGroup(string groupName) {
         std::list<User *> users;
@@ -65,6 +89,8 @@ namespace servergroupmanager {
         return users;
     }
 
+
+
     void ServerGroupManager::processReceivedPacket(Packet *packet) {
         Message receivedMessage = Message(packet->message, packet->username, packet->group, std::time(0));
         std::list<User *> users = getUsersByGroup(receivedMessage.getGroup());
@@ -72,6 +98,8 @@ namespace servergroupmanager {
         fileSystemManager->appendGroupMessageToHistory(receivedMessage);
         messageManager->broadcastMessageToUsers(receivedMessage, users);
     }
+
+
 
     void ServerGroupManager::disconnectUser(int socketId) {
         this->semaphore.wait();
@@ -86,6 +114,8 @@ namespace servergroupmanager {
         printListOfUsers(); //debug purposes
         printListOfGroups(); //debug purposes
     }
+
+
 
     void ServerGroupManager::disconnectSocket(User *user, int socketId) {
         string groupBeingDisconnected = user->getActiveSockets()->find(socketId)->second;
@@ -108,10 +138,22 @@ namespace servergroupmanager {
                     userGroupEntryToBeRemoved = itr;
                 }
             }
-
             groups.erase(userGroupEntryToBeRemoved);
+
+            // Send <user left the group> message
+            char username[USERNAME_MAX_SIZE] = {0};
+	        char group[GROUP_MAX_SIZE] = {0};
+
+	        strncpy(username, user->getUsername().c_str(), USERNAME_MAX_SIZE - 1);
+	        strncpy(group, groupBeingDisconnected.c_str(), GROUP_MAX_SIZE - 1);
+
+            Packet *exitingPacket = new Packet(username, group, (char*)"<Left the group>", time(0));
+			processReceivedPacket(exitingPacket);
+			delete exitingPacket;
         }
     }
+
+
 
     User *ServerGroupManager::getUserBySocketId(int socketId) {
         User *user = NULL;
@@ -127,9 +169,13 @@ namespace servergroupmanager {
         return user;
     }
 
+
+
     void ServerGroupManager::removeUserFromListOfUsers(User *user) {
         list_users.remove(user);
     }
+
+
 
     void ServerGroupManager::printListOfUsers() {
         for (auto const &user: list_users) {
@@ -138,12 +184,16 @@ namespace servergroupmanager {
         }
     }
 
+
+
     void ServerGroupManager::printListOfGroups() {
         cout << endl ;
         for (auto const &group: groups) {
             cout << "Group: " << group.first << " with User: " << group.second->getUsername() << endl;
         }
     }
+
+
 
     void ServerGroupManager::configureFileSystemManager(int maxNumberOfMessagesOnHistory) {
         this->fileSystemManager->setMaxNumberOfMessagesInHistory(maxNumberOfMessagesOnHistory);

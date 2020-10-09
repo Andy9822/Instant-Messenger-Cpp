@@ -1,4 +1,5 @@
 #include "../../include/client/client.h"
+#include "../../include/util/definitions.hpp"
 #include "../../include/util/Packet.hpp"
 
 
@@ -33,6 +34,8 @@ Packet Client::buildPacket(string input)
 	return Packet(usernameBuffer, groupBuffer, messageBuffer, time(0));
 }
 
+
+
 string Client::readInput()
 {
     char input[MESSAGE_MAX_SIZE];
@@ -56,12 +59,13 @@ string Client::readInput()
 }
 
 
+
 int Client::registerToServer()
 {
 	bool connectedClient = true;
 	Packet *sendingPacket = new Packet();
 
-	*sendingPacket = buildPacket("");
+	*sendingPacket = buildPacket("<Entered the group>");
 
 	// Asking server if username already exists
 	sendPacket(sockfd, sendingPacket);
@@ -75,17 +79,28 @@ int Client::registerToServer()
 		close(sockfd);
 		return -1;
 	}
+
+	// print  <entered the group>
+	if(receivedPacket->clientSocket != JOIN_QUIT_STATUS_MESSAGE)
+		showMessage(receivedPacket);
+
 	return 0;
 }
+
+
 
 void Client::setUsername(char* username)
 {
 	this->username = username;
 }
 
+
+
 void Client::setGroup(char* group) {
 	this->group = group;
 }
+
+
 
 int Client::ConnectToServer(char* username, char* group)
 {
@@ -105,6 +120,8 @@ int Client::ConnectToServer(char* username, char* group)
 
 	return registerToServer();
 }
+
+
 
 void Client::showMessage(Packet* receivedPacket)
 {
@@ -129,6 +146,8 @@ void Client::showMessage(Packet* receivedPacket)
 	cout << message << endl;
 }
 
+
+
 void * Client::receiveFromServer(void* args)
 {
 	Client* _this = (Client *) args;
@@ -148,6 +167,8 @@ void * Client::receiveFromServer(void* args)
 	}
 }
 
+
+
 void * Client::sendToServer(void* args)
 {
 	Client* _this = (Client *) args;
@@ -164,6 +185,8 @@ void * Client::sendToServer(void* args)
 		_this->sendPacket(_this->sockfd, sendingPacket);
 	}
 }
+
+
 
 int Client::clientCommunication()
 {
