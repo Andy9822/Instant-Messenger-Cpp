@@ -17,3 +17,7 @@
 #ifndef MESSAGE_MAX_SIZE
 #define MESSAGE_MAX_SIZE 255
 #endif
+
+#ifndef JOIN_QUIT_STATUS_MESSAGE
+#define JOIN_QUIT_STATUS_MESSAGE 3
+#endif

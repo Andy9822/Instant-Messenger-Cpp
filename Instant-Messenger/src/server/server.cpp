@@ -1,4 +1,5 @@
 #include "../../include/server/server.hpp"
+#include "../../include/util/definitions.hpp"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -133,7 +134,7 @@ namespace server {
         // if there was already one entry with the same username before, we don't print <entered the group> a second time 
         else if(registered == 1)
         {
-	        pack->clientSocket = 3;
+	        pack->clientSocket = JOIN_QUIT_STATUS_MESSAGE;
 	        _this->sendPacket(client_socketfd, pack);
 	    }
 
@@ -218,7 +219,6 @@ namespace server {
             // Listen for an incoming Packet from client
             Packet *receivedPacket = _this->readPacket(client_socketfd, &connectedClient);
             if (!connectedClient) {
-
                 // Free allocated memory for reading Packet
                 free(receivedPacket);
 
@@ -240,7 +240,6 @@ namespace server {
         wait_semaphore();
 
         openSockets.erase(std::remove(openSockets.begin(), openSockets.end(), client_socket), openSockets.end());
-        
         groupManager->disconnectUser(client_socket);
 
         post_semaphore();
