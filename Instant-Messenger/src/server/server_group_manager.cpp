@@ -104,7 +104,7 @@ namespace servergroupmanager {
     void ServerGroupManager::disconnectUser(int socketId) {
         this->semaphore.wait();
         User *user = getUserBySocketId(socketId);
-        string userGroup = disconnectSocket(user, socketId);
+        disconnectSocket(user, socketId);
 
         if (user->getActiveSockets()->size() == 0) {
             removeUserFromListOfUsers(user);
@@ -117,7 +117,7 @@ namespace servergroupmanager {
 
 
 
-    string ServerGroupManager::disconnectSocket(User *user, int socketId) {
+    void ServerGroupManager::disconnectSocket(User *user, int socketId) {
         string groupBeingDisconnected = user->getActiveSockets()->find(socketId)->second;
         bool hasSimultaneousConnectionToRemovedGroup = false;
 
@@ -151,8 +151,6 @@ namespace servergroupmanager {
 			processReceivedPacket(exitingPacket);
 			delete exitingPacket;
         }
-
-        return groupBeingDisconnected;
     }
 
 

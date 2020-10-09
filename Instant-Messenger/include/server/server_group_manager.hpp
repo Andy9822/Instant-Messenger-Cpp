@@ -33,7 +33,7 @@ namespace servergroupmanager {
         std::list<User*> getUsersByGroup(string group);
         User * getUserBySocketId(int socketId);
         void removeUserFromListOfUsers(User *user);
-        string disconnectSocket(User *user, int socketId);
+        void disconnectSocket(User *user, int socketId);
 
       public:
         ServerGroupManager();
