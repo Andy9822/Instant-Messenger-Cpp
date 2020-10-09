@@ -1,4 +1,5 @@
 #include "../../include/client/client.h"
+#include "../../include/util/definitions.hpp"
 #include "../../include/util/Packet.hpp"
 
 
@@ -80,7 +81,7 @@ int Client::registerToServer()
 	}
 
 	// print  <entered the group>
-	if(receivedPacket->clientSocket != 3)
+	if(receivedPacket->clientSocket != JOIN_QUIT_STATUS_MESSAGE)
 		showMessage(receivedPacket);
 
 	return 0;
