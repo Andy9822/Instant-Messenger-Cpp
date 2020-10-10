@@ -24,8 +24,6 @@ void FileSystemManager::appendGroupMessageToHistory(Message message) {
     messageContent << messageTextTreated << FILE_SEPARATOR;
     messageContent << message.getTime() << endl;
 
-    cropToFileHistoryLimit(message.getGroup());
-
     std::ofstream groupRepository(groupFile.str(), std::ios_base::app | std::ios_base::out);
 
     groupRepository << messageContent.str();
@@ -34,6 +32,11 @@ void FileSystemManager::appendGroupMessageToHistory(Message message) {
     semaphore.post();
 }
 
+/**
+ * This method garantees that we are only reading N messages in the history
+ * @param groupName
+ * @return
+ */
 std::vector<Message> FileSystemManager::readGroupHistoryMessages(string groupName) {
     semaphore.wait();
     std::string line;
@@ -41,6 +44,8 @@ std::vector<Message> FileSystemManager::readGroupHistoryMessages(string groupNam
     groupFile << MESSAGES_BASE_PATH << PATH_SEPARATOR << groupName << FILE_EXTENSION;
     std::ifstream data;
     std::vector <Message> messages;
+
+    cropToFileHistoryLimit(groupName);
 
     data.open(groupFile.str());
 
@@ -70,8 +75,8 @@ std::vector<Message> FileSystemManager::readGroupHistoryMessages(string groupNam
     return messages;
 }
 /**
- * This method is responsible for preparing the file before it receives the new message
- * We need to guarantee that we have up to N-1 messages per group file where N is the limit configured
+ * This method is responsible for preparing the file before it sends the history to the user
+ * We need to guarantee that we have up to N messages per group file where N is the limit configured
  */
 void FileSystemManager::cropToFileHistoryLimit(string group) {
     std::stringstream groupFile, tempGroupFile;
@@ -85,9 +90,9 @@ void FileSystemManager::cropToFileHistoryLimit(string group) {
         lines.push_back(line);
     }
 
-    if (lines.size() > getMaxNumberOfMessagesInHistory() - 1) {
+    if (lines.size() > getMaxNumberOfMessagesInHistory()) {
         std::ofstream newFile(tempGroupFile.str(), std::ios_base::app | std::ios_base::out);
-        for (int i = (lines.size() - getMaxNumberOfMessagesInHistory()) + 1; i < lines.size(); i++) {
+        for (int i = (lines.size() - getMaxNumberOfMessagesInHistory()); i < lines.size(); i++) {
             if (i > 0) {
                 newFile << lines[i] << endl;
             }

@@ -6,6 +6,7 @@ namespace servergroupmanager {
 
     ServerGroupManager::ServerGroupManager() : semaphore(1) {
         fileSystemManager = new FileSystemManager();
+        threadQueue = new std::list<pthread_t>();
     }
 
     int ServerGroupManager::registerUserToGroup(int socket, string username, string group) {
@@ -18,11 +19,10 @@ namespace servergroupmanager {
 
         for (user = list_users.begin(); user != list_users.end(); ++user) {
             if ((*user)->getUsername() == username) {
-            	
-            	userAlreadyExists = true;
-                
-                if ((*user)->registerSession(newSocket) < 0) {
 
+            	userAlreadyExists = true;
+
+                if ((*user)->registerSession(newSocket) < 0) {
                     result = -1;
                     break;
                 }
@@ -54,7 +54,7 @@ namespace servergroupmanager {
 
 
 
-    int ServerGroupManager::addUserToGroup(User *user, string userGroup) 
+    int ServerGroupManager::addUserToGroup(User *user, string userGroup)
     {
         Packet *enteringPacket;
 
@@ -80,23 +80,31 @@ namespace servergroupmanager {
 
 
 
-    std::list<User *> ServerGroupManager::getUsersByGroup(string groupName) {
-        std::list<User *> users;
-        for (auto const &group : groups) {
-            if (group.first == groupName)
-                users.push_back(group.second);
+    void ServerGroupManager::sendGroupHistoryMessages(int socketId) {
+        semaphore.wait();
+        User *user = getUserBySocketId(socketId);
+        string groupName = user->getActiveSockets()->find(socketId)->second;
+
+        std::vector<Message> messages = fileSystemManager->readGroupHistoryMessages(groupName);
+        for(auto const& message : messages) {
+            messageManager->sendMessageToSocketId(message, socketId);
         }
-        return users;
+        semaphore.post();
     }
 
 
 
     void ServerGroupManager::processReceivedPacket(Packet *packet) {
+        //pthread_t thId = pthread_self();
+        //cout << "pthread ID: " << thId << endl;
+        //threadQueue->insert(threadQueue->end(), thId);
+
         Message receivedMessage = Message(packet->message, packet->username, packet->group, std::time(0));
         std::list<User *> users = getUsersByGroup(receivedMessage.getGroup());
 
         fileSystemManager->appendGroupMessageToHistory(receivedMessage);
         messageManager->broadcastMessageToUsers(receivedMessage, users);
+
     }
 
 
@@ -193,9 +201,16 @@ namespace servergroupmanager {
         }
     }
 
-
-
     void ServerGroupManager::configureFileSystemManager(int maxNumberOfMessagesOnHistory) {
         this->fileSystemManager->setMaxNumberOfMessagesInHistory(maxNumberOfMessagesOnHistory);
+    }
+
+    std::list<User *> ServerGroupManager::getUsersByGroup(string groupName) {
+        std::list<User *> users;
+        for (auto const &group : groups) {
+            if (group.first == groupName)
+                users.push_back(group.second);
+        }
+        return users;
     }
 }

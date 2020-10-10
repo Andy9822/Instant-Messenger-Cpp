@@ -129,7 +129,6 @@ namespace server {
             _this->sendPacket(client_socketfd, pack);
             delete pack;
             return -1;
-
         }
         // if there was already one entry with the same username before, we don't print <entered the group> a second time 
         else if(registered == 1)
@@ -139,6 +138,8 @@ namespace server {
 	    }
 
         delete pack;
+
+        _this->groupManager->sendGroupHistoryMessages(client_socketfd);
 
         return 0;
     }
