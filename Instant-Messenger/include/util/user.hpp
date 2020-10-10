@@ -5,6 +5,7 @@
 #include <ctime>
 #include <list>
 #include <map>
+#include <vector>
 #include "exceptions.hpp"
 #include "Semaphore.hpp"
 
@@ -19,20 +20,20 @@ class User {
 
     private:
         string username;
-        std::map<int, string> *sockets;
+        std::vector<int> sockets;
         Semaphore semaphore;
     
     public:
         User(string username);
         string getUsername();
-        std::map<int, std::string> * getActiveSockets();
+        std::vector<int> getActiveSockets();
 
         /*
         * Method to register a socket linked to a user
         * throws USER_SESSIONS_LIMIT_REACHED if the addition 
         * was not created due to limitation reached
         */
-        int registerSession(pair<const int, basic_string<char>> socket);
+        int registerSession(int socket);
         void releaseSession(int socket);
         void initSessionList();
 

@@ -9,47 +9,68 @@ namespace servergroupmanager {
         threadQueue = new std::list<pthread_t>();
     }
 
-    int ServerGroupManager::registerUserToGroup(int socket, string username, string group) {
-        this->semaphore.wait();
-        bool userAlreadyExists = false;
-        User *newUser;
-        list<User *>::iterator user;
-        int result = 0;
-        std::pair<int, std::string> newSocket(socket, group);
+    /**
+     * This function will be used to active the registration for the right groupName
+     * @param socket
+     * @param username
+     * @param groupName
+     * @return
+     */
+    int ServerGroupManager::registerUserToGroup(int socket, string username, string groupName) {
 
-        for (user = list_users.begin(); user != list_users.end(); ++user) {
-            if ((*user)->getUsername() == username) {
-
-            	userAlreadyExists = true;
-
-                if ((*user)->registerSession(newSocket) < 0) {
-                    result = -1;
-                    break;
-                }
-
-                result = addUserToGroup(*user, group);
-                break;
-            }
+        // if groupName exists, send the registration to it. If it does not belong to the map of groups, we instantiate a new groupName and forward the information to it
+        Group* group = NULL;
+        if ( !groupExists(groupName) ) {
+            this->groupMap[groupName] = new Group(groupName);
         }
+        group =  this->groupMap[groupName];
 
-        this->semaphore.post();
+        group->registerNewSession(socket, username);
 
-        if (!userAlreadyExists) {
-            this->semaphore.wait();
-            newUser = new User(username);
+        // checkIfGr
 
-            if (newUser->registerSession(newSocket) < 0)
-            {
-            	this->semaphore.post();
-                return -1;
-            }
 
-            result = addUserToGroup(newUser, group);
-            list_users.push_back(newUser);
-            this->semaphore.post();
-        }
 
-        return result;
+//        this->semaphore.wait();
+//        bool userAlreadyExists = false;
+//        User *newUser;
+//        list<User *>::iterator user;
+//        int result = 0;
+//        std::pair<int, std::string> newSocket(socket, groupName);
+//
+//        for (user = list_users.begin(); user != list_users.end(); ++user) {
+//            if ((*user)->getUsername() == username) {
+//
+//            	userAlreadyExists = true;
+//
+//                if ((*user)->registerSession(newSocket) < 0) {
+//                    result = -1;
+//                    break;
+//                }
+//
+//                result = addUserToGroup(*user, groupName);
+//                break;
+//            }
+//        }
+//
+//        this->semaphore.post();
+//
+//        if (!userAlreadyExists) {
+//            this->semaphore.wait();
+//            newUser = new User(username);
+//
+//            if (newUser->registerSession(newSocket) < 0)
+//            {
+//            	this->semaphore.post();
+//                return -1;
+//            }
+//
+//            result = addUserToGroup(newUser, groupName);
+//            list_users.push_back(newUser);
+//            this->semaphore.post();
+//        }
+//
+//        return result;
     }
 
 
@@ -93,12 +114,12 @@ namespace servergroupmanager {
     void ServerGroupManager::sendGroupHistoryMessages(int socketId) {
         semaphore.wait();
         User *user = getUserBySocketId(socketId);
-        string groupName = user->getActiveSockets()->find(socketId)->second;
+        // string groupName = user->getActiveSockets()->find(socketId)->second;
 
-        std::vector<Message> messages = fileSystemManager->readGroupHistoryMessages(groupName);
-        for(auto const& message : messages) {
-            messageManager->sendMessageToSocketId(message, socketId);
-        }
+        // std::vector<Message> messages = fileSystemManager->readGroupHistoryMessages(groupName);
+//        for(auto const& message : messages) {
+//            messageManager->sendMessageToSocketId(message, socketId);
+//        }
         semaphore.post();
     }
 
@@ -124,7 +145,7 @@ namespace servergroupmanager {
         User *user = getUserBySocketId(socketId);
         disconnectSocket(user, socketId);
 
-        if (user->getActiveSockets()->size() == 0) {
+        if (user->getActiveSockets().size() == 0) {
             removeUserFromListOfUsers(user);
         }
         this->semaphore.post();
@@ -136,39 +157,39 @@ namespace servergroupmanager {
 
     // TODO isso provavlemente vai ter que ir pra dentro de Group
     void ServerGroupManager::disconnectSocket(User *user, int socketId) {
-        string groupBeingDisconnected = user->getActiveSockets()->find(socketId)->second;
-        bool hasSimultaneousConnectionToRemovedGroup = false;
-
-        user->getActiveSockets()->erase(socketId);
-
-        for(auto const& socket : *user->getActiveSockets()){
-            if(socket.second == groupBeingDisconnected){ // check the removed socket group with rest of user socket list
-                hasSimultaneousConnectionToRemovedGroup = true;
-            }
-        }
-
-        if(!hasSimultaneousConnectionToRemovedGroup){
-            multimap<string, User *>::iterator userGroupEntryToBeRemoved;
-            for (auto itr = groups.begin(); itr != groups.end(); itr++) {
-                // this is responsible for fetching the correct entry o groups map
-                // so it can be removed as there are no more connections from this user to the specified group
-                if ((itr->first == groupBeingDisconnected && itr->second->getUsername() == user->getUsername())) {
-                    userGroupEntryToBeRemoved = itr;
-                }
-            }
-            groups.erase(userGroupEntryToBeRemoved);
-
-            // Send <user left the group> message
-            char username[USERNAME_MAX_SIZE] = {0};
-	        char group[GROUP_MAX_SIZE] = {0};
-
-	        strncpy(username, user->getUsername().c_str(), USERNAME_MAX_SIZE - 1);
-	        strncpy(group, groupBeingDisconnected.c_str(), GROUP_MAX_SIZE - 1);
-
-            Packet *exitingPacket = new Packet(username, group, (char*)"<Left the group>", time(0));
-			processReceivedPacket(exitingPacket);
-			delete exitingPacket;
-        }
+//        string groupBeingDisconnected = user->getActiveSockets()->find(socketId)->second;
+//        bool hasSimultaneousConnectionToRemovedGroup = false;
+//
+//        user->getActiveSockets()->erase(socketId);
+//
+//        for(auto const& socket : *user->getActiveSockets()){
+//            if(socket.second == groupBeingDisconnected){ // check the removed socket group with rest of user socket list
+//                hasSimultaneousConnectionToRemovedGroup = true;
+//            }
+//        }
+//
+//        if(!hasSimultaneousConnectionToRemovedGroup){
+//            multimap<string, User *>::iterator userGroupEntryToBeRemoved;
+//            for (auto itr = groups.begin(); itr != groups.end(); itr++) {
+//                // this is responsible for fetching the correct entry o groups map
+//                // so it can be removed as there are no more connections from this user to the specified group
+//                if ((itr->first == groupBeingDisconnected && itr->second->getUsername() == user->getUsername())) {
+//                    userGroupEntryToBeRemoved = itr;
+//                }
+//            }
+//            groups.erase(userGroupEntryToBeRemoved);
+//
+//            // Send <user left the group> message
+//            char username[USERNAME_MAX_SIZE] = {0};
+//	        char group[GROUP_MAX_SIZE] = {0};
+//
+//	        strncpy(username, user->getUsername().c_str(), USERNAME_MAX_SIZE - 1);
+//	        strncpy(group, groupBeingDisconnected.c_str(), GROUP_MAX_SIZE - 1);
+//
+//            Packet *exitingPacket = new Packet(username, group, (char*)"<Left the group>", time(0));
+//			processReceivedPacket(exitingPacket);
+//			delete exitingPacket;
+//        }
     }
 
 
@@ -176,13 +197,13 @@ namespace servergroupmanager {
     User *ServerGroupManager::getUserBySocketId(int socketId) {
         User *user = NULL;
 
-        for (auto const &userItr : this->list_users) {
-            for (auto const &socket : *userItr->getActiveSockets()) {
-                if (socket.first == socketId) {
-                    user = userItr;
-                }
-            }
-        }
+//        for (auto const &userItr : this->list_users) {
+//            for (auto const &socket : *userItr->getActiveSockets()) {
+//                if (socket.first == socketId) {
+//                    user = userItr;
+//                }
+//            }
+//        }
 
         return user;
     }
@@ -222,5 +243,14 @@ namespace servergroupmanager {
                 users.push_back(group.second);
         }
         return users;
+    }
+
+    // ADDING THE NEW STUFF
+
+    bool ServerGroupManager::groupExists(string groupName) {
+        if ( groupMap.find(groupName) == groupMap.end() ) {
+            return false;
+        }
+        return true;
     }
 }

@@ -30,12 +30,13 @@ namespace servergroupmanager {
         Semaphore semaphore;
         list<User*> list_users;
         multimap<string, User*> groups;
-        std::map<string,Group*> groupMap;
+        std::map<string,Group*> groupMap; // will maintain a map of groupName -> group. This will be used to route the calls to the proper group
         int addUserToGroup(User *user, string group);
         std::list<User*> getUsersByGroup(string group);
         User * getUserBySocketId(int socketId);
         void removeUserFromListOfUsers(User *user);
         void disconnectSocket(User *user, int socketId);
+        bool groupExists(string groupName);
 
       public:
         std::list<pthread_t> *threadQueue;

@@ -10,7 +10,7 @@ namespace user {
 
     void User::initSessionList() {
         this->semaphore.wait();
-        this->sockets = new std::map<int, string>();
+        this->sockets = std::vector<int>();
         this->semaphore.post();
     }
 
@@ -19,24 +19,20 @@ namespace user {
         return this->username;
     }
 
-    std::map<int, std::string> *User::getActiveSockets() {
+    std::vector<int> User::getActiveSockets() {
         return sockets;
     }
 
-    int User::registerSession(pair<const int, basic_string<char>> socket) {
+    int User::registerSession(int socket) {
         this->semaphore.wait();
-        if (this->sockets->size() < NUMBER_OF_SIMULTANEOUS_CONNECTIONS) {
-            this->sockets->insert(socket);
-            this->semaphore.post();
-            return 0;
-        }
+        this->sockets.push_back(socket);
         this->semaphore.post();
-        return -1;
+        return 0;
     }
 
     void User::printSockets() {
-        for (auto const &socket : *sockets) {
-            cout << "printsockt::Socket: " << socket.first << " from group: " << socket.second << endl;
+        for (auto socket : this->sockets) {
+            cout << "printsockt::Socket: " << socket << endl;
         }
     }
 } // namespace user;

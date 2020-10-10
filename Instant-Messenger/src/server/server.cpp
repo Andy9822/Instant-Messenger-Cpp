@@ -98,7 +98,7 @@ namespace server {
 
 
     int Server::registerUser(int socket, char *username, char *group) {
-        return groupManager->registerUserToGroup(socket, username, group);
+        return groupManager->registerUserToGroup(socket, username, group); // TODO: change logic to pass the information to the right group
     }
 
 
@@ -139,7 +139,7 @@ namespace server {
 
         delete pack;
 
-        _this->groupManager->sendGroupHistoryMessages(client_socketfd);
+        _this->groupManager->sendGroupHistoryMessages(client_socketfd); // TODO: we can call this function when we are registering a new connection in the group (inside the group).
 
         return 0;
     }
@@ -191,11 +191,6 @@ namespace server {
 
         pthread_create(tid, NULL, clientCommunication, (void *) args);
 
-        groupManager->printListOfUsers(); //debug purposes
-        groupManager->printListOfGroups(); //debug purposes
-
-        sleep(5);
-
         return 0;
     }
 
@@ -226,7 +221,8 @@ namespace server {
                 break;
             }
 
-            _this->groupManager->processReceivedPacket(receivedPacket);
+            _this->groupManager->processReceivedPacket(receivedPacket); // TODO: this is running in a thread for each user... It is ok to call this interface, but lets make the group to treat the request
+            // TODO: change this call to: write to group`s messageQueue
         }
 
         // Close all properties related to client connection
@@ -241,7 +237,7 @@ namespace server {
         wait_semaphore();
 
         openSockets.erase(std::remove(openSockets.begin(), openSockets.end(), client_socket), openSockets.end());
-        groupManager->disconnectUser(client_socket);
+        groupManager->disconnectUser(client_socket); // TODO:  Logic change THIS IS OK, AS WELL, SINCE WE NEED TO PASS THE INFORMATION TO THE PROPER GROUP. But the logic will change
 
         post_semaphore();
 
@@ -267,6 +263,6 @@ namespace server {
     }
 
     void Server::configureFilesystemManager(int maxNumberOfMessagesInHistory) {
-        groupManager->configureFileSystemManager(maxNumberOfMessagesInHistory);
+        groupManager->configureFileSystemManager(maxNumberOfMessagesInHistory); // THIS CALL IS OK, WE NEED TO PASS THE INFORMATION
     }
 }

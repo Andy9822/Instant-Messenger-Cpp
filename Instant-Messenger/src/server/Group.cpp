@@ -68,4 +68,32 @@ void Group::saveMessageToQueue(message::Message receivedMessage)
     pthread_mutex_unlock(&mutex_consumer_producer);
 }
 
+/**
+ * This method will register the user in the group by adding it to the users list and adding the reference to the socket
+ * If user already exists in the list, we just add the id for the socket in the connections
+ * at this point, we dont need to care about persisting more connections for users since the number of connections for users
+ * is maintained by the server.
+ *
+ * After all, it calls the method responsible for notify all other users in the same group
+ *
+ * @param socket
+ * @param userName
+ * @param groupName
+ */
+void Group::registerNewSession(int socket, string userName) {
+    User* user = NULL;
+    for (auto userItr : this->users) {
+        if ( user->getUsername() == userName) {
+            user = userItr;
+            break;
+        }
+    }
+    if ( user == NULL) { // if user does not exists in the list, we create the entry in the list
+        user = new User(userName);
+        this->users.push_back(user);
+    }
+    user->registerSession(socket);
+    // TODO: call to notify the bitches about the entry
+}
+
 
