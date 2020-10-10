@@ -73,7 +73,9 @@ namespace servergroupmanager {
         strncpy(group, userGroup.c_str(), GROUP_MAX_SIZE - 1);
 
         enteringPacket = new Packet(username, group, (char*)"<Entered the group>", time(0));
+        enteringPacket->clientSocket = JOIN_QUIT_STATUS_MESSAGE;
         processReceivedPacket(enteringPacket);
+        delete enteringPacket;
 
         return 0;
     }
@@ -95,7 +97,9 @@ namespace servergroupmanager {
         Message receivedMessage = Message(packet->message, packet->username, packet->group, std::time(0));
         std::list<User *> users = getUsersByGroup(receivedMessage.getGroup());
 
-        fileSystemManager->appendGroupMessageToHistory(receivedMessage);
+        if(packet->clientSocket != JOIN_QUIT_STATUS_MESSAGE)
+            fileSystemManager->appendGroupMessageToHistory(receivedMessage);
+        
         messageManager->broadcastMessageToUsers(receivedMessage, users);
     }
 
@@ -148,6 +152,7 @@ namespace servergroupmanager {
 	        strncpy(group, groupBeingDisconnected.c_str(), GROUP_MAX_SIZE - 1);
 
             Packet *exitingPacket = new Packet(username, group, (char*)"<Left the group>", time(0));
+            exitingPacket->clientSocket = JOIN_QUIT_STATUS_MESSAGE;
 			processReceivedPacket(exitingPacket);
 			delete exitingPacket;
         }
