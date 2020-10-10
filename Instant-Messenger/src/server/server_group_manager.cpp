@@ -58,6 +58,16 @@ namespace servergroupmanager {
     {
         Packet *enteringPacket;
 
+        // Se grupo n existe, cria grupo e adiciona na lista de grupos
+        if ( groupMap.find(userGroup) == groupMap.end() ) {
+            Group* group = new Group(userGroup);
+            groupMap[userGroup] = group;
+            //TODO paramos aqui, criar grupo se nao existe e lidar c grupo existente abaixo
+            
+        } else {
+        // found
+        }
+
         std::list<User *> groupUsers = getUsersByGroup(userGroup);
         for (auto userItr = groupUsers.begin(); userItr != groupUsers.end(); userItr++) {
             if ((*userItr)->getUsername() == user->getUsername())
@@ -108,7 +118,7 @@ namespace servergroupmanager {
     }
 
 
-
+    // TODO isso provavlemente vai ter que ir pra dentro de Group
     void ServerGroupManager::disconnectUser(int socketId) {
         this->semaphore.wait();
         User *user = getUserBySocketId(socketId);
@@ -124,7 +134,7 @@ namespace servergroupmanager {
     }
 
 
-
+    // TODO isso provavlemente vai ter que ir pra dentro de Group
     void ServerGroupManager::disconnectSocket(User *user, int socketId) {
         string groupBeingDisconnected = user->getActiveSockets()->find(socketId)->second;
         bool hasSimultaneousConnectionToRemovedGroup = false;
