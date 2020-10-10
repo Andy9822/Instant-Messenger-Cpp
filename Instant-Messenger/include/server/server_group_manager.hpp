@@ -22,7 +22,6 @@ using namespace servermessagemanager;
 namespace servergroupmanager {
 
     class ServerGroupManager {
-
         private:
         ServerMessageManager *messageManager;
         FileSystemManager *fileSystemManager;
@@ -36,6 +35,8 @@ namespace servergroupmanager {
         void disconnectSocket(User *user, int socketId);
 
       public:
+        std::list<pthread_t> *threadQueue;
+
         ServerGroupManager();
         int registerUserToGroup(int socket, string username, string groupName);
         void processReceivedPacket(Packet* packet);
@@ -43,6 +44,7 @@ namespace servergroupmanager {
         void printListOfUsers();
         void printListOfGroups();
         void configureFileSystemManager(int maxNumberOfMessagesOnHistory);
+        void sendGroupHistoryMessages(int socketId);
     };
 }
 #endif

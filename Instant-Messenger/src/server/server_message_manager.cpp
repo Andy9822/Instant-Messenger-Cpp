@@ -3,6 +3,12 @@
 
 namespace servermessagemanager {
 
+    void ServerMessageManager::sendMessageToSocketId(Message message, int socketId)
+    {
+        Packet* sendingPacket = new Packet((char*)message.getUser().c_str(), (char*)message.getGroup().c_str(), (char*)message.getText().c_str(), message.getTime());
+        sendPacket(socketId, sendingPacket);
+    }
+
     void ServerMessageManager::broadcastMessageToUsers(Message message, std::list<User *> users)
     {
         Packet* sendingPacket = new Packet((char*)message.getUser().c_str(), (char*)message.getGroup().c_str(), (char*)message.getText().c_str(), message.getTime());
