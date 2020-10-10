@@ -59,12 +59,12 @@ void * Group::consumeMessageQueue(void * args)
 void Group::saveMessageToQueue(message::Message receivedMessage) 
 {
     //TODO HAS TO CHANGE TO SEMAPHORE WITH SOME KIND OF ORDER TO WAKE
-    pthread_mutex_lock(&mutex_message_queue);
+    sem_message_queue->wait();
 
     messages_queue.push(receivedMessage);
 
     //TODO HAS TO CHANGE TO SEMAPHORE WITH SOME KIND OF ORDER TO WAKE
-    pthread_mutex_unlock(&mutex_message_queue);
+    sem_message_queue->post();
     pthread_mutex_unlock(&mutex_consumer_producer);
 }
 
