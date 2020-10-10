@@ -99,13 +99,12 @@ namespace servergroupmanager {
         //cout << "pthread ID: " << thId << endl;
         //threadQueue->insert(threadQueue->end(), thId);
 
-        semaphore.wait();
         Message receivedMessage = Message(packet->message, packet->username, packet->group, std::time(0));
         std::list<User *> users = getUsersByGroup(receivedMessage.getGroup());
 
         fileSystemManager->appendGroupMessageToHistory(receivedMessage);
         messageManager->broadcastMessageToUsers(receivedMessage, users);
-        semaphore.post();
+
     }
 
 
