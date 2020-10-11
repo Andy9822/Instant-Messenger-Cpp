@@ -26,6 +26,7 @@ void FileSystemManager::appendGroupMessageToHistory(Message message) {
     messageContent << messageTextTreated << FILE_SEPARATOR;
     messageContent << message.getTime() << endl;
 
+    cropToFileHistoryLimit(message.getGroup(), true);
     std::ofstream groupRepository(groupFile.str().c_str(), std::ios_base::app | std::ios_base::out);
 
     groupRepository << messageContent.str();
@@ -47,7 +48,7 @@ std::vector<Message> FileSystemManager::readGroupHistoryMessages(string groupNam
     std::ifstream data;
     std::vector <Message> messages;
 
-    cropToFileHistoryLimit(groupName);
+    cropToFileHistoryLimit(groupName, false);
 
     data.open(groupFile.str().c_str());
 
@@ -80,21 +81,28 @@ std::vector<Message> FileSystemManager::readGroupHistoryMessages(string groupNam
  * This method is responsible for preparing the file before it sends the history to the user
  * We need to guarantee that we have up to N messages per group file where N is the limit configured
  */
-void FileSystemManager::cropToFileHistoryLimit(string group) {
+    void FileSystemManager::cropToFileHistoryLimit(string group, bool isWrite) {
     std::stringstream groupFile, tempGroupFile;
     groupFile << MESSAGES_BASE_PATH << PATH_SEPARATOR << group << FILE_EXTENSION;
     tempGroupFile << groupFile.str() << "_temp";
     ifstream oldFile(groupFile.str().c_str());
     std::string line;
     vector<std::string> lines;
-
+    int isWriteDiscount = 0;
     while (std::getline(oldFile, line)) {
         lines.push_back(line);
     }
 
+    if (isWrite) {
+        isWriteDiscount = 1;
+    }
+
     if (lines.size() > getMaxNumberOfMessagesInHistory()) {
         std::ofstream newFile(tempGroupFile.str(), std::ios_base::app | std::ios_base::out);
-        for (int i = (lines.size() - getMaxNumberOfMessagesInHistory()); i < lines.size(); i++) {
+        cout << getMaxNumberOfMessagesInHistory() + isWriteDiscount << ", isWriteDisc " << isWriteDiscount << endl;
+        cout << lines.size() << "LineSize" << endl;
+        cout << "i=" <<  (lines.size() - getMaxNumberOfMessagesInHistory() + isWriteDiscount)<< endl;
+        for (int i = (lines.size() - (getMaxNumberOfMessagesInHistory() - isWriteDiscount)); i < lines.size(); i++) {
             if (i > 0) {
                 newFile << lines[i] << endl;
             }
