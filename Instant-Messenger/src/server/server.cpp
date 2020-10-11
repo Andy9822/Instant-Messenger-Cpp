@@ -98,8 +98,15 @@ namespace server {
     }
 
 
+    /**
+     * Only used to forward the message to the proper group. The group turns himself to deliver
+     * @param socket
+     * @param username
+     * @param group
+     * @return
+     */
     int Server::registerUser(int socket, char *username, char *group) {
-        return groupManager->registerUserToGroup(socket, username, group); // TODO: change logic to pass the information to the right group, kind of done
+        return groupManager->registerUserToGroup(socket, username, group);
     }
 
 
@@ -246,7 +253,6 @@ namespace server {
     }
 
 
-    // TODO may be move functions below to a binary semaphore class and just extend that class
     void Server::init_semaphore() {
         sem_init(&semaphore, 0, 1);
     }
@@ -258,6 +264,7 @@ namespace server {
     void Server::post_semaphore() {
         sem_post(&semaphore);
     }
+
 
     void Server::configureFilesystemManager(int maxNumberOfMessagesInHistory) {
         groupManager->configureFileSystemManager(maxNumberOfMessagesInHistory); // THIS CALL IS OK, WE NEED TO PASS THE INFORMATION
