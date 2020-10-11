@@ -48,12 +48,12 @@ namespace servergroupmanager {
      * Hey bro, this sockets disconected, it may interest you. Of so, process this event as you want.
      * @param socketId
      */
-    void ServerGroupManager::propagateSocketDisconnectionEvent(int socketId) {
+    void ServerGroupManager::propagateSocketDisconnectionEvent(int socketId, map<string, int> &numberOfConnectionsByUser) {
         std::map<basic_string<char>, Group*>::iterator it = this->groupMap.begin();
 
         while ( it != this->groupMap.end() ) { // iterates over the map
             Group* group = it->second;
-            group->handleDisconnectEvent(socketId);
+            group->handleDisconnectEvent(socketId, numberOfConnectionsByUser);
             it++;
         }
     }

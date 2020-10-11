@@ -234,7 +234,7 @@ namespace server {
         wait_semaphore();
 
         openSockets.erase(std::remove(openSockets.begin(), openSockets.end(), client_socket), openSockets.end());
-        groupManager->propagateSocketDisconnectionEvent(client_socket);
+        groupManager->propagateSocketDisconnectionEvent(client_socket, this->connectionsCount);
 
         post_semaphore();
 

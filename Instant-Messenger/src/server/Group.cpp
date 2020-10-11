@@ -97,10 +97,10 @@ int Group::registerNewSession(int socket, string userName) {
  * This function handles the disconnect events from the upper layer
  * @param socket
  */
-void Group::handleDisconnectEvent(int socket) {
+void Group::handleDisconnectEvent(int socket, map<string, int> &numberOfConnectionsByUser) {
     vector<int> allActiveSockets = this->getAllActiveSockets();
     if (std::count(allActiveSockets.begin(), allActiveSockets.end(), socket)) { // element found
-        this->disconnectSession(socket);
+        this->disconnectSession(socket, numberOfConnectionsByUser);
     }
 }
 
@@ -113,9 +113,10 @@ void Group::handleDisconnectEvent(int socket) {
  *      if not - we remove the user from the user's list and send a notification
  * @param socketId
  */
-void Group::disconnectSession(int socketId) {
+void Group::disconnectSession(int socketId, map<string, int> &numberOfConnectionsByUser) {
     user::User* user = getUserFromSocket(socketId);
     if ( user != NULL) {
+        numberOfConnectionsByUser[user->getUsername()] -= 1;
         user->releaseSession(socketId);
         if (user->getActiveSockets().size() < 1) {
             sendActivityMessage(user->getUsername(), "<Left the group>");

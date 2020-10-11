@@ -29,7 +29,7 @@ class Group
         static void *consumeMessageQueue(void * args);
         int registerNewSession(int socket, string username);
         void processReceivedMessage(string userName, string message);
-        void handleDisconnectEvent(int socket);
+        void handleDisconnectEvent(int socket, map<string, int> &numberOfConnectionsByUser);
 
     void configureFileSystemManager(int maxNumberOfMessagesOnHistory);
 
@@ -40,7 +40,7 @@ private:
 
     void sendActivityMessage(const string &userName, const string &actionText);
 
-    void disconnectSession(int socketId);
+    void disconnectSession(int socketId, map<string, int> &numberOfConnectionsByUser);
 
     User *getUserFromSocket(int socketId) const;
 
