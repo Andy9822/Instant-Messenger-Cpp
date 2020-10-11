@@ -50,10 +50,12 @@ namespace user {
 
     void User::releaseSession(int socketId) {
         std::vector<int>::iterator position;
+        this->semaphore.wait();
         position = std::find(sockets.begin(), sockets.end(), socketId);
 
         if (position != sockets.end()) {
             sockets.erase(position);
         }
+        this->semaphore.post();
     }
 } // namespace user;
