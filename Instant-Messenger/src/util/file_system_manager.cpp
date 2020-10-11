@@ -1,4 +1,5 @@
 #include "../../include/util/file_system_manager.hpp"
+#include "../../include/util/definitions.hpp"
 #include <sstream>
 #include <iostream>
 #include <vector>
@@ -47,9 +48,9 @@ std::vector<Message> FileSystemManager::readGroupHistoryMessages(string groupNam
 
     cropToFileHistoryLimit(groupName);
 
-    data.open(groupFile.str());
+    data.open(groupFile.str().c_str());
 
-    while(std::getline(data,line))
+    while(getline(data,line))
     {
         std::stringstream lineStream(line);
         std::string cell;
@@ -82,7 +83,7 @@ void FileSystemManager::cropToFileHistoryLimit(string group) {
     std::stringstream groupFile, tempGroupFile;
     groupFile << MESSAGES_BASE_PATH << PATH_SEPARATOR << group << FILE_EXTENSION;
     tempGroupFile << groupFile.str() << "_temp";
-    ifstream oldFile(groupFile.str());
+    ifstream oldFile(groupFile.str().c_str());
     std::string line;
     vector<std::string> lines;
 
@@ -107,6 +108,9 @@ void FileSystemManager::cropToFileHistoryLimit(string group) {
 }
 
 int FileSystemManager::getMaxNumberOfMessagesInHistory() {
+    if ( this->maxNumberOfMessagesInHistory <= 0 ) {
+        return DEFAULT_NUMBER_OF_RECORDED_MESSAGES;
+    }
     return this->maxNumberOfMessagesInHistory;
 }
 

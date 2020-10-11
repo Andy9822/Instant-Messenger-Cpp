@@ -21,3 +21,7 @@
 #ifndef JOIN_QUIT_STATUS_MESSAGE
 #define JOIN_QUIT_STATUS_MESSAGE 3
 #endif
+
+#ifndef DEBUG_MODE
+#define DEBUG_MODE false
+#endif

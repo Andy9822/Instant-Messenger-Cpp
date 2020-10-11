@@ -30,9 +30,10 @@ class User {
 
         /*
         * Method to register a socket linked to a user
-        * throws USER_SESSIONS_LIMIT_REACHED if the addition 
+        * throws USER_SESSIONS_LIMIT_REACHED if the addition
         * was not created due to limitation reached
         */
+
         int registerSession(int socket);
         void releaseSession(int socket);
         void initSessionList();

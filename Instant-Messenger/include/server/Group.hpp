@@ -28,7 +28,11 @@ class Group
         string groupName;
         static void *consumeMessageQueue(void * args);
         void saveMessageToQueue(message::Message receivedMessage);
-        void registerNewSession(int socket, string username);
+        int registerNewSession(int socket, string username);
+        void sendHistoryToUser(int socketId);
+        void addMessageToMessageQueue(Message message);
+        void processReceivedMessage(string userName, string message);
+        vector<int> getAllActiveSockets();
 };
 
 #endif

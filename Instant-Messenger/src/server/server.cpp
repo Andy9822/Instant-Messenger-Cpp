@@ -98,7 +98,7 @@ namespace server {
 
 
     int Server::registerUser(int socket, char *username, char *group) {
-        return groupManager->registerUserToGroup(socket, username, group); // TODO: change logic to pass the information to the right group
+        return groupManager->registerUserToGroup(socket, username, group); // TODO: change logic to pass the information to the right group, kind of done
     }
 
 
@@ -139,7 +139,7 @@ namespace server {
 
         delete pack;
 
-        _this->groupManager->sendGroupHistoryMessages(client_socketfd); // TODO: we can call this function when we are registering a new connection in the group (inside the group).
+//        _this->groupManager->sendGroupHistoryMessages(client_socketfd); // TODO: we can call this function when we are registering a new connection in the group (inside the group).
 
         return 0;
     }

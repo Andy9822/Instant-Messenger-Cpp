@@ -23,11 +23,23 @@ namespace user {
         return sockets;
     }
 
+    /**
+     * The validation for the number of sockets is not the hard verification that we needed,
+     * It is a week on because it is only checking in the group level. Server has a function to verify it in the upper layer
+     * But it is good to hava some kind of validation here, as well
+     * @param socket
+     * @return negative if error
+     */
     int User::registerSession(int socket) {
         this->semaphore.wait();
-        this->sockets.push_back(socket);
-        this->semaphore.post();
-        return 0;
+        if ( sockets.size() < NUMBER_OF_SIMULTANEOUS_CONNECTIONS ) {
+            this->sockets.push_back(socket);
+            this->semaphore.post();
+            return 0;
+        } else {
+            this->semaphore.post();
+            return -1;
+        }
     }
 
     void User::printSockets() {

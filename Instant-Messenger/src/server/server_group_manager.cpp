@@ -25,54 +25,9 @@ namespace servergroupmanager {
         }
         group =  this->groupMap[groupName];
 
-        group->registerNewSession(socket, username);
-
-        // checkIfGr
-
-
-
-//        this->semaphore.wait();
-//        bool userAlreadyExists = false;
-//        User *newUser;
-//        list<User *>::iterator user;
-//        int result = 0;
-//        std::pair<int, std::string> newSocket(socket, groupName);
-//
-//        for (user = list_users.begin(); user != list_users.end(); ++user) {
-//            if ((*user)->getUsername() == username) {
-//
-//            	userAlreadyExists = true;
-//
-//                if ((*user)->registerSession(newSocket) < 0) {
-//                    result = -1;
-//                    break;
-//                }
-//
-//                result = addUserToGroup(*user, groupName);
-//                break;
-//            }
-//        }
-//
-//        this->semaphore.post();
-//
-//        if (!userAlreadyExists) {
-//            this->semaphore.wait();
-//            newUser = new User(username);
-//
-//            if (newUser->registerSession(newSocket) < 0)
-//            {
-//            	this->semaphore.post();
-//                return -1;
-//            }
-//
-//            result = addUserToGroup(newUser, groupName);
-//            list_users.push_back(newUser);
-//            this->semaphore.post();
-//        }
-//
-//        return result;
+        int a = group->registerNewSession(socket, username);
+        return a;
     }
-
 
 
     int ServerGroupManager::addUserToGroup(User *user, string userGroup)
@@ -109,33 +64,17 @@ namespace servergroupmanager {
         return 0;
     }
 
-
-
-    void ServerGroupManager::sendGroupHistoryMessages(int socketId) {
-        semaphore.wait();
-        User *user = getUserBySocketId(socketId);
-        // string groupName = user->getActiveSockets()->find(socketId)->second;
-
-        // std::vector<Message> messages = fileSystemManager->readGroupHistoryMessages(groupName);
-//        for(auto const& message : messages) {
-//            messageManager->sendMessageToSocketId(message, socketId);
-//        }
-        semaphore.post();
-    }
-
-
-
+    /**
+     * This method selects the responsible group and says: "Hey bro, here is a message. Do whatever you have to do"
+     * @param packet
+     */
     void ServerGroupManager::processReceivedPacket(Packet *packet) {
-        //pthread_t thId = pthread_self();
-        //cout << "pthread ID: " << thId << endl;
-        //threadQueue->insert(threadQueue->end(), thId);
 
-        Message receivedMessage = Message(packet->message, packet->username, packet->group, std::time(0));
-        std::list<User *> users = getUsersByGroup(receivedMessage.getGroup());
-
-        fileSystemManager->appendGroupMessageToHistory(receivedMessage);
-        messageManager->broadcastMessageToUsers(receivedMessage, users);
-
+        if ( !groupExists(packet->group) ) {
+            cout << "[ERROR] group does not exist" << endl;
+            return;
+        }
+        this->groupMap[packet->group]->processReceivedMessage(packet->username, packet->message);
     }
 
 

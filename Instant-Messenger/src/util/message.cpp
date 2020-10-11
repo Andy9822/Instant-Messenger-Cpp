@@ -14,6 +14,7 @@ Message::Message(string text, string user, string group, long int time) {
     this->user = user;
     this->group = group;
     this->time = time;
+    this->isHistoryFlag = false;
 }
 
 string Message::getText() {
@@ -40,6 +41,14 @@ void Message::setGroup(string group) {
 }
 void Message::setTime(long int time) {
     this->time = time;
+}
+
+bool Message::getIsHistoryFlag() {
+    return this->isHistoryFlag;
+}
+
+void Message::setIsHistoryFlag(bool value) {
+    this->isHistoryFlag = value;
 }
 
 
