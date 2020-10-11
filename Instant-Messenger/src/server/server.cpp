@@ -60,11 +60,20 @@ namespace server {
     }
 
     void Server::prepareConnection() {
+        int opt = 1;
+
         // Create socket file descriptor
-        if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) <= 0) {
             cout << "ERROR opening socket\n" << endl;
             exit(1);
         }
+
+        // Forcefully attaching socket to the port
+        if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) 
+        { 
+            perror("setsockopt"); 
+            exit(EXIT_FAILURE); 
+        } 
 
         // Attach socket to server's port
         if (::bind(socket_fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
