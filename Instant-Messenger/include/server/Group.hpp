@@ -40,7 +40,6 @@ class Group
         void sendActivityMessage(const string &userName, const string &actionText);
         void disconnectSession(int socketId, map<string, int> &numberOfConnectionsByUser);
         User *getUserFromSocket(int socketId) const;
-        void removeUserFromGroup(User *user);
 
 };
 

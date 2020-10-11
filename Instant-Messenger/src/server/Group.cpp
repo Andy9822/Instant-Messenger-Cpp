@@ -128,7 +128,7 @@ void Group::disconnectSession(int socketId, map<string, int> &numberOfConnection
         user->releaseSession(socketId);
         if (user->getActiveSockets().size() < 1) {
             sendActivityMessage(user->getUsername(), LEFT_GROUP_MESSAGE);
-            removeUserFromGroup(user);
+            users.remove(user);
         }
     }
 }
@@ -169,11 +169,6 @@ void Group::sendHistoryToUser(int socketId) {
 void Group::processReceivedMessage(string userName, string message) {
     Message receivedMessage = Message(message, userName, this->groupName, std::time(0));
     addMessageToMessageQueue(receivedMessage);
-}
-
-
-void Group::removeUserFromGroup(User *user) {
-    users.remove(user);
 }
 
 /**

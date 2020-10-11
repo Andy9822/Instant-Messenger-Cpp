@@ -193,13 +193,13 @@ namespace server {
         // Also, send reference of this instance to the new thread
         args->second = this;
 
-        pthread_create(tid, NULL, clientCommunication, (void *) args);
+        pthread_create(tid, NULL, listenClientCommunication, (void *) args);
 
         return 0;
     }
 
 
-    void *Server::clientCommunication(void *args) {
+    void *Server::listenClientCommunication(void *args) {
         // We cast our receveid void* args to a pair*
         std::pair<int *, Server *> *args_pair = (std::pair<int *, Server *> *) args;
 
@@ -230,13 +230,13 @@ namespace server {
         }
 
         // Close all properties related to client connection
-        _this->closeClientCommunication(client_socketfd);
+        _this->closeListenClientCommunication(client_socketfd);
 
         return 0;
     }
 
 
-    void Server::closeClientCommunication(int client_socket) {
+    void Server::closeListenClientCommunication(int client_socket) {
         std::cout << "\n\nFreeing allocated memory and closing client connection thread" << std::endl;
         wait_semaphore();
 
@@ -283,17 +283,7 @@ namespace server {
             return 0;
         } else {
             connectionsCount[user] = 1;
+            return 0;
         }
     }
-
-
-    int Server::decrementNumberOfConnectionsFromUser(string user) {
-        map<string, int>::iterator it = this->connectionsCount.find(user);
-
-        if(it != this->connectionsCount.end())
-        {
-            connectionsCount[user] -= 1;
-        }
-    }
-
 }
