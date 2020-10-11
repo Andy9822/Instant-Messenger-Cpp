@@ -78,19 +78,19 @@ namespace servergroupmanager {
     }
 
 
-    // TODO isso provavlemente vai ter que ir pra dentro de Group
-    void ServerGroupManager::disconnectUser(int socketId) {
-        this->semaphore.wait();
-        User *user = getUserBySocketId(socketId);
-        disconnectSocket(user, socketId);
+    /**
+     * This will the send an event to all groups saying:
+     * Hey bro, this sockets disconected, it may interest you. Of so, process this event as you want.
+     * @param socketId
+     */
+    void ServerGroupManager::propagateSocketDisconnectionEvent(int socketId) {
+        std::map<basic_string<char>, Group*>::iterator it = this->groupMap.begin();
 
-        if (user->getActiveSockets().size() == 0) {
-            removeUserFromListOfUsers(user);
+        while ( it != this->groupMap.end() ) { // iterates over the map
+            Group* group = it->second;
+            group->handleDisconnectEvent(socketId);
+            it++;
         }
-        this->semaphore.post();
-
-        printListOfUsers(); //debug purposes
-        printListOfGroups(); //debug purposes
     }
 
 

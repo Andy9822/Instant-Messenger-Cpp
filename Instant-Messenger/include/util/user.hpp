@@ -35,7 +35,7 @@ class User {
         */
 
         int registerSession(int socket);
-        void releaseSession(int socket);
+        void releaseSession(int socketId);
         void initSessionList();
 
         bool operator == (const User& s) const { return username == s.username; }

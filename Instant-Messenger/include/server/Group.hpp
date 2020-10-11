@@ -29,13 +29,22 @@ class Group
         static void *consumeMessageQueue(void * args);
         int registerNewSession(int socket, string username);
         void processReceivedMessage(string userName, string message);
+        void handleDisconnectEvent(int socket);
 
     private:
         vector<int> getAllActiveSockets();
         void sendHistoryToUser(int socketId);
         void addMessageToMessageQueue(Message message);
 
-    void sendJoinedMessage(const string &userName);
+    void sendActivityMessage(const string &userName, const string &actionText);
+
+    void disconnectSession(int socketId);
+
+    User *getUserFromSocket(int socketId) const;
+
+    void removeUserFromGroup(User *user);
+
+
 };
 
 #endif

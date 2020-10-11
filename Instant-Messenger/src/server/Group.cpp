@@ -1,4 +1,5 @@
 #include "../../include/server/Group.hpp"
+#include <algorithm>
 
 using namespace std;
 
@@ -85,7 +86,7 @@ int Group::registerNewSession(int socket, string userName) {
         user = new User(userName);
         this->users.push_back(user);
         result = user->registerSession(socket);
-        sendJoinedMessage(userName); // Se a pessoa já está no grupo, não deve-se enviar uma nova mensagem dizendo que ela ingressou no grupo. (copiei do moodle esse statement)
+        sendActivityMessage(userName, "<Joined the group>"); // Se a pessoa já está no grupo, não deve-se enviar uma nova mensagem dizendo que ela ingressou no grupo. (copiei do moodle esse statement)
     } else {
         result = user->registerSession(socket);
     }
@@ -93,11 +94,43 @@ int Group::registerNewSession(int socket, string userName) {
 }
 
 /**
- * Send a notification that the user entered the group
+ * This function handles the disconnect events from the upper layer
+ * @param socket
+ */
+void Group::handleDisconnectEvent(int socket) {
+    vector<int> allActiveSockets = this->getAllActiveSockets();
+    if (std::count(allActiveSockets.begin(), allActiveSockets.end(), socket)) { // element found
+        this->disconnectSession(socket);
+    }
+}
+
+
+/**
+ * This function will terminated a user connection
+ * Not a big deal, we just need to pay attention to two cases:
+ *  1. will the system keep another connection open?
+ *      if yes - we just kill the connection
+ *      if not - we remove the user from the user's list and send a notification
+ * @param socketId
+ */
+void Group::disconnectSession(int socketId) {
+    user::User* user = getUserFromSocket(socketId);
+    if ( user != NULL) {
+        user->releaseSession(socketId);
+        if (user->getActiveSockets().size() < 1) {
+            sendActivityMessage(user->getUsername(), "<Left the group>");
+            removeUserFromGroup(user);
+        }
+    }
+}
+
+
+/**
+ * Send a notification to the group (entered or join)
  * @param userName
  */
-void Group::sendJoinedMessage(const string &userName) {
-    Message entryNotificationMessage = Message("<Entered the Group>", userName, groupName, time(0));
+void Group::sendActivityMessage(const string &userName, const string &actionText) {
+    Message entryNotificationMessage = Message(actionText, userName, groupName, time(0));
     entryNotificationMessage.setIsNotification(true);
     addMessageToMessageQueue(entryNotificationMessage);
 }
@@ -148,9 +181,29 @@ void Group::sendHistoryToUser(int socketId) {
  * @param message
  */
 void Group::processReceivedMessage(string userName, string message) {
-    cout << "[DEBUG] Group::processReceivedMessage (" << groupName << "): user: " << userName << ", message: " << message << endl;
     Message receivedMessage = Message(message, userName, this->groupName, std::time(0));
     addMessageToMessageQueue(receivedMessage);
+}
+
+
+void Group::removeUserFromGroup(User *user) {
+    users.remove(user);
+}
+
+/**
+ * Auxiliar method to get the user by the socket
+ * @param socketId
+ * @return
+ */
+User *Group::getUserFromSocket(int socketId) const {
+    for (auto user : users) {
+        for (auto socket : user->getActiveSockets()) {
+            if (socket == socketId) {
+                return user;
+            }
+        }
+    }
+    return NULL;
 }
 
 /**

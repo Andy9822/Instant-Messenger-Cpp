@@ -221,12 +221,12 @@ namespace server {
                 break;
             }
 
-            _this->groupManager->processReceivedPacket(receivedPacket); // TODO: this is running in a thread for each user... It is ok to call this interface, but lets make the group to treat the request
-            // TODO: change this call to: write to group`s messageQueue
+            _this->groupManager->processReceivedPacket(receivedPacket);
+
         }
 
         // Close all properties related to client connection
-        _this->closeClientCommunication(client_socketfd);
+        _this->closeClientCommunication(client_socketfd); // TODO: verify this part
 
         return 0;
     }
@@ -237,7 +237,7 @@ namespace server {
         wait_semaphore();
 
         openSockets.erase(std::remove(openSockets.begin(), openSockets.end(), client_socket), openSockets.end());
-        groupManager->disconnectUser(client_socket); // TODO:  Logic change THIS IS OK, AS WELL, SINCE WE NEED TO PASS THE INFORMATION TO THE PROPER GROUP. But the logic will change
+        groupManager->propagateSocketDisconnectionEvent(client_socket); // TODO:  Logic change THIS IS OK, AS WELL, SINCE WE NEED TO PASS THE INFORMATION TO THE PROPER GROUP. But the logic will change
 
         post_semaphore();
 

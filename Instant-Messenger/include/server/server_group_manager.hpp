@@ -44,7 +44,7 @@ namespace servergroupmanager {
         ServerGroupManager();
         int registerUserToGroup(int socket, string username, string groupName);
         void processReceivedPacket(Packet* packet);
-        void disconnectUser(int socketId);
+        void propagateSocketDisconnectionEvent(int socketId);
         void printListOfUsers();
         void printListOfGroups();
         void configureFileSystemManager(int maxNumberOfMessagesOnHistory);

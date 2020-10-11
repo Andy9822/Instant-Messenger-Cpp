@@ -1,6 +1,6 @@
 #include "../../include/util/user.hpp"
-#include <sstream>
 #include <iostream>
+#include <algorithm>
 
 namespace user {
     User::User(string username) : semaphore(1) {
@@ -45,6 +45,15 @@ namespace user {
     void User::printSockets() {
         for (auto socket : this->sockets) {
             cout << "printsockt::Socket: " << socket << endl;
+        }
+    }
+
+    void User::releaseSession(int socketId) {
+        std::vector<int>::iterator position;
+        position = std::find(sockets.begin(), sockets.end(), socketId);
+
+        if (position != sockets.end()) {
+            sockets.erase(position);
         }
     }
 } // namespace user;
