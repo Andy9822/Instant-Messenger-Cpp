@@ -23,29 +23,24 @@ class Group
         pthread_t tid;
         list<user::User*> users;
         pthread_mutex_t mutex_consumer_producer;
-        Semaphore* sem_message_queue;
+        Semaphore* messageQueueSemaphore;
+        Semaphore* usersSemaphore;
         std::queue<message::Message> messages_queue;  
         string groupName;
         static void *consumeMessageQueue(void * args);
         int registerNewSession(int socket, string username);
         void processReceivedMessage(string userName, string message);
         void handleDisconnectEvent(int socket, map<string, int> &numberOfConnectionsByUser);
+        void configureFileSystemManager(int maxNumberOfMessagesOnHistory);
 
-    void configureFileSystemManager(int maxNumberOfMessagesOnHistory);
-
-private:
+    private:
         vector<int> getAllActiveSockets();
         void sendHistoryToUser(int socketId);
         void addMessageToMessageQueue(Message message);
-
-    void sendActivityMessage(const string &userName, const string &actionText);
-
-    void disconnectSession(int socketId, map<string, int> &numberOfConnectionsByUser);
-
-    User *getUserFromSocket(int socketId) const;
-
-    void removeUserFromGroup(User *user);
-
+        void sendActivityMessage(const string &userName, const string &actionText);
+        void disconnectSession(int socketId, map<string, int> &numberOfConnectionsByUser);
+        User *getUserFromSocket(int socketId) const;
+        void removeUserFromGroup(User *user);
 
 };
 

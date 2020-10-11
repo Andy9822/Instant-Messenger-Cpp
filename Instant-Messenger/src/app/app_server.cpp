@@ -46,9 +46,6 @@ void read_args(int argc, char *argv[], int *port, int *maxNumberOfMessagesInHist
     } else {
 	    cout << "[WARNING] using random port and " << DEFAULT_NUMBER_OF_RECORDED_MESSAGES << "messages on history" << endl;
 	}
-
-    cout << "[DEBUG] BROOOOOOOOOOOO " << *maxNumberOfMessagesInHistory << "messages on history" << endl;
-
 }
 
 int main(int argc, char *argv[])

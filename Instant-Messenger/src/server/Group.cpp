@@ -9,8 +9,9 @@ Group::Group(string name)
     fsManager = new filesystemmanager::FileSystemManager();
     messageManager = new servermessagemanager::ServerMessageManager();
 
-    // Init queue semaphore
-    sem_message_queue = new Semaphore(1);
+    // Init semaphores
+    messageQueueSemaphore = new Semaphore(1);
+    usersSemaphore = new Semaphore(1);
 
     // Init consumer/producer mutex
     pthread_mutex_init(&mutex_consumer_producer, NULL);
@@ -33,23 +34,25 @@ void * Group::consumeMessageQueue(void * args)
         while (hasMessagesInQueue)
         {
             
-            _this->sem_message_queue->wait();
+            _this->messageQueueSemaphore->wait();
 
             if (_this->messages_queue.empty())
             {
                 hasMessagesInQueue = false;
-                _this->sem_message_queue->post();
+                _this->messageQueueSemaphore->post();
             }
             else
             {
                 message::Message message = _this->messages_queue.front();
                 _this->messages_queue.pop();
 
-                _this->sem_message_queue->post();
+                _this->messageQueueSemaphore->post();
 
 
                 _this->fsManager->appendGroupMessageToHistory(message);
+                _this->usersSemaphore->wait();
                 _this->messageManager->broadcastMessageToUsers(message, _this->getAllActiveSockets());
+                _this->usersSemaphore->post();
             }
         }
         
@@ -76,6 +79,7 @@ int Group::registerNewSession(int socket, string userName) {
 
 
     sendHistoryToUser(socket);
+    usersSemaphore->wait();
     for (auto userItr : this->users) {
         if ( userName.compare(userItr->getUsername()) == 0 ) {
             user = userItr;
@@ -86,10 +90,11 @@ int Group::registerNewSession(int socket, string userName) {
         user = new User(userName);
         this->users.push_back(user);
         result = user->registerSession(socket);
-        sendActivityMessage(userName, "<Joined the group>"); // Se a pessoa já está no grupo, não deve-se enviar uma nova mensagem dizendo que ela ingressou no grupo. (copiei do moodle esse statement)
+        sendActivityMessage(userName, JOINED_MESSAGE); // Se a pessoa já está no grupo, não deve-se enviar uma nova mensagem dizendo que ela ingressou no grupo. (copiei do moodle esse statement)
     } else {
         result = user->registerSession(socket);
     }
+    usersSemaphore->post();
     return result;
 }
 
@@ -98,10 +103,12 @@ int Group::registerNewSession(int socket, string userName) {
  * @param socket
  */
 void Group::handleDisconnectEvent(int socket, map<string, int> &numberOfConnectionsByUser) {
+    usersSemaphore->wait();
     vector<int> allActiveSockets = this->getAllActiveSockets();
     if (std::count(allActiveSockets.begin(), allActiveSockets.end(), socket)) { // element found
         this->disconnectSession(socket, numberOfConnectionsByUser);
     }
+    usersSemaphore->post();
 }
 
 
@@ -111,6 +118,7 @@ void Group::handleDisconnectEvent(int socket, map<string, int> &numberOfConnecti
  *  1. will the system keep another connection open?
  *      if yes - we just kill the connection
  *      if not - we remove the user from the user's list and send a notification
+ *  it is already thread safe by the call (handleDisconnectEvent)
  * @param socketId
  */
 void Group::disconnectSession(int socketId, map<string, int> &numberOfConnectionsByUser) {
@@ -119,7 +127,7 @@ void Group::disconnectSession(int socketId, map<string, int> &numberOfConnection
         numberOfConnectionsByUser[user->getUsername()] -= 1;
         user->releaseSession(socketId);
         if (user->getActiveSockets().size() < 1) {
-            sendActivityMessage(user->getUsername(), "<Left the group>");
+            sendActivityMessage(user->getUsername(), LEFT_GROUP_MESSAGE);
             removeUserFromGroup(user);
         }
     }
@@ -144,12 +152,12 @@ void Group::sendActivityMessage(const string &userName, const string &actionText
  */
 void Group::sendHistoryToUser(int socketId) {
     std::vector<Message> messages = fsManager->readGroupHistoryMessages(this->groupName);
-    sem_message_queue->wait();
+    messageQueueSemaphore->wait();
     for(auto  message : messages) {
         message.setIsNotification(true);
         messageManager->sendMessageToSocketId(message, socketId);
     }
-    sem_message_queue->post();
+    messageQueueSemaphore->post();
 }
 
 
@@ -190,9 +198,9 @@ User *Group::getUserFromSocket(int socketId) const {
  * @param message
  */
 void Group::addMessageToMessageQueue(Message message) {
-    sem_message_queue->wait();
+    messageQueueSemaphore->wait();
     messages_queue.push(message);
-    sem_message_queue->post();
+    messageQueueSemaphore->post();
     pthread_mutex_unlock(&mutex_consumer_producer);
 }
 
@@ -204,7 +212,6 @@ vector<int> Group::getAllActiveSockets() {
     vector<int> sockets = vector<int>();
     for (auto user : this->users) {
         for (auto userActiveSocket : user->getActiveSockets()) {
-            cout << "[DEBUG] Group::getAllActiveSockets - user: " << user->getUsername() << " socket: " << userActiveSocket << endl;
             sockets.push_back(userActiveSocket);
         }
     }

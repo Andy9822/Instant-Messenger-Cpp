@@ -22,9 +22,7 @@ namespace servermessagemanager {
      */
     void ServerMessageManager::broadcastMessageToUsers(Message message, vector<int> sockets)
     {
-        cout << "[DEBUG] broadcastMessageToUsers " << message.getUser() << ", user: " << message.getUser() << endl;
         for ( auto socket : sockets) {
-            cout << "[DEBUG] broadcastMessageToUsers sockets: " << socket << endl;
             sendMessageToSocketId(message, socket);
         }
     }

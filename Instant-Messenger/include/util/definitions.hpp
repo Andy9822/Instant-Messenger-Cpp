@@ -25,3 +25,17 @@
 #ifndef DEBUG_MODE
 #define DEBUG_MODE false
 #endif
+
+
+#ifndef DEBUG_MODE
+#define DEBUG_MODE false
+#endif
+
+
+#ifndef JOINED_MESSAGE
+#define JOINED_MESSAGE "<Joined the group>"
+#endif
+
+#ifndef LEFT_GROUP_MESSAGE
+#define LEFT_GROUP_MESSAGE "<Left the group>"
+#endif
