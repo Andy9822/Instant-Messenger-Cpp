@@ -24,7 +24,7 @@ class FileSystemManager {
     private: 
         Semaphore semaphore;
         int maxNumberOfMessagesInHistory;
-        void cropToFileHistoryLimit(string group);
+        void cropToFileHistoryLimit(string group, bool isWrite);
 
     public: 
         FileSystemManager();
