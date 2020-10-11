@@ -15,7 +15,6 @@ struct sigaction sigIntHandler;
 void my_handler(int signal){
 	if (signal == 2)
 	{
-		//TODO have to investigate why even closing sockets still hang outs if there are open connections
         serverApp.closeServer();
 		exit(2);
 	}	
@@ -46,9 +45,6 @@ void read_args(int argc, char *argv[], int *port, int *maxNumberOfMessagesInHist
     } else {
 	    cout << "[WARNING] using random port and " << DEFAULT_NUMBER_OF_RECORDED_MESSAGES << "messages on history" << endl;
 	}
-
-    cout << "[DEBUG] BROOOOOOOOOOOO " << *maxNumberOfMessagesInHistory << "messages on history" << endl;
-
 }
 
 int main(int argc, char *argv[])

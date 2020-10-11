@@ -12,12 +12,12 @@ build-client:
 
 build-server:
 	${CC} -pthread -std=c++11 -g -o $(BUILD_DIR)/server.app $(SRC_DIR)/util/Socket.cpp $(SRC_DIR)/util/message.cpp $(SRC_DIR)/util/file_system_manager.cpp $(SRC_DIR)/util/Semaphore.cpp $(SRC_DIR)/app/app_server.cpp $(SRC_DIR)/server/server.cpp \
-	$(SRC_DIR)/server/server_group_manager.cpp $(SRC_DIR)/server/server_message_manager.cpp $(SRC_DIR)/util/user.cpp
+	$(SRC_DIR)/server/server_group_manager.cpp $(SRC_DIR)/server/server_message_manager.cpp $(SRC_DIR)/util/user.cpp $(SRC_DIR)/server/Group.cpp
 
 run-client:
-	$(BUILD_DIR)/client.app JohnnyUser2 SampleRoom2 127.0.0.1 $(SERVER_PORT)
+	$(BUILD_DIR)/client.app JohnnyUser1 SampleRoom1 127.0.0.1 $(SERVER_PORT)
 
-run-server:
+run-server: build-server
 	$(BUILD_DIR)/server.app $(SERVER_PORT) 4
 
 clean:

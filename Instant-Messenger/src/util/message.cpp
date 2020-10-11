@@ -14,6 +14,7 @@ Message::Message(string text, string user, string group, long int time) {
     this->user = user;
     this->group = group;
     this->time = time;
+    this->isNotification = false;
 }
 
 string Message::getText() {
@@ -40,6 +41,14 @@ void Message::setGroup(string group) {
 }
 void Message::setTime(long int time) {
     this->time = time;
+}
+
+bool Message::getIsNotification() {
+    return this->isNotification;
+}
+
+void Message::setIsNotification(bool value) {
+    this->isNotification = value;
 }
 
 
