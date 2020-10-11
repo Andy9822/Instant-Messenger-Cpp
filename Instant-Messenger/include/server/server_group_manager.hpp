@@ -37,6 +37,7 @@ namespace servergroupmanager {
         void removeUserFromListOfUsers(User *user);
         void disconnectSocket(User *user, int socketId);
         bool groupExists(string groupName);
+        int maxNumberOfMessagesOnHistory;
 
       public:
         std::list<pthread_t> *threadQueue;
@@ -45,10 +46,8 @@ namespace servergroupmanager {
         int registerUserToGroup(int socket, string username, string groupName);
         void processReceivedPacket(Packet* packet);
         void propagateSocketDisconnectionEvent(int socketId);
-        void printListOfUsers();
-        void printListOfGroups();
         void configureFileSystemManager(int maxNumberOfMessagesOnHistory);
-        void sendGroupHistoryMessages(int socketId);
+
     };
 }
 #endif

@@ -144,29 +144,6 @@ void Group::sendActivityMessage(const string &userName, const string &actionText
 void Group::sendHistoryToUser(int socketId) {
     std::vector<Message> messages = fsManager->readGroupHistoryMessages(this->groupName);
     sem_message_queue->wait();
-
-    if ( DEBUG_MODE ) cout << "[DEUB] Group::queueTheHistoryMessages messages size: " << messages.size() << endl;
-
-    if ( DEBUG_MODE ) {
-        Message message0 = Message("test0", "", "SampleRoom2", 12312);
-        Message message1 = Message("test1", "", "SampleRoom2", 12311);
-        Message message2 = Message("test2", "", "SampleRoom2", 12312);
-        Message message3 = Message("test3", "", "SampleRoom2", 12313);
-        Message message4 = Message("test4", "", "SampleRoom2", 12314);
-
-        message0.setIsNotification(true);
-        message1.setIsNotification(true);
-        message2.setIsNotification(true);
-        message3.setIsNotification(true);
-        message4.setIsNotification(true);
-
-        messages.push_back(message0);
-        messages.push_back(message1);
-        messages.push_back(message2);
-        messages.push_back(message3);
-        messages.push_back(message4);
-    }
-
     for(auto  message : messages) {
         message.setIsNotification(true);
         messageManager->sendMessageToSocketId(message, socketId);
@@ -231,6 +208,10 @@ vector<int> Group::getAllActiveSockets() {
         }
     }
     return sockets;
+}
+
+void Group::configureFileSystemManager(int maxNumberOfMessagesOnHistory) {
+    this->fsManager->setMaxNumberOfMessagesInHistory(maxNumberOfMessagesOnHistory);
 }
 
 

@@ -29,7 +29,9 @@ namespace server {
         int socket_fd;
         struct sockaddr_in serv_addr;
         void closeClientCommunication(int client_socket);
-        //TODO maybe remove static and evaluate how to share vector between threads
+        std::map<string, int> connectionsCount;
+        int limitOfConnectios;
+
 
     public:
         Server();
@@ -50,6 +52,9 @@ namespace server {
         void wait_semaphore();
         void post_semaphore();
         void configureFilesystemManager(int maxNumberOfMessagesInHistory);
+        int getNumberOfConnectionsByUser(string user);
+        int incrementNumberOfConnectionsFromUser(string user);
+        int decrementNumberOfConnectionsFromUser(string user);
     };
 }
 #endif

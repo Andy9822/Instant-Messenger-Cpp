@@ -32,7 +32,7 @@ namespace user {
      */
     int User::registerSession(int socket) {
         this->semaphore.wait();
-        if ( sockets.size() < NUMBER_OF_SIMULTANEOUS_CONNECTIONS ) {
+        if (sockets.size() < MAX_NUMBER_OF_SIMULTANEOUS_CONNECTIONS ) {
             this->sockets.push_back(socket);
             this->semaphore.post();
             return 0;

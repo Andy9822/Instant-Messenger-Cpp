@@ -12,7 +12,7 @@
 using namespace std;
 using std::string;
 
-#define NUMBER_OF_SIMULTANEOUS_CONNECTIONS 2
+#define MAX_NUMBER_OF_SIMULTANEOUS_CONNECTIONS 2
 
 namespace user {
 

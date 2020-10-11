@@ -31,7 +31,9 @@ class Group
         void processReceivedMessage(string userName, string message);
         void handleDisconnectEvent(int socket);
 
-    private:
+    void configureFileSystemManager(int maxNumberOfMessagesOnHistory);
+
+private:
         vector<int> getAllActiveSockets();
         void sendHistoryToUser(int socketId);
         void addMessageToMessageQueue(Message message);

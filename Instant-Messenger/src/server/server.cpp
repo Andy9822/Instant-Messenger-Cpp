@@ -6,6 +6,7 @@
 #else
 
 #include <unistd.h>
+#include "../../include/util/exceptions.hpp"
 
 #endif
 
@@ -120,27 +121,23 @@ namespace server {
         strncpy(username, receivedPacket->username, USERNAME_MAX_SIZE - 1);
         strncpy(group, receivedPacket->group, GROUP_MAX_SIZE - 1);
 
-        // checking if there are already 2 users with the same name registered
-        registered = _this->registerUser(client_socketfd, username, group);
-        
-        // if there are already two users with the same name, we close the connection
-        if (registered < 0) {
+        if (incrementNumberOfConnectionsFromUser(username) == USER_SESSIONS_LIMIT_REACHED ) {
             pack->clientSocket = -1;
             _this->sendPacket(client_socketfd, pack);
             delete pack;
             return -1;
         }
+
+        registered = _this->registerUser(client_socketfd, username, group);
+
         // if there was already one entry with the same username before, we don't print <entered the group> a second time 
-        else if(registered == 1)
+        if(registered == 1)
         {
 	        pack->clientSocket = JOIN_QUIT_STATUS_MESSAGE;
 	        _this->sendPacket(client_socketfd, pack);
 	    }
 
         delete pack;
-
-//        _this->groupManager->sendGroupHistoryMessages(client_socketfd); // TODO: we can call this function when we are registering a new connection in the group (inside the group).
-
         return 0;
     }
 
@@ -226,7 +223,7 @@ namespace server {
         }
 
         // Close all properties related to client connection
-        _this->closeClientCommunication(client_socketfd); // TODO: verify this part
+        _this->closeClientCommunication(client_socketfd);
 
         return 0;
     }
@@ -237,7 +234,7 @@ namespace server {
         wait_semaphore();
 
         openSockets.erase(std::remove(openSockets.begin(), openSockets.end(), client_socket), openSockets.end());
-        groupManager->propagateSocketDisconnectionEvent(client_socket); // TODO:  Logic change THIS IS OK, AS WELL, SINCE WE NEED TO PASS THE INFORMATION TO THE PROPER GROUP. But the logic will change
+        groupManager->propagateSocketDisconnectionEvent(client_socket);
 
         post_semaphore();
 
@@ -265,4 +262,31 @@ namespace server {
     void Server::configureFilesystemManager(int maxNumberOfMessagesInHistory) {
         groupManager->configureFileSystemManager(maxNumberOfMessagesInHistory); // THIS CALL IS OK, WE NEED TO PASS THE INFORMATION
     }
+
+
+    int Server::incrementNumberOfConnectionsFromUser(string user) {
+        map<string, int>::iterator it = this->connectionsCount.find(user);
+
+        if(it != this->connectionsCount.end()) // achou
+        {
+            if (connectionsCount[user] >= MAX_NUMBER_OF_SIMULTANEOUS_CONNECTIONS ) {
+                return USER_SESSIONS_LIMIT_REACHED;
+            }
+            connectionsCount[user] += 1;
+            return 0;
+        } else {
+            connectionsCount[user] = 1;
+        }
+    }
+
+
+    int Server::decrementNumberOfConnectionsFromUser(string user) {
+        map<string, int>::iterator it = this->connectionsCount.find(user);
+
+        if(it != this->connectionsCount.end())
+        {
+            connectionsCount[user] -= 1;
+        }
+    }
+
 }

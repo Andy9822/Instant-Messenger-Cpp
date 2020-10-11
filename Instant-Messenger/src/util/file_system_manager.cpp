@@ -26,7 +26,7 @@ void FileSystemManager::appendGroupMessageToHistory(Message message) {
     messageContent << messageTextTreated << FILE_SEPARATOR;
     messageContent << message.getTime() << endl;
 
-    std::ofstream groupRepository(groupFile.str(), std::ios_base::app | std::ios_base::out);
+    std::ofstream groupRepository(groupFile.str().c_str(), std::ios_base::app | std::ios_base::out);
 
     groupRepository << messageContent.str();
     groupRepository.close();
