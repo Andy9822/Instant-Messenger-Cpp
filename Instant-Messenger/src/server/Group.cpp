@@ -72,6 +72,9 @@ void * Group::consumeMessageQueue(void * args)
 int Group::registerNewSession(int socket, string userName) {
     User* user = NULL;
     int result = 0;
+
+
+    sendHistoryToUser(socket);
     for (auto userItr : this->users) {
         if ( userName.compare(userItr->getUsername()) == 0 ) {
             user = userItr;
@@ -81,13 +84,30 @@ int Group::registerNewSession(int socket, string userName) {
     if ( user == NULL) { // if user does not exists in the list, we create the entry in the list
         user = new User(userName);
         this->users.push_back(user);
+        result = user->registerSession(socket);
+        sendJoinedMessage(userName); // Se a pessoa já está no grupo, não deve-se enviar uma nova mensagem dizendo que ela ingressou no grupo. (copiei do moodle esse statement)
+    } else {
+        result = user->registerSession(socket);
     }
-    // TODO: call to notify the bitches about the entry
-    sendHistoryToUser(socket);
-
-    return user->registerSession(socket);
+    return result;
 }
 
+/**
+ * Send a notification that the user entered the group
+ * @param userName
+ */
+void Group::sendJoinedMessage(const string &userName) {
+    Message entryNotificationMessage = Message("<Entered the Group>", userName, groupName, time(0));
+    entryNotificationMessage.setIsNotification(true);
+    addMessageToMessageQueue(entryNotificationMessage);
+}
+
+
+/**
+ * This little friend can send the history to a socket
+ * It can help you to welcome new users and introduce them to the discussed topics
+ * @param socketId
+ */
 void Group::sendHistoryToUser(int socketId) {
     std::vector<Message> messages = fsManager->readGroupHistoryMessages(this->groupName);
     sem_message_queue->wait();
@@ -101,11 +121,11 @@ void Group::sendHistoryToUser(int socketId) {
         Message message3 = Message("test3", "", "SampleRoom2", 12313);
         Message message4 = Message("test4", "", "SampleRoom2", 12314);
 
-        message0.setIsHistoryFlag(true);
-        message1.setIsHistoryFlag(true);
-        message2.setIsHistoryFlag(true);
-        message3.setIsHistoryFlag(true);
-        message4.setIsHistoryFlag(true);
+        message0.setIsNotification(true);
+        message1.setIsNotification(true);
+        message2.setIsNotification(true);
+        message3.setIsNotification(true);
+        message4.setIsNotification(true);
 
         messages.push_back(message0);
         messages.push_back(message1);
@@ -115,7 +135,7 @@ void Group::sendHistoryToUser(int socketId) {
     }
 
     for(auto  message : messages) {
-        message.setIsHistoryFlag(true);
+        message.setIsNotification(true);
         messageManager->sendMessageToSocketId(message, socketId);
     }
     sem_message_queue->post();
@@ -153,6 +173,7 @@ vector<int> Group::getAllActiveSockets() {
     vector<int> sockets = vector<int>();
     for (auto user : this->users) {
         for (auto userActiveSocket : user->getActiveSockets()) {
+            cout << "[DEBUG] Group::getAllActiveSockets - user: " << user->getUsername() << " socket: " << userActiveSocket << endl;
             sockets.push_back(userActiveSocket);
         }
     }

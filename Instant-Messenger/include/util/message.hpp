@@ -15,7 +15,7 @@ class Message {
         string user;
         string group;
         long int time;
-        bool isHistoryFlag;
+        bool isNotification;
     
     public:
         Message();
@@ -28,8 +28,8 @@ class Message {
         void setUser(string user);
         void setGroup(string group);
         void setTime(long int time);
-        bool getIsHistoryFlag();
-        void setIsHistoryFlag(bool value);
+        bool getIsNotification();
+        void setIsNotification(bool value);
 };
 }  //namespace message
 

@@ -35,6 +35,7 @@ class Group
         void sendHistoryToUser(int socketId);
         void addMessageToMessageQueue(Message message);
 
+    void sendJoinedMessage(const string &userName);
 };
 
 #endif

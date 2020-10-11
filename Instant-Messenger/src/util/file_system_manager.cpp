@@ -15,6 +15,7 @@ FileSystemManager::FileSystemManager() : semaphore(1) {
 }
 
 void FileSystemManager::appendGroupMessageToHistory(Message message) {
+    if (message.getIsNotification() ) return; // if entry or disconnected message, do not save to the history
     semaphore.wait();
     std::stringstream groupFile;
     std::stringstream messageContent;
