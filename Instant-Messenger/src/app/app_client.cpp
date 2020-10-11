@@ -1,37 +1,34 @@
 #include "../../include/client/client.h"
 #include "../../include/util/definitions.hpp"
+#include <iterator>
+#include <string>
+#include <regex>
 
 int validateName(char *name)
 {
-    int nameLength = strlen(name);
+    string stringToBeValidated(name);
+    int nameLength = stringToBeValidated.length();
+    regex validator("[A-Za-z][A-Za-z0-9.]+");
 
-    if(nameLength > 3 && nameLength < USERNAME_MAX_SIZE + 1)
+    bool isValidSize = ( nameLength >= 4 && nameLength <= USERNAME_MAX_SIZE);
+    bool isValidString = regex_match(stringToBeValidated.begin(), stringToBeValidated.end(), validator);
+
+    if (isValidSize && isValidString)
     {
-        for(int i=0; i<nameLength; i++)
-        {
-
-            if((name[i] >= 'A' && name[i] <= 'Z') || (name[i] >= 'a' && name[i] <= 'z') || (name[i] == '.') || (name[i] >= '0' && name[i] <= '9'))
-            {
-                if(i == 0 && (name[i] == '.'))
-                {
-                    std::cout << "Invalid user/group name -> Name must start with a letter" << std::endl;
-                    return -1;
-                }
-            }
-            else
-            {
-                std::cout << "Invalid user/group name -> Name must have only letters, numbers and '.' " << std::endl;
-                return -1;
-            }
-        }
+        return 0;
     }
     else
     {
-        std::cout << "Invalid user/group name -> Name must have between 4 and 20 characters" << std::endl;
+        if (!isValidSize)
+        {
+            std::cout << "Invalid user or group name -> Name must have between 4 and 20 characters" << std::endl;
+        }
+        else
+        {
+            std::cout << "Invalid user or group name -> Name must start with letter and be formed with numbers, letters and . only" << std::endl;
+        }
         return -1;
     }
-
-    return 0;
 }
 
 
