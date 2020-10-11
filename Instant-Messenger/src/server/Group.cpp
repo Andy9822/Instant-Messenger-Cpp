@@ -56,18 +56,6 @@ void * Group::consumeMessageQueue(void * args)
     
 }
 
-void Group::saveMessageToQueue(message::Message receivedMessage) 
-{
-    //TODO HAS TO CHANGE TO SEMAPHORE WITH SOME KIND OF ORDER TO WAKE
-    sem_message_queue->wait();
-
-    messages_queue.push(receivedMessage);
-
-    //TODO HAS TO CHANGE TO SEMAPHORE WITH SOME KIND OF ORDER TO WAKE
-    sem_message_queue->post();
-    pthread_mutex_unlock(&mutex_consumer_producer);
-}
-
 /**
  * This method will register the user in the group by adding it to the users list and adding the reference to the socket
  * If user already exists in the list, we just add the id for the socket in the connections
@@ -143,7 +131,6 @@ void Group::processReceivedMessage(string userName, string message) {
     cout << "[DEBUG] Group::processReceivedMessage (" << groupName << "): user: " << userName << ", message: " << message << endl;
     Message receivedMessage = Message(message, userName, this->groupName, std::time(0));
     addMessageToMessageQueue(receivedMessage);
-    fsManager->appendGroupMessageToHistory(receivedMessage);
 }
 
 /**
@@ -155,6 +142,7 @@ void Group::addMessageToMessageQueue(Message message) {
     sem_message_queue->wait();
     messages_queue.push(message);
     sem_message_queue->post();
+    pthread_mutex_unlock(&mutex_consumer_producer);
 }
 
 /**

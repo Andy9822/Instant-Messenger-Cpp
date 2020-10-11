@@ -27,12 +27,14 @@ class Group
         std::queue<message::Message> messages_queue;  
         string groupName;
         static void *consumeMessageQueue(void * args);
-        void saveMessageToQueue(message::Message receivedMessage);
         int registerNewSession(int socket, string username);
+        void processReceivedMessage(string userName, string message);
+
+    private:
+        vector<int> getAllActiveSockets();
         void sendHistoryToUser(int socketId);
         void addMessageToMessageQueue(Message message);
-        void processReceivedMessage(string userName, string message);
-        vector<int> getAllActiveSockets();
+
 };
 
 #endif
