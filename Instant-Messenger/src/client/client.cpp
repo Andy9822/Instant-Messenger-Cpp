@@ -165,6 +165,7 @@ void * Client::receiveFromServer(void* args)
 
 		_this->showMessage(receivedPacket);
 	}
+	return NULL;
 }
 
 

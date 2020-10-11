@@ -28,7 +28,7 @@ namespace server {
         ServerGroupManager *groupManager;
         int socket_fd;
         struct sockaddr_in serv_addr;
-        void closeClientCommunication(int client_socket);
+        void closeListenClientCommunication(int client_socket);
         std::map<string, int> connectionsCount;
         int limitOfConnectios;
 
@@ -37,7 +37,7 @@ namespace server {
         Server();
         static std::vector<int> openSockets;
         static sem_t semaphore;
-        static void *clientCommunication(void *newsocket);
+        static void *listenClientCommunication(void *newsocket);
         static void closeClientConnection(int socket_fd);
         void setPort(int port);
         void prepareConnection();
@@ -54,7 +54,6 @@ namespace server {
         void configureFilesystemManager(int maxNumberOfMessagesInHistory);
         int getNumberOfConnectionsByUser(string user);
         int incrementNumberOfConnectionsFromUser(string user);
-        int decrementNumberOfConnectionsFromUser(string user);
     };
 }
 #endif
