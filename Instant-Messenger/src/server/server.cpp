@@ -6,6 +6,7 @@
 #else
 
 #include <unistd.h>
+#include "../../include/util/exceptions.hpp"
 
 #endif
 
@@ -97,6 +98,13 @@ namespace server {
     }
 
 
+    /**
+     * Only used to forward the message to the proper group. The group turns himself to deliver
+     * @param socket
+     * @param username
+     * @param group
+     * @return
+     */
     int Server::registerUser(int socket, char *username, char *group) {
         return groupManager->registerUserToGroup(socket, username, group);
     }
@@ -120,27 +128,23 @@ namespace server {
         strncpy(username, receivedPacket->username, USERNAME_MAX_SIZE - 1);
         strncpy(group, receivedPacket->group, GROUP_MAX_SIZE - 1);
 
-        // checking if there are already 2 users with the same name registered
-        registered = _this->registerUser(client_socketfd, username, group);
-        
-        // if there are already two users with the same name, we close the connection
-        if (registered < 0) {
+        if (incrementNumberOfConnectionsFromUser(username) == USER_SESSIONS_LIMIT_REACHED ) {
             pack->clientSocket = -1;
             _this->sendPacket(client_socketfd, pack);
             delete pack;
             return -1;
         }
+
+        registered = _this->registerUser(client_socketfd, username, group);
+
         // if there was already one entry with the same username before, we don't print <entered the group> a second time 
-        else if(registered == 1)
+        if(registered == 1)
         {
 	        pack->clientSocket = JOIN_QUIT_STATUS_MESSAGE;
 	        _this->sendPacket(client_socketfd, pack);
 	    }
 
         delete pack;
-
-        _this->groupManager->sendGroupHistoryMessages(client_socketfd);
-
         return 0;
     }
 
@@ -191,11 +195,6 @@ namespace server {
 
         pthread_create(tid, NULL, clientCommunication, (void *) args);
 
-        groupManager->printListOfUsers(); //debug purposes
-        groupManager->printListOfGroups(); //debug purposes
-
-        sleep(5);
-
         return 0;
     }
 
@@ -227,6 +226,7 @@ namespace server {
             }
 
             _this->groupManager->processReceivedPacket(receivedPacket);
+
         }
 
         // Close all properties related to client connection
@@ -241,7 +241,7 @@ namespace server {
         wait_semaphore();
 
         openSockets.erase(std::remove(openSockets.begin(), openSockets.end(), client_socket), openSockets.end());
-        groupManager->disconnectUser(client_socket);
+        groupManager->propagateSocketDisconnectionEvent(client_socket, this->connectionsCount);
 
         post_semaphore();
 
@@ -253,7 +253,6 @@ namespace server {
     }
 
 
-    // TODO may be move functions below to a binary semaphore class and just extend that class
     void Server::init_semaphore() {
         sem_init(&semaphore, 0, 1);
     }
@@ -266,7 +265,35 @@ namespace server {
         sem_post(&semaphore);
     }
 
+
     void Server::configureFilesystemManager(int maxNumberOfMessagesInHistory) {
-        groupManager->configureFileSystemManager(maxNumberOfMessagesInHistory);
+        groupManager->configureFileSystemManager(maxNumberOfMessagesInHistory); // THIS CALL IS OK, WE NEED TO PASS THE INFORMATION
     }
+
+
+    int Server::incrementNumberOfConnectionsFromUser(string user) {
+        map<string, int>::iterator it = this->connectionsCount.find(user);
+
+        if(it != this->connectionsCount.end()) // achou
+        {
+            if (connectionsCount[user] >= MAX_NUMBER_OF_SIMULTANEOUS_CONNECTIONS ) {
+                return USER_SESSIONS_LIMIT_REACHED;
+            }
+            connectionsCount[user] += 1;
+            return 0;
+        } else {
+            connectionsCount[user] = 1;
+        }
+    }
+
+
+    int Server::decrementNumberOfConnectionsFromUser(string user) {
+        map<string, int>::iterator it = this->connectionsCount.find(user);
+
+        if(it != this->connectionsCount.end())
+        {
+            connectionsCount[user] -= 1;
+        }
+    }
+
 }

@@ -13,7 +13,7 @@ namespace servermessagemanager {
 
     class ServerMessageManager : public Socket{
         public:
-        void broadcastMessageToUsers(Message message, std::list<User*> users);
+        void broadcastMessageToUsers(Message message, vector<int> sockets);
         void sendMessageToSocketId(Message message, int socketId);
     };
 }

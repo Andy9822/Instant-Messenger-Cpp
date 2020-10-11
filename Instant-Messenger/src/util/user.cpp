@@ -1,6 +1,6 @@
 #include "../../include/util/user.hpp"
-#include <sstream>
 #include <iostream>
+#include <algorithm>
 
 namespace user {
     User::User(string username) : semaphore(1) {
@@ -10,7 +10,7 @@ namespace user {
 
     void User::initSessionList() {
         this->semaphore.wait();
-        this->sockets = new std::map<int, string>();
+        this->sockets = std::vector<int>();
         this->semaphore.post();
     }
 
@@ -19,24 +19,43 @@ namespace user {
         return this->username;
     }
 
-    std::map<int, std::string> *User::getActiveSockets() {
+    std::vector<int> User::getActiveSockets() {
         return sockets;
     }
 
-    int User::registerSession(pair<const int, basic_string<char>> socket) {
+    /**
+     * The validation for the number of sockets is not the hard verification that we needed,
+     * It is a week on because it is only checking in the group level. Server has a function to verify it in the upper layer
+     * But it is good to hava some kind of validation here, as well
+     * @param socket
+     * @return negative if error
+     */
+    int User::registerSession(int socket) {
         this->semaphore.wait();
-        if (this->sockets->size() < NUMBER_OF_SIMULTANEOUS_CONNECTIONS) {
-            this->sockets->insert(socket);
+        if (sockets.size() < MAX_NUMBER_OF_SIMULTANEOUS_CONNECTIONS ) {
+            this->sockets.push_back(socket);
             this->semaphore.post();
             return 0;
+        } else {
+            this->semaphore.post();
+            return -1;
         }
-        this->semaphore.post();
-        return -1;
     }
 
     void User::printSockets() {
-        for (auto const &socket : *sockets) {
-            cout << "printsockt::Socket: " << socket.first << " from group: " << socket.second << endl;
+        for (auto socket : this->sockets) {
+            cout << "printsockt::Socket: " << socket << endl;
         }
+    }
+
+    void User::releaseSession(int socketId) {
+        std::vector<int>::iterator position;
+        this->semaphore.wait();
+        position = std::find(sockets.begin(), sockets.end(), socketId);
+
+        if (position != sockets.end()) {
+            sockets.erase(position);
+        }
+        this->semaphore.post();
     }
 } // namespace user;

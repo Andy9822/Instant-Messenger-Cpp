@@ -18,6 +18,7 @@ add_executable(Instant_Messenger
         include/client/client_message_manager.h
         include/client/user_interface.h
         include/server/server.hpp
+        include/server/Group.hpp
         include/server/server_communication_manager.h
         include/server/server_group_manager.hpp
         include/server/server_message_manager.hpp
@@ -35,6 +36,7 @@ add_executable(Instant_Messenger
         src/client/client_message_manager.cpp
         src/client/user_interface.cpp
         src/server/server.cpp
+        src/server/Group.cpp
         src/server/server_group_manager.cpp
         src/server/server_message_manager.cpp
         src/util/file_system_manager.cpp
