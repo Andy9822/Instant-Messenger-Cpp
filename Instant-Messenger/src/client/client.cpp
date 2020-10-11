@@ -201,6 +201,7 @@ int Client::clientCommunication()
 	pthread_create(&senderTid, NULL, sendToServer, (void*) this);
 	pthread_join(receiverTid, NULL);
 
+	std::cout << "A conexão com o servidor foi perdida" << std::endl;
 	close(sockfd);
 
 	return 0;
