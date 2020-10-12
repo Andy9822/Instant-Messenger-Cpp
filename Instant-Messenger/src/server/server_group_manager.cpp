@@ -19,11 +19,13 @@ namespace servergroupmanager {
 
         // if groupName exists, send the registration to it. If it does not belong to the map of groups, we instantiate a new groupName and forward the information to it
         Group* group = NULL;
+        semaphore.wait();
         if ( !groupExists(groupName) ) {
             this->groupMap[groupName] = new Group(groupName);
             this->groupMap[groupName]->configureFileSystemManager(this->maxNumberOfMessagesOnHistory);
         }
         group =  this->groupMap[groupName];
+        semaphore.post();
 
         return group->registerNewSession(socket, username);
     }
