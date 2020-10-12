@@ -43,6 +43,7 @@ string Client::readInput()
 
     if(fgets(input, MESSAGE_MAX_SIZE, stdin) == NULL) // ctrl+d
     {
+		close(sockfd);
         exit(0);
     }
 

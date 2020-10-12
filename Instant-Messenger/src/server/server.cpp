@@ -137,12 +137,16 @@ namespace server {
         strncpy(username, receivedPacket->username, USERNAME_MAX_SIZE - 1);
         strncpy(group, receivedPacket->group, GROUP_MAX_SIZE - 1);
 
+        // Store new crated socket in the vector of existing connections sockets and increment counter for the user
+        wait_semaphore();
         if (incrementNumberOfConnectionsFromUser(username) == USER_SESSIONS_LIMIT_REACHED ) {
             pack->clientSocket = -1;
             _this->sendPacket(client_socketfd, pack);
             delete pack;
             return -1;
         }
+        openSockets.push_back(client_socketfd);
+        post_semaphore();
 
         registered = _this->registerUser(client_socketfd, username, group);
 
@@ -188,11 +192,6 @@ namespace server {
 
         std::cout << "client connected with socket: " << *newsockfd << std::endl;
 
-        // Store new crated socket in the vector of existing connections sockets
-        wait_semaphore();
-        openSockets.push_back(*newsockfd);
-        post_semaphore();
-
         //Create a pair for sending more than 1 parameter to the new thread that we are about to create
         std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
 
@@ -230,7 +229,7 @@ namespace server {
             if (!connectedClient) {
                 // Free allocated memory for reading Packet
                 free(receivedPacket);
-
+                
                 break;
             }
 
