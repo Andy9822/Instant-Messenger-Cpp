@@ -10,13 +10,13 @@ using namespace std::chrono;
 
 namespace filesystemmanager{
 
-FileSystemManager::FileSystemManager() : semaphore(1) {
+FileSystemManager::FileSystemManager() {
 
 }
 
 void FileSystemManager::appendGroupMessageToHistory(Message message) {
     if (message.getIsNotification() ) return; // if entry or disconnected message, do not save to the history
-    semaphore.wait();
+
     std::stringstream groupFile;
     std::stringstream messageContent;
     string messageTextTreated = message.getText();
@@ -32,7 +32,6 @@ void FileSystemManager::appendGroupMessageToHistory(Message message) {
     groupRepository << messageContent.str();
     groupRepository.close();
 
-    semaphore.post();
 }
 
 /**
@@ -41,7 +40,7 @@ void FileSystemManager::appendGroupMessageToHistory(Message message) {
  * @return
  */
 std::vector<Message> FileSystemManager::readGroupHistoryMessages(string groupName) {
-    semaphore.wait();
+
     std::string line;
     std::stringstream groupFile;
     groupFile << MESSAGES_BASE_PATH << PATH_SEPARATOR << groupName << FILE_EXTENSION;
@@ -73,7 +72,6 @@ std::vector<Message> FileSystemManager::readGroupHistoryMessages(string groupNam
     }
 
     data.close();
-    semaphore.post();
 
     return messages;
 }
