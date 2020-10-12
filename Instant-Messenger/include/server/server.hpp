@@ -17,6 +17,7 @@
 #include "server_group_manager.hpp"
 #include "server_message_manager.hpp"
 #include "../util/Socket.hpp"
+#include "../util/Semaphore.hpp"
 
 #define MAXBACKLOG SOMAXCONN
 
@@ -36,7 +37,7 @@ namespace server {
     public:
         Server();
         static std::vector<int> openSockets;
-        static sem_t semaphore;
+        Semaphore* sockets_connections_semaphore;
         static void *listenClientCommunication(void *newsocket);
         static void closeClientConnection(int socket_fd);
         void setPort(int port);
