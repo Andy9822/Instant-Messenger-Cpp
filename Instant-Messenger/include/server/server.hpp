@@ -36,7 +36,7 @@ namespace server {
     public:
         Server();
         static std::vector<int> openSockets;
-        static sem_t semaphore;
+        Semaphore* sockets_connections_semaphore;
         static void *listenClientCommunication(void *newsocket);
         static void closeClientConnection(int socket_fd);
         void setPort(int port);

@@ -12,9 +12,9 @@
 
 namespace server {
     vector<int> Server::openSockets;
-    sem_t Server::semaphore;
 
     Server::Server() {
+        sockets_connections_semaphore = new Semaphore(1);
         groupManager = new ServerGroupManager();
 
         // Configure server address properties
@@ -138,7 +138,7 @@ namespace server {
         strncpy(group, receivedPacket->group, GROUP_MAX_SIZE - 1);
 
         // Store new crated socket in the vector of existing connections sockets and increment counter for the user
-        wait_semaphore();
+        _this->sockets_connections_semaphore->wait();
         if (incrementNumberOfConnectionsFromUser(username) == USER_SESSIONS_LIMIT_REACHED ) {
             pack->clientSocket = -1;
             _this->sendPacket(client_socketfd, pack);
@@ -146,7 +146,7 @@ namespace server {
             return -1;
         }
         openSockets.push_back(client_socketfd);
-        post_semaphore();
+        _this->sockets_connections_semaphore->post();
 
         registered = _this->registerUser(client_socketfd, username, group);
 
@@ -246,31 +246,18 @@ namespace server {
 
     void Server::closeListenClientCommunication(int client_socket) {
         std::cout << "\n\nFreeing allocated memory and closing client connection thread" << std::endl;
-        wait_semaphore();
+        sockets_connections_semaphore->wait();
 
         openSockets.erase(std::remove(openSockets.begin(), openSockets.end(), client_socket), openSockets.end());
         groupManager->propagateSocketDisconnectionEvent(client_socket, this->connectionsCount);
 
-        post_semaphore();
+        sockets_connections_semaphore->post();
 
         if ((close(client_socket)) == 0) {
             std::cout << "\nClosed socket: " << client_socket << std::endl;
         } else {
             std::cout << "!!! Fatal error closing socket!!!!" << std::endl;
         }
-    }
-
-
-    void Server::init_semaphore() {
-        sem_init(&semaphore, 0, 1);
-    }
-
-    void Server::wait_semaphore() {
-        sem_wait(&semaphore);
-    }
-
-    void Server::post_semaphore() {
-        sem_post(&semaphore);
     }
 
 
