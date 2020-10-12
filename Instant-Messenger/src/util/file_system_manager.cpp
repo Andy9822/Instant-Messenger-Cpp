@@ -99,9 +99,6 @@ std::vector<Message> FileSystemManager::readGroupHistoryMessages(string groupNam
 
     if (lines.size() > getMaxNumberOfMessagesInHistory()) {
         std::ofstream newFile(tempGroupFile.str(), std::ios_base::app | std::ios_base::out);
-        cout << getMaxNumberOfMessagesInHistory() + isWriteDiscount << ", isWriteDisc " << isWriteDiscount << endl;
-        cout << lines.size() << "LineSize" << endl;
-        cout << "i=" <<  (lines.size() - getMaxNumberOfMessagesInHistory() + isWriteDiscount)<< endl;
         for (int i = (lines.size() - (getMaxNumberOfMessagesInHistory() - isWriteDiscount)); i < lines.size(); i++) {
             if (i > 0) {
                 newFile << lines[i] << endl;
