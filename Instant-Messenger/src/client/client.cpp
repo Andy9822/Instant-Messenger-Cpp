@@ -119,6 +119,9 @@ int Client::ConnectToServer(char* username, char* group)
         return -1;
 	}
 
+	
+    std::cout << "\n" << "Bem-vindo ao grupo: " << group << std::endl;
+
 	return registerToServer();
 }
 
