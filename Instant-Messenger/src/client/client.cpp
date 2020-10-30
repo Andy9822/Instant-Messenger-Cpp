@@ -29,8 +29,11 @@ Packet Client::buildPacket(string input)
 
 	strncpy(usernameBuffer, this->username.c_str(), USERNAME_MAX_SIZE - 1);
 	strncpy(groupBuffer, this->group.c_str(), GROUP_MAX_SIZE - 1);
-	strncpy(messageBuffer, input.c_str(), MESSAGE_MAX_SIZE - 1); //Send message with maximum of 255 characters
+	strncpy(messageBuffer, input.c_str(), MESSAGE_MAX_SIZE - 2); //Send message with maximum of 255 characters
 	
+	// Adjust last character to end of string in case string was bigger than max size
+	messageBuffer[MESSAGE_MAX_SIZE - 1] = '\0';
+
 	return Packet(usernameBuffer, groupBuffer, messageBuffer, time(0));
 }
 
@@ -38,24 +41,15 @@ Packet Client::buildPacket(string input)
 
 string Client::readInput()
 {
-    char input[MESSAGE_MAX_SIZE];
-    bzero(input, MESSAGE_MAX_SIZE);
+    string input;
+    std::getline(std::cin, input);
 
-    if(fgets(input, MESSAGE_MAX_SIZE, stdin) == NULL) // ctrl+d
-    {
+	// Ctrl + D
+	if(std::cin.eof()) {
 		close(sockfd);
         exit(0);
-    }
+	}
 
-	// just a way to remove the \n
-	char *pos;
-	if ((pos=strchr(input, '\n')) != NULL) {
-		*pos = '\0';
-	}
-	else {
-		cout << "String is too long, cutting int to " << MESSAGE_MAX_SIZE - 1 << " chars." << endl;
-	}
-	fflush(stdin);
 	return input;
 }
 
