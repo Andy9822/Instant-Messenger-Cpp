@@ -26,6 +26,9 @@ class ProxyFE : public Socket
         int socket_fd;
         struct sockaddr_in serv_addr;
         pthread_t monitor_tid;
+        pthread_t reconnect_server_tid;
+
+        void processServerReconnect(void* args);   
 
     public:
         Semaphore* openClientsSockets_semaphore;
@@ -33,12 +36,16 @@ class ProxyFE : public Socket
         Semaphore* online_semaphore;
         static bool online_RMserver;
         static int serverRM_socket;
+        pthread_mutex_t mutex_server_reconnect;
+
         ProxyFE();
         static void closeClientConnection(int socket_fd);
         void setPort(int port);
         void prepareConnection();
         void printPortNumber();
-        int handleServerConnection();        
+        int handleServerConnection();
+        static void* listenServerReconnect(void* args);        
+        void handleServerReconnect();        
         int handleClientConnection(pthread_t *tid);
         static void* monitorKeepAlivesAux(void* args);        
         void monitorKeepAlives();        

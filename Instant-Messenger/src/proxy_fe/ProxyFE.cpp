@@ -13,6 +13,12 @@ ProxyFE::ProxyFE() {
     online_semaphore = new Semaphore(1);
     online_RMserver = false;
 
+    // Init server reconnect mutex
+    pthread_mutex_init(&mutex_server_reconnect, NULL);
+
+    // Server reconnect mutex inits locked as initially it's everything connected and fine
+    pthread_mutex_lock(&mutex_server_reconnect);
+
     // Configure server address properties
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -85,14 +91,38 @@ int ProxyFE::handleServerConnection() {
 
     std::cout << "Primary RM server connected with socket: " << newsockfd << std::endl;
     
+    // Save server RM socket to openSockets map
     serverRM_socket = newsockfd;
     openClientsSockets_semaphore->wait();
     openClientsSockets[serverRM_socket] = make_pair(NULL, time(0));
     openClientsSockets_semaphore->post();
+    
+    // Set application as online
+    online_semaphore->wait();
+    online_RMserver = true;
+    online_semaphore->post();
+
     return 0; 
 }
 
-int ProxyFE::handleClientConnection(pthread_t *tid) {
+void* ProxyFE::listenServerReconnect(void* args)
+{
+    ProxyFE* _this = (ProxyFE *) args;
+    while (true)
+    {
+        std::cout << "Waiting for reconnect" << std::endl;
+        pthread_mutex_lock(&(_this->mutex_server_reconnect));
+        _this->handleServerConnection();
+    }
+}
+
+void ProxyFE::handleServerReconnect() 
+{
+    pthread_create(&reconnect_server_tid, NULL, listenServerReconnect, (void*) this);
+}
+
+int ProxyFE::handleClientConnection(pthread_t *tid) 
+{
     return 0;
 }
 
@@ -103,6 +133,8 @@ void* ProxyFE::monitorKeepAlivesAux(void* args)
     int checking_socket;
     while (true)
     {
+        sleep(10);
+
         _this->openClientsSockets_semaphore->wait();
         time_t checking_time = time(0);
         vector<int> expired_sockets;  
@@ -130,22 +162,27 @@ void* ProxyFE::monitorKeepAlivesAux(void* args)
                 if (checking_socket != _this->serverRM_socket)
                 {
                     std::cout << "Cliente Caiu" << std::endl;
-                    close(checking_socket);
                     
                     // Acho que isso nem vai precisar, dando close o Socket.cpp já identifica erro
                     // pthread_cancel(_this->openClientsSockets[checking_socket].first);
                 }
-                // If it's server RM socket, then signal that the application is now offline
+                // If it's server RM socket then signal that the application is now offline
                 else
                 {   
                     _this->online_semaphore->wait();
-                    _this->online_RMserver = true;
-                    _this->online_semaphore->wait()
+                    _this->online_RMserver = false;
+                    _this->online_semaphore->post();
+                    pthread_mutex_unlock(&(_this->mutex_server_reconnect));
                     std::cout << "Servidor Primario Caiu" << std::endl;
                 }
+                close(checking_socket);
+                _this->openClientsSockets.erase(checking_socket);
             }
-        }        
-        sleep(10);
+        }
+        _this->openClientsSockets_semaphore->post();        
+        string status = _this->online_RMserver ? "true" : "false";
+        std::cout << "Application is online: " << status << std::endl;
+        std::cout << "Open sockets: " << _this->openClientsSockets.size() << std::endl;
     }
     
 }

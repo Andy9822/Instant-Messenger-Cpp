@@ -59,10 +59,14 @@ int main(int argc, char *argv[])
     proxy_fe.prepareConnection();
     proxy_fe.printPortNumber();
 
+	if(proxy_fe.handleServerConnection() < 0) 
+	{
+		return -1;
+	}
+	
+	proxy_fe.handleServerReconnect();
 	//while(1)
 	{
-		if(proxy_fe.handleServerConnection() < 0)
-			return -1;
 		
 		proxy_fe.monitorKeepAlives();
 		sleep(60);

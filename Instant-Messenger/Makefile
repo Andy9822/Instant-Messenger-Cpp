@@ -4,6 +4,7 @@ BIN_DIR=./bin
 SRC_DIR=./src
 BUILD_DIR=./build
 SERVER_PORT=4040
+FE_SERVER_PORT=6969
 
 all: build-server build-client
 
@@ -23,6 +24,12 @@ run-client:
 
 run-server:
 	$(BUILD_DIR)/server.app $(SERVER_PORT) 4
+
+run-proxy_fe:
+	$(BUILD_DIR)/proxy_fe.app $(FE_SERVER_PORT)
+
+run-rm:
+	$(BUILD_DIR)/client.app JohnnyUser1 SampleRoom1 127.0.0.1 $(FE_SERVER_PORT)
 
 clean:
 	rm -rf $(SRC_DIR)/*~ $(INC_DIR)/*~ client server *~
