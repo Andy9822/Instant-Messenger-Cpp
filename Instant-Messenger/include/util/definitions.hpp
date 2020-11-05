@@ -39,3 +39,11 @@
 #ifndef LEFT_GROUP_MESSAGE
 #define LEFT_GROUP_MESSAGE "<Left the group>"
 #endif
+
+#ifndef CONNECTION_LIVE
+#define CONNECTION_LIVE 10
+#endif
+
+#ifndef CONNECTION_COUNTDOWN_STEP
+#define CONNECTION_COUNTDOWN_STEP 2
+#endif

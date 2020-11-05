@@ -15,6 +15,7 @@ struct Packet
     char message[MESSAGE_MAX_SIZE];
     int clientSocket;
     time_t timestamp;
+    bool isKeepAlive = false;
 
     Packet() {}
 

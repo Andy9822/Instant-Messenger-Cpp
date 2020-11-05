@@ -1,3 +1,4 @@
+#include "../../include/client/ConnectionKeeper.hpp"
 #include "../../include/client/client.h"
 #include "../../include/util/definitions.hpp"
 #include "../../include/util/Packet.hpp"
@@ -197,6 +198,7 @@ int Client::clientCommunication()
 
 	pthread_create(&receiverTid, NULL, receiveFromServer, (void*) this);
 	pthread_create(&senderTid, NULL, sendToServer, (void*) this);
+	ConnectionKeeper(this->sockfd); // starts the thread that keeps sending keep alives
 	pthread_join(receiverTid, NULL);
 
 	std::cout << "A conexão com o servidor foi perdida" << std::endl;
