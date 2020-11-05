@@ -1,7 +1,3 @@
-//
-// Created by gabriel on 11/4/20.
-//
-
 #ifndef INSTANT_MESSENGER_CONNECTIONKEEPER_HPP
 #define INSTANT_MESSENGER_CONNECTIONMONITOR_HPP
 
@@ -22,10 +18,6 @@ public:
     void monitor(int *socket);
     void refresh(int socket);
     void killSocket(int socket);
-
-
-
-
 };
 
 

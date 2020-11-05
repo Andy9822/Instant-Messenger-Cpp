@@ -1,7 +1,3 @@
-//
-// Created by gabriel on 11/4/20.
-//
-
 #include "../../include/server/ConnectionMonitor.hpp"
 #include "../../include/util/definitions.hpp"
 
