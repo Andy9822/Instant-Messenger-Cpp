@@ -19,61 +19,88 @@ ProxyFE::ProxyFE() {
     // Server reconnect mutex inits locked as initially it's everything connected and fine
     pthread_mutex_lock(&mutex_server_reconnect);
 
-    // Configure server address properties
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_addr.s_addr = INADDR_ANY;
-    bzero(&(serv_addr.sin_zero), 8);
+    // Configure serverRM address properties
+    serv_sock_addr.sin_family = AF_INET;
+    serv_sock_addr.sin_addr.s_addr = INADDR_ANY;
+    bzero(&(serv_sock_addr.sin_zero), 8);
+
+    // Configure clients address properties
+    client_sock_addr.sin_family = AF_INET;
+    client_sock_addr.sin_addr.s_addr = INADDR_ANY;
+    bzero(&(client_sock_addr.sin_zero), 8);
 
     // Initialize socket file descriptor
-    socket_fd = 0;
+    server_socket_fd = 0;
+    clients_socket_fd = 0;
 }
 
-void ProxyFE::setPort(int port) {
-    serv_addr.sin_port = htons(port);
+void ProxyFE::setPortServerRM(int port) {
+    serv_sock_addr.sin_port = htons(port);
 }
 
-void ProxyFE::prepareConnection() {
+void ProxyFE::setPortClients(int port) {
+    client_sock_addr.sin_port = htons(port);
+}
+
+void ProxyFE::prepareSocketConnection(int* socket_fd, sockaddr_in* serv_addr) 
+{
     int opt = 1;
 
     // Create socket file descriptor
-    if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) <= 0) {
+    if ((*socket_fd = socket(AF_INET, SOCK_STREAM, 0)) <= 0) {
         cout << "ERROR opening socket\n" << endl;
         exit(1);
     }
 
     // Forcefully attaching socket to the port
-    if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) 
+    if (setsockopt(*socket_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) 
     { 
         perror("setsockopt"); 
         exit(EXIT_FAILURE); 
     } 
 
     // Attach socket to server's port
-    if (::bind(socket_fd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) {
+    if (::bind(*socket_fd, (struct sockaddr *) serv_addr, sizeof(*serv_addr)) < 0) {
         cout << "ERROR on binding\n" << endl;
         exit(1);
     }
 
     // Configure socket to listen for tcp connections
-    if (listen(socket_fd, MAXBACKLOG) < 0) // SOMAXCONN is the maximum value of backlog
+    if (listen(*socket_fd, MAXBACKLOG) < 0) // SOMAXCONN is the maximum value of backlog
     {
         cout << "ERROR on listening\n" << endl;
         exit(1);
     }
 
-    std::cout << "server_socket_fd preparedConnection: " << socket_fd << std::endl;
+    std::cout << "server_server_socket_fd preparedConnection: " << server_socket_fd << std::endl;
+}
+
+void ProxyFE::prepareServerConnection()
+{
+    prepareSocketConnection(&server_socket_fd, &serv_sock_addr);
+}
+
+void ProxyFE::prepareClientsConnection()
+{
+    prepareSocketConnection(&clients_socket_fd, &client_sock_addr);
+}
+
+void ProxyFE::prepareConnection()
+{
+    prepareServerConnection();
+    prepareClientsConnection();
 }
 
 
 void ProxyFE::printPortNumber() {
-    socklen_t len = sizeof(serv_addr);
+    socklen_t len = sizeof(serv_sock_addr);
 
-    if (getsockname(socket_fd, (struct sockaddr *) &serv_addr, &len) < 0) {
+    if (getsockname(server_socket_fd, (struct sockaddr *) &serv_sock_addr, &len) < 0) {
         cout << "Unable to print port Number!" << endl;
         exit(1);
     }
 
-    cout << "Server running on PORT: " << ntohs(serv_addr.sin_port) << endl;
+    cout << "Server running on PORT: " << ntohs(serv_sock_addr.sin_port) << endl;
 }
 
 int ProxyFE::handleServerConnection() {
@@ -84,8 +111,9 @@ int ProxyFE::handleServerConnection() {
     struct sockaddr_in cli_addr;
     socklen_t clilen = sizeof(struct sockaddr_in);
 
-    if ((newsockfd = accept(socket_fd, (struct sockaddr *) &cli_addr, &clilen)) == -1) {
+    if ((newsockfd = accept(server_socket_fd, (struct sockaddr *) &cli_addr, &clilen)) == -1) {
         cout << "ERROR on accept\n" << endl;
+        pthread_mutex_unlock(&mutex_server_reconnect);
         return -1;
     }
 
@@ -121,8 +149,26 @@ void ProxyFE::handleServerReconnect()
     pthread_create(&reconnect_server_tid, NULL, listenServerReconnect, (void*) this);
 }
 
+void* ProxyFE::listenClientCommunication(void *args) 
+{
+    int client_socketfd = *(int *) args;
+    return NULL;
+}
+
 int ProxyFE::handleClientConnection(pthread_t *tid) 
 {
+    // Allocate memory space to store value in heap and be able to use it after this function ends
+    int *newsockfd = (int *) calloc(1, sizeof(int));
+    struct sockaddr_in cli_addr;
+    socklen_t clilen = sizeof(struct sockaddr_in);
+
+    if ((*newsockfd = accept(clients_socket_fd, (struct sockaddr *) &cli_addr, &clilen)) == -1) {
+        cout << "ERROR on accept\n" << endl;
+        return -1;
+    }
+
+    pthread_create(tid, NULL, listenClientCommunication, (void *) newsockfd);
+
     return 0;
 }
 

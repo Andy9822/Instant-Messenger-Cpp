@@ -27,15 +27,22 @@ void capture_signals()
 	sigaction(SIGINT, &sigIntHandler, NULL);
 }
 
-void read_args(int argc, char *argv[], int *port, int *maxNumberOfMessagesInHistory)
+void read_args(int argc, char *argv[], int *portServerRM, int *portClients)
 {	
-	*port = RANDOM_PORT_NUMBER; //Set any available port as default
-	*maxNumberOfMessagesInHistory = DEFAULT_NUMBER_OF_RECORDED_MESSAGES;
+	*portServerRM = RANDOM_PORT_NUMBER; //Set any available port as default
+	*portClients = RANDOM_PORT_NUMBER; //Set any available port as default
 
-	if(argc == 2)
+	if(argc == 3)
     {
 			try {
-				*port = stoi(argv[1]); // In case it's received a specific port as argv
+				*portServerRM = stoi(argv[1]); // In case it's received a specific port as argv
+			}
+			catch(std::invalid_argument e) {
+                cout << "[ERROR] Invalid arguments" << endl;
+			}
+
+			try {
+				*portClients = stoi(argv[2]); // In case it's received a specific port as argv
 			}
 			catch(std::invalid_argument e) {
                 cout << "[ERROR] Invalid arguments" << endl;
@@ -48,28 +55,30 @@ void read_args(int argc, char *argv[], int *port, int *maxNumberOfMessagesInHist
 int main(int argc, char *argv[])
 {
     int i = 0;
-    int port, maxNumberOfMessagesInHistory;
-    // Capture and process SO signals
+    int portServerRM, portClients;
+	pthread_t tid[MAXBACKLOG];
+    
+	// Capture and process SO signals
 	capture_signals();
 
-	pthread_t tid[MAXBACKLOG];
-
-	read_args(argc, argv, &port, &maxNumberOfMessagesInHistory);
-    proxy_fe.setPort(port);
+	read_args(argc, argv, &portServerRM, &portClients);
+    proxy_fe.setPortServerRM(portServerRM);
+    proxy_fe.setPortClients(portClients);
     proxy_fe.prepareConnection();
     proxy_fe.printPortNumber();
 
-	if(proxy_fe.handleServerConnection() < 0) 
-	{
-		return -1;
-	}
+	// Wait for initial server connection
+	proxy_fe.handleServerConnection();
 	
+	// Trigger Server Reconnection processment in case initial connection downs
 	proxy_fe.handleServerReconnect();
-	//while(1)
+	
+	// Invoke keep alives monitor to detect connections offline
+	proxy_fe.monitorKeepAlives();
+	
+	while(true)
 	{
-		
-		proxy_fe.monitorKeepAlives();
-		sleep(60);
+		proxy_fe.handleClientConnection(&tid[i++]);
 	}
 
 	return 0;
