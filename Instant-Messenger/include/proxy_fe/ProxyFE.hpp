@@ -15,6 +15,7 @@
 #include <utility>
 #include <map>
 #include "../util/Socket.hpp"
+#include "../util/Packet.hpp"
 #include "../util/Semaphore.hpp"
 
 #define MAXBACKLOG SOMAXCONN
@@ -34,7 +35,7 @@ class ProxyFE : public Socket
 
     public:
         Semaphore* openClientsSockets_semaphore;
-        std::map<int, std::pair<int, time_t>> openClientsSockets;
+        std::map<int, std::pair<pthread_t, time_t>> openClientsSockets;
         Semaphore* online_semaphore;
         static bool online_RMserver;
         static int serverRM_socket;
@@ -43,6 +44,7 @@ class ProxyFE : public Socket
         void prepareSocketConnection(int* socket_fd, sockaddr_in* serv_addr);
         void prepareServerConnection();
         void prepareClientsConnection();
+        static void handleSocketDisconnection(int socket, ProxyFE* _this);
 
         ProxyFE();
         static void closeClientConnection(int socket_fd);
