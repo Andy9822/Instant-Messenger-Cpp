@@ -11,7 +11,7 @@ public:
     ConnectionKeeper(int socket);
 
 private:
-    int sleepTime = CONNECTION_COUNTDOWN_STEP;
+    int sleepTime = KEEP_ALIVE_INTERVAL;
     int communicationSocket;
     static void * sendKeepAliveForever(void *args);
 

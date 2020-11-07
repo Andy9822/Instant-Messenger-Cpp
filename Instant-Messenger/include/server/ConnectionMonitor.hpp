@@ -5,13 +5,13 @@
 #include <vector>
 #include <map>
 #include "../../include/util/Semaphore.hpp"
-
+#include <time.h>
 
 class ConnectionMonitor {
 
 private:
-    std::map<int, int> socketCountdown;
-    Semaphore* socketMapSemaphore;
+    std::map<int, time_t> socketLastKeepAlive;
+    Semaphore* socketLastKeepAliveSemaphore;
     void static * keepsMonitoringConnection(void *args); // this will be called for monitoring the connection of each socket
 public:
     ConnectionMonitor();

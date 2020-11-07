@@ -12,7 +12,7 @@
 using namespace std;
 
 ConnectionMonitor::ConnectionMonitor() {
-    this->socketMapSemaphore = new Semaphore(1);
+    this->socketLastKeepAliveSemaphore = new Semaphore(1);
 }
 
 void ConnectionMonitor::monitor(int *socket) {
@@ -22,9 +22,9 @@ void ConnectionMonitor::monitor(int *socket) {
 
     keepsMonitoringConnection(args);
 
-    this->socketMapSemaphore->wait();
-    this->socketCountdown.erase(*socket);
-    this->socketMapSemaphore->post();
+    this->socketLastKeepAliveSemaphore->wait();
+    this->socketLastKeepAlive.erase(*socket);
+    this->socketLastKeepAliveSemaphore->post();
 }
 
 void * ConnectionMonitor::keepsMonitoringConnection(void *args) {
@@ -32,28 +32,31 @@ void * ConnectionMonitor::keepsMonitoringConnection(void *args) {
     int socket = *(int *) pair->first;
     ConnectionMonitor *_this = (ConnectionMonitor *) pair->second;
 
-    _this->socketMapSemaphore->wait();
-    _this->socketCountdown[socket] = CONNECTION_LIVE;
-    _this->socketMapSemaphore->post();
+    _this->socketLastKeepAliveSemaphore->wait();
+    _this->socketLastKeepAlive[socket] = time(NULL); // sets the current time
+    _this->socketLastKeepAliveSemaphore->post();
 
     bool connectionIsValid;
     do {
-        sleep(CONNECTION_COUNTDOWN_STEP);
-        _this->socketMapSemaphore->wait();
-        _this->socketCountdown[socket] -= CONNECTION_COUNTDOWN_STEP;
-        _this->socketMapSemaphore->post();
-        connectionIsValid = _this->socketCountdown[socket] > 0;
+        sleep(KEEP_ALIVE_INTERVAL);
+        double secondsSinceLastKeepAlive;
+        time_t now = time(NULL);
+
+        _this->socketLastKeepAliveSemaphore->wait();
+        secondsSinceLastKeepAlive = difftime(now, _this->socketLastKeepAlive[socket]);
+        _this->socketLastKeepAliveSemaphore->post();
+        connectionIsValid = secondsSinceLastKeepAlive < KEEP_ALIVE_TIMEOUT;
     } while (connectionIsValid);
 }
 
 void ConnectionMonitor::refresh(int socket) {
-    this->socketMapSemaphore->wait();
-    this->socketCountdown[socket] = CONNECTION_LIVE;
-    this->socketMapSemaphore->post();
+    this->socketLastKeepAliveSemaphore->wait();
+    this->socketLastKeepAlive[socket] = time(NULL); // sets the current time
+    this->socketLastKeepAliveSemaphore->post();
 }
 
 void ConnectionMonitor::killSocket(int socket) {
-    this->socketMapSemaphore->wait();
-    this->socketCountdown.erase(socket);
-    this->socketMapSemaphore->post();
+    this->socketLastKeepAliveSemaphore->wait();
+    this->socketLastKeepAlive.erase(socket);
+    this->socketLastKeepAliveSemaphore->post();
 }
