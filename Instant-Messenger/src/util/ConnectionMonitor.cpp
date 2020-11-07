@@ -1,4 +1,4 @@
-#include "../../include/server/ConnectionMonitor.hpp"
+#include "../../include/util/ConnectionMonitor.hpp"
 #include "../../include/util/definitions.hpp"
 
 #ifdef _WIN32
@@ -47,6 +47,8 @@ void * ConnectionMonitor::keepsMonitoringConnection(void *args) {
         _this->socketLastKeepAliveSemaphore->post();
         connectionIsValid = secondsSinceLastKeepAlive < KEEP_ALIVE_TIMEOUT;
     } while (connectionIsValid);
+
+    return NULL;
 }
 
 void ConnectionMonitor::refresh(int socket) {

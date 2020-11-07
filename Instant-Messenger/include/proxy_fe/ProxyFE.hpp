@@ -14,14 +14,15 @@
 #include <ctime>
 #include <utility>
 #include <map>
-#include "../util/Socket.hpp"
 #include "../util/Packet.hpp"
 #include "../util/Semaphore.hpp"
+#include "../util/ConnectionMonitor.hpp"
+#include "../util/Socket.hpp"
 
 #define MAXBACKLOG SOMAXCONN
 using namespace std;
 
-class ProxyFE : public Socket 
+class ProxyFE : public Socket
 {
     private:
         int server_socket_fd;
@@ -36,15 +37,20 @@ class ProxyFE : public Socket
     public:
         Semaphore* openClientsSockets_semaphore;
         std::map<int, std::pair<pthread_t, time_t>> openClientsSockets;
-        Semaphore* online_semaphore;
+        static Semaphore* online_semaphore;
         static bool online_RMserver;
         static int serverRM_socket;
         pthread_mutex_t mutex_server_reconnect;
+        ConnectionMonitor* keepAliveMonitor;
 
         void prepareSocketConnection(int* socket_fd, sockaddr_in* serv_addr);
         void prepareServerConnection();
         void prepareClientsConnection();
-        static void handleSocketDisconnection(int socket, ProxyFE* _this);
+        void handleSocketDisconnection(int socket);
+        void handleServerDisconnection(int socket);
+
+        void processClientPacket(Packet* receivedPacket, int socket);
+        void processServerPacket(Packet* receivedPacket, int socket);
 
         ProxyFE();
         static void closeClientConnection(int socket_fd);
@@ -52,12 +58,14 @@ class ProxyFE : public Socket
         void setPortServerRM(int port);
         void prepareConnection();
         void printPortNumber();
-        int handleServerConnection();
+        int handleServerConnection(pthread_t *tid);
         static void* listenServerReconnect(void* args);        
-        void handleServerReconnect();        
+        void handleServerReconnect(pthread_t *tid);        
         int handleClientConnection(pthread_t *tid);
+
         static void* listenClientCommunication(void *args);
-        static void* monitorKeepAlivesAux(void* args);        
-        void monitorKeepAlives();        
+        static void* listenServerCommunication(void *args);
+
+        static void* monitorConnectionKeepAlive(void *args);     
 };
 #endif

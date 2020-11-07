@@ -6,7 +6,7 @@
 
 #include <string>
 #include "../../include/util/Packet.hpp"
-#include "../../include/client/ConnectionKeeper.hpp"
+#include "../../include/util/ConnectionKeeper.hpp"
 
 
 ConnectionKeeper::ConnectionKeeper(int socket) {
@@ -24,6 +24,8 @@ void * ConnectionKeeper::sendKeepAliveForever(void *args) {
         sleep(_this->sleepTime);
         _this->sendPacket(_this->communicationSocket, keepAlivePacket);
     }
+
+    return NULL;
 }
 
 

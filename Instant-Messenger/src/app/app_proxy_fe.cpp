@@ -68,13 +68,10 @@ int main(int argc, char *argv[])
     proxy_fe.printPortNumber();
 
 	// Wait for initial server connection
-	proxy_fe.handleServerConnection();
+	proxy_fe.handleServerConnection(&tid[i++]);
 	
 	// Trigger Server Reconnection processment in case initial connection downs
-	proxy_fe.handleServerReconnect();
-	
-	// Invoke keep alives monitor to detect connections offline
-	proxy_fe.monitorKeepAlives();
+	proxy_fe.handleServerReconnect(&tid[i++]);
 	
 	while(true)
 	{

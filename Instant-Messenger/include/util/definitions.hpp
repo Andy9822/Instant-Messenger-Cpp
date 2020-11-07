@@ -48,14 +48,14 @@
 #define KEEP_ALIVE_INTERVAL 2
 #endif
 
-#ifndef MESSAGE_PACKET
-#define MESSAGE_PACKET 0
-#endif
-
-#ifndef KEEP_ALIVE_PACKET
-#define KEEP_ALIVE_PACKET 1
-#endif
-
-#ifndef ELECTION_PACKET
-#define ELECTION_PACKET 2
+#ifndef PACKET_TYPES
+#define PACKET_TYPES
+/////// Types of Packet
+enum
+{
+    MESSAGE_PACKET = 0,
+    KEEP_ALIVE_PACKET,
+    ELECTION_PACKET,
+};
+////////
 #endif

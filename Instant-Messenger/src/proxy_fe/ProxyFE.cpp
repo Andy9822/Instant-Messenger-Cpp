@@ -2,23 +2,11 @@
 
 
 std::map<int, std::pair<pthread_t, time_t>> openClientsSockets;
+Semaphore* ProxyFE::online_semaphore;
 bool ProxyFE::online_RMserver;
 int ProxyFE::serverRM_socket;
 
 ProxyFE::ProxyFE() {
-    // Init semaphore for openClientsSockets 
-    openClientsSockets_semaphore = new Semaphore(1);
-
-    // Init semaphore for online_RMserver and set variable to false
-    online_semaphore = new Semaphore(1);
-    online_RMserver = false;
-
-    // Init server reconnect mutex
-    pthread_mutex_init(&mutex_server_reconnect, NULL);
-
-    // Server reconnect mutex inits locked as initially it's everything connected and fine
-    pthread_mutex_lock(&mutex_server_reconnect);
-
     // Configure serverRM address properties
     serv_sock_addr.sin_family = AF_INET;
     serv_sock_addr.sin_addr.s_addr = INADDR_ANY;
@@ -32,6 +20,23 @@ ProxyFE::ProxyFE() {
     // Initialize socket file descriptor
     server_socket_fd = 0;
     clients_socket_fd = 0;
+
+    // Init semaphore for openClientsSockets 
+    openClientsSockets_semaphore = new Semaphore(1);
+
+    // Init semaphore for online_RMserver and set variable to false
+    online_semaphore = new Semaphore(1);
+    online_RMserver = false;
+
+    // Init server reconnect mutex
+    pthread_mutex_init(&mutex_server_reconnect, NULL);
+
+    // Server reconnect mutex inits locked as initially it's everything connected and fine
+    pthread_mutex_lock(&mutex_server_reconnect);
+
+    // Init connections keep alives monitor
+    this->keepAliveMonitor = new ConnectionMonitor();
+
 }
 
 void ProxyFE::setPortServerRM(int port) {
@@ -110,7 +115,67 @@ void ProxyFE::printPortNumber() {
 
 }
 
-int ProxyFE::handleServerConnection() {
+void ProxyFE::processServerPacket(Packet* receivedPacket, int socket)
+{
+    switch (receivedPacket->type)
+    {
+    case MESSAGE_PACKET:
+        std::cout << "recebi do server: " << receivedPacket->message << std::endl;
+        break;
+    
+    case KEEP_ALIVE_PACKET:
+        std::cout << "recebi Keep Alive do server" << std::endl;
+        keepAliveMonitor->refresh(socket);
+        break;
+    
+    default:
+        std::cout << "Undefined Packet type received" << std::endl;
+        break;
+    }
+}
+
+void* ProxyFE::listenServerCommunication(void *args) 
+{
+    // We cast our receveid void* args to a pair*
+    std::pair<int, ProxyFE *> *args_pair = (std::pair<int, ProxyFE *>*) args;
+
+    // Get socket from the new connected client
+    int server_socketfd = args_pair->first;
+
+    // Get a reference of the object instance in this thread
+    ProxyFE *_this = (ProxyFE *) args_pair->second;
+
+    // Free pair created for receiving arguments
+    free(args_pair);
+
+    bool is_server_connected = true;
+    // TODO remover isso, é so pra fingir que teve OK e server ta apto a conectar
+    {
+        char messageBuffer[USERNAME_MAX_SIZE] = "welcome to FE land";
+        char usernameBuffer[MESSAGE_MAX_SIZE] = "FE bro";
+        char groupBuffer[GROUP_MAX_SIZE] = "algum group";
+        _this->readPacket(server_socketfd, &is_server_connected);
+        _this->sendPacket(server_socketfd, new Packet(usernameBuffer, groupBuffer, messageBuffer, time(0)));
+    }
+
+        // Listen for incoming Packets from server until it disconnects
+    while (is_server_connected) {
+        Packet* receivedPacket = _this->readPacket(server_socketfd, &is_server_connected);
+        if (!is_server_connected) {
+            // Free allocated memory for reading Packet
+            free(receivedPacket);
+            break;
+        }
+        _this->processServerPacket(receivedPacket, server_socketfd);
+    }
+    
+    std::cout << "server socket " << server_socketfd <<  " has disconnected" << std::endl;
+    _this->handleServerDisconnection(server_socketfd);
+    
+    return NULL;
+}
+
+int ProxyFE::handleServerConnection(pthread_t *tid) {
     int status;
 
     // Allocate memory space to store value in heap and be able to use it after this function ends
@@ -128,9 +193,23 @@ int ProxyFE::handleServerConnection() {
     
     // Save server RM socket to openSockets map
     serverRM_socket = newsockfd;
-    openClientsSockets_semaphore->wait();
-    openClientsSockets[serverRM_socket] = make_pair(NULL, time(0));
-    openClientsSockets_semaphore->post();
+
+    //Create a pair for sending more than 1 parameter to the new thread that we are about to create for listening client Packets
+    std::pair<int, ProxyFE*>* args = (std::pair<int, ProxyFE*>*) calloc(1, sizeof(std::pair<int, ProxyFE*>));
+    
+    args->second = this; // Send reference of this instance to the new thread
+    args->first = serverRM_socket;
+
+    pthread_create(tid, NULL, listenServerCommunication, (void *) args);
+
+    //Create another pair for sending more than 1 parameter to the new thread to monitor keep alives from this connection
+    std::pair<int, ProxyFE*>* args2 = (std::pair<int, ProxyFE*>*) calloc(1, sizeof(std::pair<int, ProxyFE*>));
+    
+    args2->second = this; // Send reference of this instance to the new thread
+    args2->first = serverRM_socket;
+
+    //TODO ver esses tid totalmente errados
+    pthread_create(tid, NULL, monitorConnectionKeepAlive, (void *) args2);
     
     // Set application as online
     online_semaphore->wait();
@@ -144,18 +223,37 @@ int ProxyFE::handleServerConnection() {
 
 void* ProxyFE::listenServerReconnect(void* args)
 {
-    ProxyFE* _this = (ProxyFE *) args;
+    // We cast our receveid void* args to a pair*
+    std::pair<pthread_t*, ProxyFE *> *args_pair = (std::pair<pthread_t*, ProxyFE *>*) args;
+
+    // Get tid 
+    pthread_t* tid = args_pair->first;
+
+    // Get a reference of the object instance in this thread
+    ProxyFE *_this = (ProxyFE *) args_pair->second;
+
+    // Free pair created for receiving arguments
+    free(args_pair);
+    
     while (true)
     {
         pthread_mutex_lock(&(_this->mutex_server_reconnect));
         std::cout << "Waiting for ServerRM reconnection..." << std::endl;
-        _this->handleServerConnection();
+        _this->handleServerConnection(tid);
     }
+
+    return NULL;
 }
 
-void ProxyFE::handleServerReconnect() 
+void ProxyFE::handleServerReconnect(pthread_t *tid) 
 {
-    pthread_create(&reconnect_server_tid, NULL, listenServerReconnect, (void*) this);
+    //Create a pair for sending more than 1 parameter to the new thread that we are about to create for listening client Packets
+    std::pair<pthread_t*, ProxyFE*>* args = (std::pair<pthread_t*, ProxyFE*>*) calloc(1, sizeof(std::pair<pthread_t*, ProxyFE*>));
+    
+    args->first = tid;
+    args->second = this; // Send reference of this instance to the new thread
+    
+    pthread_create(&reconnect_server_tid, NULL, listenServerReconnect, (void*) args);
 }
 
 
@@ -171,22 +269,48 @@ int ProxyFE::handleClientConnection(pthread_t *tid)
     }
 
 
-    //Create a pair for sending more than 1 parameter to the new thread that we are about to create
+    //Create a pair for sending more than 1 parameter to the new thread that we are about to create for listening client Packets
     std::pair<int, ProxyFE*>* args = (std::pair<int, ProxyFE*>*) calloc(1, sizeof(std::pair<int, ProxyFE*>));
-
+    
+    args->second = this; // Send reference of this instance to the new thread
     args->first = newsockfd;
-
-    // Send reference of this instance to the new thread
-    args->second = this;
 
     pthread_create(tid, NULL, listenClientCommunication, (void *) args);
 
-    // Add client to openSockets map
-    openClientsSockets_semaphore->wait();
-    openClientsSockets[newsockfd] = make_pair(*tid, time(0));
-    openClientsSockets_semaphore->post();
+    //Create another pair for sending more than 1 parameter to the new thread to monitor keep alives from this connection
+    std::pair<int, ProxyFE*>* args2 = (std::pair<int, ProxyFE*>*) calloc(1, sizeof(std::pair<int, ProxyFE*>));
+    
+    args2->second = this; // Send reference of this instance to the new thread
+    args2->first = newsockfd;
+
+    pthread_create(tid, NULL, monitorConnectionKeepAlive, (void *) args2);
 
     return 0;
+}
+
+void* ProxyFE::monitorConnectionKeepAlive(void *args) 
+{
+    // We cast our receveid void* args to a pair*
+    std::pair<int, ProxyFE *> *args_pair = (std::pair<int, ProxyFE *>*) args;
+
+    // Get socket from the new connected client
+    int client_socketfd = args_pair->first;
+
+    // Get a reference of the object instance in this thread
+    ProxyFE *_this = (ProxyFE *) args_pair->second;
+
+    // Free pair created for receiving arguments
+    free(args_pair);
+
+    //We call this method that will keep running until keep alive timeouts
+    _this->keepAliveMonitor->monitor(&client_socketfd);
+
+    // After client socket disconnection we need to process this disconnection in application level
+    std::cout << "Timed out socket " << client_socketfd << std::endl;
+    // TODO avisa server
+    shutdown(client_socketfd, 2);
+
+    return NULL;
 }
 
 void* ProxyFE::listenClientCommunication(void *args) 
@@ -213,86 +337,55 @@ void* ProxyFE::listenClientCommunication(void *args)
         _this->sendPacket(client_socketfd, new Packet(usernameBuffer, groupBuffer, messageBuffer, time(0)));
     }
 
+        // Listen for incoming Packets from client untill it disconnects
     while (is_client_connected) {
-        // Listen for an incoming Packet from client
-        Packet *receivedPacket = _this->readPacket(client_socketfd, &is_client_connected);
+        Packet* receivedPacket = _this->readPacket(client_socketfd, &is_client_connected);
         if (!is_client_connected) {
             // Free allocated memory for reading Packet
             free(receivedPacket);
             break;
         }
-        std::cout << "recebi: " << receivedPacket->message << std::endl;
+        _this->processClientPacket(receivedPacket, client_socketfd);
     }
-
     
     std::cout << "Client socket " << client_socketfd <<  " has disconnected" << std::endl;
-    handleSocketDisconnection(client_socketfd, _this);
+    _this->handleSocketDisconnection(client_socketfd);
     
     return NULL;
 }
 
-void ProxyFE::handleSocketDisconnection(int socket, ProxyFE* _this)
+void ProxyFE::processClientPacket(Packet* receivedPacket, int socket)
 {
-    _this->openClientsSockets_semaphore->wait();
-    _this->openClientsSockets.erase(socket);
-    _this->openClientsSockets_semaphore->post();
-}
-
-void* ProxyFE::monitorKeepAlivesAux(void* args) 
-{
-
-    ProxyFE* _this = (ProxyFE *) args;
-    int checking_socket;
-    while (true)
+    switch (receivedPacket->type)
     {
-        sleep(10);
-
-        _this->openClientsSockets_semaphore->wait();
-        time_t checking_time = time(0);
-        vector<int> expired_sockets;  
-
-        std::map<int, std::pair<pthread_t, time_t>>::iterator it;
-        // Iterate over openSockets map and check when was received each socket's last keep alive
-        for (it = _this->openClientsSockets.begin(); it != _this->openClientsSockets.end(); it++ )
-        {
-            checking_socket = it->first;
-            time_t last_keep_alive = it->second.second;
-            if (checking_time - last_keep_alive >= 10)
-            {
-                expired_sockets.push_back(checking_socket);
-            }
-        }
-        // If there are expired sockets, remove them from openSockets map and close its sockets_fd
-        int expireds = expired_sockets.size();
-        if (expireds)
-        {
-            for (int i = 0; i < expireds; i++)
-            {
-                checking_socket = expired_sockets[i];
-
-                // Close socket and interrupt any pending transmission
-                shutdown(checking_socket, 2);
-                close(checking_socket);
-
-                // If it's ServerRM's socket then signal that the application is now offline
-                if (checking_socket == _this->serverRM_socket)
-                {   
-                    _this->online_semaphore->wait();
-                    _this->online_RMserver = false;
-                    _this->online_semaphore->post();
-                    pthread_mutex_unlock(&(_this->mutex_server_reconnect));
-                    std::cout << "❌❗❌ ServerRM went down - System is Offline ❌❗❌" << std::endl;
-                    _this->openClientsSockets.erase(checking_socket);
-                }
-            }
-        }
-        _this->openClientsSockets_semaphore->post();        
-    }
+    case MESSAGE_PACKET:
+        std::cout << "recebi: " << receivedPacket->message << std::endl;
+        break;
     
+    case KEEP_ALIVE_PACKET:
+        std::cout << "recebi: Keep Alive" << std::endl;
+        keepAliveMonitor->refresh(socket);
+        break;
+    
+    default:
+        std::cout << "Undefined Packet type received" << std::endl;
+        break;
+    }
 }
 
-void ProxyFE::monitorKeepAlives() {
-    pthread_create(&monitor_tid, NULL, monitorKeepAlivesAux, (void*) this);
+void ProxyFE::handleSocketDisconnection(int socket)
+{
+    keepAliveMonitor->killSocket(socket);
+    close(socket);
 }
 
+void ProxyFE::handleServerDisconnection(int socket)
+{
+    handleSocketDisconnection(socket);
+    online_semaphore->wait();
+    online_RMserver = false;
+    online_semaphore->post();
+    pthread_mutex_unlock(&mutex_server_reconnect);
+    std::cout << "❌❗❌ ServerRM went down - System is Offline ❌❗❌" << std::endl;
+}
     
