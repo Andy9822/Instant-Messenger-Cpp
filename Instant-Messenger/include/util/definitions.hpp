@@ -39,3 +39,23 @@
 #ifndef LEFT_GROUP_MESSAGE
 #define LEFT_GROUP_MESSAGE "<Left the group>"
 #endif
+
+#ifndef KEEP_ALIVE_TIMEOUT
+#define KEEP_ALIVE_TIMEOUT 10
+#endif
+
+#ifndef KEEP_ALIVE_INTERVAL
+#define KEEP_ALIVE_INTERVAL 2
+#endif
+
+#ifndef MESSAGE_PACKET
+#define MESSAGE_PACKET 0
+#endif
+
+#ifndef KEEP_ALIVE_PACKET
+#define KEEP_ALIVE_PACKET 1
+#endif
+
+#ifndef ELECTION_PACKET
+#define ELECTION_PACKET 2
+#endif

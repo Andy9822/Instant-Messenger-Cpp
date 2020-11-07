@@ -15,8 +15,15 @@ struct Packet
     char message[MESSAGE_MAX_SIZE];
     int clientSocket;
     time_t timestamp;
+    int type;
 
-    Packet() {}
+    Packet() {
+        this->type = MESSAGE_PACKET;
+    }
+
+    Packet(int type) {
+        this->type = type;
+    }
 
     Packet(char* username, char* group, char* message, time_t timestamp) {
       this->status = 1440;
@@ -24,6 +31,15 @@ struct Packet
       strncpy(this->group, group, GROUP_MAX_SIZE - 1);
       strncpy(this->message, message, MESSAGE_MAX_SIZE - 1);
       this->timestamp = timestamp;
+    }
+    bool isKeepAlive() {
+        return this->type == KEEP_ALIVE_PACKET;
+    }
+    bool isMessage() {
+        return this->type == MESSAGE_PACKET;
+    }
+    bool isElection() {
+        return this->type == ELECTION_PACKET;
     }
 };
 

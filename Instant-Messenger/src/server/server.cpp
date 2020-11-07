@@ -17,6 +17,7 @@ namespace server {
         // Init semaphore for openSockets
         sockets_connections_semaphore = new Semaphore(1);
         groupManager = new ServerGroupManager();
+        connectionMonitor = new ConnectionMonitor();
 
         // Configure server address properties
         serv_addr.sin_family = AF_INET;
@@ -162,6 +163,7 @@ namespace server {
 
     int Server::handleClientConnection(pthread_t *tid) {
         int status;
+        pthread_t monitoringThread;
 
         // Allocate memory space to store value in heap and be able to use it after this function ends
         int *newsockfd = (int *) calloc(1, sizeof(int));
@@ -193,17 +195,34 @@ namespace server {
         //Create a pair for sending more than 1 parameter to the new thread that we are about to create
         std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
 
+        //Create another pair for the monitoring method
+        std::pair<int *, Server *> *monitoringArgs = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
+
         // Send pointer of the previously allocated address and be able to access it's value in new thread's execution
         args->first = newsockfd;
+        monitoringArgs->first = newsockfd;
 
         // Also, send reference of this instance to the new thread
         args->second = this;
+        monitoringArgs->second = this;
 
+        pthread_create(&monitoringThread, NULL, monitorConnection, (void *) monitoringArgs);
         pthread_create(tid, NULL, listenClientCommunication, (void *) args);
 
         return 0;
     }
+    void * Server::monitorConnection(void *args) {
+        std::pair<int *, Server *> *args_pair = (std::pair<int *, Server *> *) args;
+        int client_socketfd = *(int *) args_pair->first;
+        Server *_this = (Server *) args_pair->second;
 
+        cout << "monitorConnection" << endl;
+        _this->connectionMonitor->monitor(&client_socketfd);
+        _this->closeListenClientCommunication(client_socketfd);
+
+        free(args_pair->first);
+        free(args_pair);
+    }
 
     void *Server::listenClientCommunication(void *args) {
         // We cast our receveid void* args to a pair*
@@ -227,25 +246,33 @@ namespace server {
             if (!connectedClient) {
                 // Free allocated memory for reading Packet
                 free(receivedPacket);
-                
                 break;
             }
 
-            _this->groupManager->processReceivedPacket(receivedPacket);
+            if (receivedPacket->isMessage()) {
+                _this->groupManager->processReceivedPacket(receivedPacket);
+            } else if (receivedPacket->isKeepAlive()){
+                _this->connectionMonitor->refresh(client_socketfd);
+            }
 
         }
 
+        _this->connectionMonitor->killSocket(client_socketfd);
         // Close all properties related to client connection
         _this->closeListenClientCommunication(client_socketfd);
 
         return 0;
     }
 
-
     void Server::closeListenClientCommunication(int client_socket) {
-        std::cout << "\n\nFreeing allocated memory and closing client connection thread" << std::endl;
-        sockets_connections_semaphore->wait();
 
+        sockets_connections_semaphore->wait();
+        if(std::find(openSockets.begin(), openSockets.end(), client_socket) == openSockets.end()) {
+            std::cout << "The connection was already closed: " << client_socket << std::endl;
+            sockets_connections_semaphore->post();
+            return;
+        }
+        std::cout << "\n\nFreeing allocated memory and closing client connection thread" << std::endl;
         openSockets.erase(std::remove(openSockets.begin(), openSockets.end(), client_socket), openSockets.end());
         groupManager->propagateSocketDisconnectionEvent(client_socket, this->connectionsCount);
 

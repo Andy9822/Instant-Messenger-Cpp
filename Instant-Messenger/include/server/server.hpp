@@ -18,6 +18,7 @@
 #include "server_message_manager.hpp"
 #include "../util/Socket.hpp"
 #include "../util/Semaphore.hpp"
+#include "ConnectionMonitor.hpp"
 
 #define MAXBACKLOG SOMAXCONN
 
@@ -27,11 +28,13 @@ namespace server {
     class Server : public Socket {
     private:
         ServerGroupManager *groupManager;
+        ConnectionMonitor *connectionMonitor;
         int socket_fd;
         struct sockaddr_in serv_addr;
         void closeListenClientCommunication(int client_socket);
         std::map<string, int> connectionsCount;
         int limitOfConnectios;
+        static void * monitorConnection(void *args);
 
 
     public:
