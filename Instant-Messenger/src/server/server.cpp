@@ -195,12 +195,18 @@ namespace server {
         //Create a pair for sending more than 1 parameter to the new thread that we are about to create
         std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
 
+        //Create another pair for the monitoring method
+        std::pair<int *, Server *> *monitoringArgs = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
+
         // Send pointer of the previously allocated address and be able to access it's value in new thread's execution
         args->first = newsockfd;
+        monitoringArgs->first = newsockfd;
 
         // Also, send reference of this instance to the new thread
         args->second = this;
-        pthread_create(&monitoringThread, NULL, monitorConnection, (void *) args);
+        monitoringArgs->second = this;
+
+        pthread_create(&monitoringThread, NULL, monitorConnection, (void *) monitoringArgs);
         pthread_create(tid, NULL, listenClientCommunication, (void *) args);
 
         return 0;
@@ -213,6 +219,9 @@ namespace server {
         cout << "monitorConnection" << endl;
         _this->connectionMonitor->monitor(&client_socketfd);
         _this->closeListenClientCommunication(client_socketfd);
+
+        free(args_pair->first);
+        free(args_pair);
     }
 
     void *Server::listenClientCommunication(void *args) {
