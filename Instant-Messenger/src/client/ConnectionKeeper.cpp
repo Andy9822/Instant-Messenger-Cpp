@@ -18,8 +18,7 @@ ConnectionKeeper::ConnectionKeeper(int socket) {
 void * ConnectionKeeper::sendKeepAliveForever(void *args) {
     ConnectionKeeper *_this = (ConnectionKeeper *) args;
 
-    Packet *keepAlivePacket = new Packet();
-    keepAlivePacket->isKeepAlive = true;
+    Packet *keepAlivePacket = new Packet(KEEP_ALIVE_PACKET);
     while (true)
     {
         sleep(_this->sleepTime);

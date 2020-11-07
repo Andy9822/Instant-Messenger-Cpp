@@ -240,9 +240,9 @@ namespace server {
                 break;
             }
 
-            if (!receivedPacket->isKeepAlive) {
+            if (receivedPacket->isMessage()) {
                 _this->groupManager->processReceivedPacket(receivedPacket);
-            } else {
+            } else if (receivedPacket->isKeepAlive()){
                 _this->connectionMonitor->refresh(client_socketfd);
             }
 

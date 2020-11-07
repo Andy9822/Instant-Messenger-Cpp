@@ -47,3 +47,15 @@
 #ifndef CONNECTION_COUNTDOWN_STEP
 #define CONNECTION_COUNTDOWN_STEP 2
 #endif
+
+#ifndef MESSAGE_PACKET
+#define MESSAGE_PACKET 0
+#endif
+
+#ifndef KEEP_ALIVE_PACKET
+#define KEEP_ALIVE_PACKET 1
+#endif
+
+#ifndef ELECTION_PACKET
+#define ELECTION_PACKET 2
+#endif
