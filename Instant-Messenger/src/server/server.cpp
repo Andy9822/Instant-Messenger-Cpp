@@ -199,6 +199,7 @@ namespace server {
         int status;
         pthread_t monitoringThread;
 
+        std::cout << "before accept"<< std::endl;
         // Allocate memory space to store value in heap and be able to use it after this function ends
         int *newsockfd = (int *) calloc(1, sizeof(int));
         int *socketMonitoring = (int *) calloc(1, sizeof(int));
@@ -210,6 +211,8 @@ namespace server {
             cout << "ERROR on accept\n" << endl;
             return -1;
         }
+
+        std::cout << "after accept"<< std::endl;
 
         // Registering user to server
         std::pair<int *, Server *> *user = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
