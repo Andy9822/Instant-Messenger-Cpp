@@ -25,6 +25,7 @@ using namespace std;
 class ProxyFE : public Socket
 {
     private:
+        int connections_server_socket_fd;
         int server_socket_fd;
         int clients_socket_fd;
         struct sockaddr_in serv_sock_addr;
@@ -38,9 +39,12 @@ class ProxyFE : public Socket
         Semaphore* openClientsSockets_semaphore;
         std::map<int, std::pair<pthread_t, time_t>> openClientsSockets;
         static Semaphore* online_semaphore;
+        Semaphore* processing_message_semaphore;
+        Packet* processing_message;
         static bool online_RMserver;
         static int serverRM_socket;
         pthread_mutex_t mutex_server_reconnect;
+        pthread_mutex_t mutex_consumer_message;
         ConnectionMonitor* keepAliveMonitor;
 
         void prepareSocketConnection(int* socket_fd, sockaddr_in* serv_addr);
@@ -66,6 +70,10 @@ class ProxyFE : public Socket
         static void* listenClientCommunication(void *args);
         static void* listenServerCommunication(void *args);
 
-        static void* monitorConnectionKeepAlive(void *args);     
+        static void* monitorConnectionKeepAlive(void *args);
+
+        static void* handleProcessingMessage(void* args);
+        void activateMessageConsumer(pthread_t *tid);     
+        void processIncomingClientMessage(Packet* message);     
 };
 #endif

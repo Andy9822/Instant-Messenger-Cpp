@@ -72,6 +72,9 @@ int main(int argc, char *argv[])
 	
 	// Trigger Server Reconnection processment in case initial connection downs
 	proxy_fe.handleServerReconnect(&tid[i++]);
+
+	// Trigger processing message consumer thread
+	proxy_fe.activateMessageConsumer(&tid[i++]);
 	
 	while(true)
 	{

@@ -18,20 +18,22 @@ ProxyFE::ProxyFE() {
     bzero(&(client_sock_addr.sin_zero), 8);
 
     // Initialize socket file descriptor
-    server_socket_fd = 0;
+    connections_server_socket_fd = 0;
     clients_socket_fd = 0;
 
-    // Init semaphore for openClientsSockets 
-    openClientsSockets_semaphore = new Semaphore(1);
+    // Init semaphore for processing message semaphore
+    processing_message_semaphore = new Semaphore(1);
 
     // Init semaphore for online_RMserver and set variable to false
     online_semaphore = new Semaphore(1);
     online_RMserver = false;
 
-    // Init server reconnect mutex
-    pthread_mutex_init(&mutex_server_reconnect, NULL);
+    // Init message consumer mutex
+    pthread_mutex_init(&mutex_consumer_message, NULL);
+    pthread_mutex_lock(&mutex_consumer_message);
 
-    // Server reconnect mutex inits locked as initially it's everything connected and fine
+    // Init server reconnect mutex locked as initially it's everything connected and fine
+    pthread_mutex_init(&mutex_server_reconnect, NULL);
     pthread_mutex_lock(&mutex_server_reconnect);
 
     // Init connections keep alives monitor
@@ -80,8 +82,8 @@ void ProxyFE::prepareSocketConnection(int* socket_fd, sockaddr_in* serv_addr)
 
 void ProxyFE::prepareServerConnection()
 {
-    prepareSocketConnection(&server_socket_fd, &serv_sock_addr);
-    std::cout << "Prepared server socket_fd: " << server_socket_fd << " ✅" << std::endl;
+    prepareSocketConnection(&connections_server_socket_fd, &serv_sock_addr);
+    std::cout << "Prepared server socket_fd: " << connections_server_socket_fd << " ✅" << std::endl;
 }
 
 void ProxyFE::prepareClientsConnection()
@@ -101,7 +103,7 @@ void ProxyFE::printPortNumber() {
     socklen_t len_srv = sizeof(serv_sock_addr);
     socklen_t len_cli = sizeof(client_sock_addr);
 
-    if (getsockname(server_socket_fd, (struct sockaddr *) &serv_sock_addr, &len_srv) < 0) {
+    if (getsockname(connections_server_socket_fd, (struct sockaddr *) &serv_sock_addr, &len_srv) < 0) {
         cout << "Unable to print port Number!" << endl;
         exit(1);
     }
@@ -124,7 +126,7 @@ void ProxyFE::processServerPacket(Packet* receivedPacket, int socket)
         break;
     
     case KEEP_ALIVE_PACKET:
-        std::cout << "recebi Keep Alive do server" << std::endl;
+        // std::cout << "recebi Keep Alive do server" << std::endl;
         keepAliveMonitor->refresh(socket);
         break;
     
@@ -139,11 +141,11 @@ void* ProxyFE::listenServerCommunication(void *args)
     // We cast our receveid void* args to a pair*
     std::pair<int, ProxyFE *> *args_pair = (std::pair<int, ProxyFE *>*) args;
 
-    // Get socket from the new connected client
-    int server_socketfd = args_pair->first;
-
     // Get a reference of the object instance in this thread
     ProxyFE *_this = (ProxyFE *) args_pair->second;
+
+    // Get socket from the new connected client
+    _this->server_socket_fd = args_pair->first; //TODO talvez proteger isso sob semaphore
 
     // Free pair created for receiving arguments
     free(args_pair);
@@ -154,23 +156,24 @@ void* ProxyFE::listenServerCommunication(void *args)
         char messageBuffer[USERNAME_MAX_SIZE] = "welcome to FE land";
         char usernameBuffer[MESSAGE_MAX_SIZE] = "FE bro";
         char groupBuffer[GROUP_MAX_SIZE] = "algum group";
-        _this->readPacket(server_socketfd, &is_server_connected);
-        _this->sendPacket(server_socketfd, new Packet(usernameBuffer, groupBuffer, messageBuffer, time(0)));
+        _this->readPacket(_this->server_socket_fd, &is_server_connected);
+        std::cout << "vou mandarl welcome pro _this->server_socket_fd: " << _this->server_socket_fd << std::endl;
+        _this->sendPacket(_this->server_socket_fd, new Packet(usernameBuffer, groupBuffer, messageBuffer, time(0)));
     }
 
         // Listen for incoming Packets from server until it disconnects
     while (is_server_connected) {
-        Packet* receivedPacket = _this->readPacket(server_socketfd, &is_server_connected);
+        Packet* receivedPacket = _this->readPacket(_this->server_socket_fd, &is_server_connected);
         if (!is_server_connected) {
             // Free allocated memory for reading Packet
             free(receivedPacket);
             break;
         }
-        _this->processServerPacket(receivedPacket, server_socketfd);
+        _this->processServerPacket(receivedPacket, _this->server_socket_fd);
     }
     
-    std::cout << "server socket " << server_socketfd <<  " has disconnected" << std::endl;
-    _this->handleServerDisconnection(server_socketfd);
+    std::cout << "server socket " << _this->server_socket_fd <<  " has disconnected" << std::endl;
+    _this->handleServerDisconnection(_this->server_socket_fd);
     
     return NULL;
 }
@@ -183,7 +186,7 @@ int ProxyFE::handleServerConnection(pthread_t *tid) {
     struct sockaddr_in cli_addr;
     socklen_t clilen = sizeof(struct sockaddr_in);
 
-    if ((newsockfd = accept(server_socket_fd, (struct sockaddr *) &cli_addr, &clilen)) == -1) {
+    if ((newsockfd = accept(connections_server_socket_fd, (struct sockaddr *) &cli_addr, &clilen)) == -1) {
         cout << "ERROR on accept\n" << endl;
         pthread_mutex_unlock(&mutex_server_reconnect);
         return -1;
@@ -359,11 +362,13 @@ void ProxyFE::processClientPacket(Packet* receivedPacket, int socket)
     switch (receivedPacket->type)
     {
     case MESSAGE_PACKET:
-        std::cout << "recebi: " << receivedPacket->message << std::endl;
+        // std::cout << "recebi: " << receivedPacket->message << std::endl;
+        // std::cout << "Vou esperar semaforo pra forwardar" << std::endl;
+        processIncomingClientMessage(receivedPacket);
         break;
     
     case KEEP_ALIVE_PACKET:
-        std::cout << "recebi: Keep Alive" << std::endl;
+        // std::cout << "recebi: Keep Alive" << std::endl;
         keepAliveMonitor->refresh(socket);
         break;
     
@@ -389,3 +394,36 @@ void ProxyFE::handleServerDisconnection(int socket)
     std::cout << "❌❗❌ ServerRM went down - System is Offline ❌❗❌" << std::endl;
 }
     
+
+///////////////// FE Forwarding
+void ProxyFE::activateMessageConsumer(pthread_t* tid) 
+{
+    pthread_create(tid, NULL, handleProcessingMessage, (void *) this);
+}
+
+void* ProxyFE::handleProcessingMessage(void* args) 
+{
+    // Get a reference of the object instance in this thread
+    ProxyFE *_this = (ProxyFE *) args;
+
+    while (true)
+    {
+        pthread_mutex_lock(&(_this->mutex_consumer_message));
+        // std::cout << "I'm processing message: " << _this->processing_message->message << std::endl;
+        // sleep(4);
+        _this->sendPacket(_this->server_socket_fd, _this->processing_message);
+        _this->processing_message_semaphore->post();
+        // std::cout << "liberei processamento mensagem: " << _this->processing_message->message << std::endl;
+    }
+    
+}
+
+
+void ProxyFE::processIncomingClientMessage(Packet* message)
+{
+    processing_message_semaphore->wait();
+
+    // std::cout << "entrei processamento mensagem: " << message->message << std::endl;
+    processing_message = message;
+    pthread_mutex_unlock(&mutex_consumer_message);
+} 
