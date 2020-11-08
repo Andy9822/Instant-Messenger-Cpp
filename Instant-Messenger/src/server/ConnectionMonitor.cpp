@@ -22,6 +22,8 @@ void ConnectionMonitor::monitor(int *socket) {
 
     keepsMonitoringConnection(args);
 
+    cout << "Timeout has been reached " << "\U0001F41D" << endl;
+
     this->socketLastKeepAliveSemaphore->wait();
     this->socketLastKeepAlive.erase(*socket);
     this->socketLastKeepAliveSemaphore->post();

@@ -39,7 +39,7 @@ class Group
         void addMessageToMessageQueue(Message message);
         void sendActivityMessage(const string &userName, const string &actionText);
         void disconnectSession(pair<int, int> connectionId, map<string, int> &numberOfConnectionsByUser);
-        User *getUserFromSocket(pair<int, int> connectionId) const;
+        User *getUserFromConnectionId(pair<int, int> connectionId) const;
 
 };
 

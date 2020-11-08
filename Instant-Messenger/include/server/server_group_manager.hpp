@@ -3,6 +3,7 @@
 
 #include "../util/message.hpp"
 #include "../util/user.hpp"
+#include "../util/Socket.hpp"
 #include "../server/server_message_manager.hpp"
 #include "../util/Packet.hpp"
 #include "./Group.hpp"
@@ -23,7 +24,7 @@ using namespace servermessagemanager;
 
 namespace servergroupmanager {
 
-    class ServerGroupManager {
+    class ServerGroupManager : Socket {
         private:
             Semaphore semaphore;
             std::map<string,Group*> groupMap; // will maintain a map of groupName -> group. This will be used to route the calls to the proper group

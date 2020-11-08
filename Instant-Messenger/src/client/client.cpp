@@ -145,7 +145,7 @@ void Client::showMessage(Packet* receivedPacket)
 	time = to_string(ltm->tm_hour) + ":" + to_string(ltm->tm_min) + ":" + to_string(1 + ltm->tm_sec);
 
 	message+= time + " " + user + " " + receivedPacket->message;
-	cout << message << endl;
+	cout << "client id: " << receivedPacket->clientDispositiveIdentifier << ", " << message << endl;
 }
 
 
@@ -183,6 +183,7 @@ void * Client::sendToServer(void* args)
 
 		// Prepare Packet struct to be sent
 		*sendingPacket = _this->buildPacket(input);
+		sendingPacket->type = MESSAGE_PACKET;
 
 		//Send Packet struct via TCP socket
 		_this->sendPacket(_this->sockfd, sendingPacket);

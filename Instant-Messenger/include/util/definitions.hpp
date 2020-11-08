@@ -71,3 +71,11 @@
 #ifndef DISCONNECT_PACKET
 #define DISCONNECT_PACKET 5
 #endif
+
+#ifndef ACK_PACKET
+#define ACK_PACKET 6
+#endif
+
+#ifndef FE_DISCONNECT
+#define FE_DISCONNECT -2
+#endif

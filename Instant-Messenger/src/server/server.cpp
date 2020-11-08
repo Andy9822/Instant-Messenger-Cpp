@@ -36,11 +36,11 @@ namespace server {
     }
 
 
-    void Server::closeConnections() {
-        cout << "Number of client connections: " << openSockets.size() << endl;
+    void Server::closeFrontEndConnections() {
+        cout << "Number of front end connections: " << openSockets.size() << endl;
         // std::for_each(openSockets.begin(), openSockets.end(), close);
-        std::for_each(openSockets.begin(), openSockets.end(), closeClientConnection);
-        cout << "Number of client connections: " << openSockets.size() << endl;
+        std::for_each(openSockets.begin(), openSockets.end(), close);
+        cout << "Number of front end connections: " << openSockets.size() << endl;
     }
 
 
@@ -52,7 +52,7 @@ namespace server {
 
 
     void Server::closeServer() {
-        closeConnections();
+        closeFrontEndConnections();
         closeSocket();
     }
 
@@ -230,6 +230,14 @@ namespace server {
             }
 
             if (receivedPacket->isMessage()) {
+                cout << "[DEBUG] " << receivedPacket->message << ", " << receivedPacket->clientDispositiveIdentifier <<
+                    " FE socket: " << frontEndSocket << endl;
+                //TODO: send this to the backup servers
+
+                Packet *ackPacket = new Packet(ACK_PACKET);
+                ackPacket->clientDispositiveIdentifier = receivedPacket->clientDispositiveIdentifier; // send a simple packet with the dispositive ID before sending it to the group
+                strcpy(ackPacket->message, "ACK_MESSAGE, mensagem meramente ilustrativa");
+                _this->sendPacket(frontEndSocket, ackPacket);
                 _this->groupManager->processReceivedPacket(receivedPacket);
             } else if (receivedPacket->isKeepAlive()){
                 _this->connectionMonitor->refresh(frontEndSocket);
@@ -239,7 +247,7 @@ namespace server {
                 pair<int, int> connectionId = pair<int, int>();
                 connectionId.first = receivedPacket->clientDispositiveIdentifier;
                 connectionId.second = frontEndSocket;
-                _this->closeListenClientCommunication(connectionId); // considers the front end connection
+                _this->closeClientConnection(connectionId); // considers the front end connection
             }
 
         }
@@ -251,11 +259,19 @@ namespace server {
         return 0;
     }
 
+    /**
+     * When the FE dies, let's process it and kill all the connections that we had for the users
+     * @param socketId
+     */
     void Server::closeFrontEndConnection(int socketId) {
-
+        pair <int, int> connectionId = pair<int, int>();
+        connectionId.first = FE_DISCONNECT;
+        connectionId.second = socketId;
+        closeClientConnection(connectionId);
+//        close(socketId); TODO: fechar a conexão do FE em si
     }
 
-    void Server::closeListenClientCommunication(pair<int, int> clientConnectionId) {
+    void Server::closeClientConnection(pair<int, int> clientConnectionId) {
         sockets_connections_semaphore->wait();
         groupManager->propagateSocketDisconnectionEvent(clientConnectionId, this->connectionsCount);
         sockets_connections_semaphore->post();
@@ -265,7 +281,6 @@ namespace server {
     void Server::configureFilesystemManager(int maxNumberOfMessagesInHistory) {
         groupManager->configureFileSystemManager(maxNumberOfMessagesInHistory); // THIS CALL IS OK, WE NEED TO PASS THE INFORMATION
     }
-
 
     int Server::incrementNumberOfConnectionsFromUser(string user) {
         map<string, int>::iterator it = this->connectionsCount.find(user);

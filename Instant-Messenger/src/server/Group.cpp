@@ -104,9 +104,18 @@ int Group::registerNewSession(pair<int, int> clientIdentifier, string userName) 
 void Group::handleDisconnectEvent(pair<int, int> connectionId, map<string, int> &numberOfConnectionsByUser) {
     usersSemaphore->wait();
     vector<pair <int, int> > allActiveSockets = this->getAllActiveConnectionIds();
-    if (std::count(allActiveSockets.begin(), allActiveSockets.end(), connectionId)) { // element found
+
+    if (connectionId.first == FE_DISCONNECT) { // DELETE ALL CONNECTIONS FROM THE CLIENTS THAT WERE CONNECTED TO THE FE
+        for (auto groupConnection : allActiveSockets) {
+            if (groupConnection.second == connectionId.second) { // if there is a match in the FE socket ID
+                cout << "Killing clientConnection [" << groupConnection.first << "," << groupConnection.second << "]" << endl;
+                this->disconnectSession(groupConnection, numberOfConnectionsByUser);
+            }
+        }
+    } else if (std::count(allActiveSockets.begin(), allActiveSockets.end(), connectionId)) { // element found
         this->disconnectSession(connectionId, numberOfConnectionsByUser);
     }
+
     usersSemaphore->post();
 }
 
@@ -121,7 +130,7 @@ void Group::handleDisconnectEvent(pair<int, int> connectionId, map<string, int> 
  * @param connectionId
  */
 void Group::disconnectSession(pair<int, int> connectionId, map<string, int> &numberOfConnectionsByUser) {
-    user::User* user = getUserFromSocket(connectionId);
+    user::User* user = getUserFromConnectionId(connectionId);
     if ( user != NULL) {
         numberOfConnectionsByUser[user->getUsername()] -= 1;
         user->releaseSession(connectionId);
@@ -171,14 +180,14 @@ void Group::processReceivedMessage(string userName, string message) {
 }
 
 /**
- * Auxiliar method to get the user by the socket
+ * Auxiliary method to get the user by the connection
  * @param connectionId
  * @return
  */
-User *Group::getUserFromSocket(pair<int, int> connectionId) const {
+User *Group::getUserFromConnectionId(pair<int, int> connectionId) const {
     for (auto user : users) {
-        for (auto connectionId : user->getActiveConnections()) {
-            if (connectionId.first == connectionId.first && connectionId.second == connectionId.second) {
+        for (auto groupConnectionId : user->getActiveConnections()) {
+            if (groupConnectionId == connectionId) {
                 return user;
             }
         }

@@ -52,6 +52,10 @@ struct Packet
     bool isDisconnect() {
         return this->type == DISCONNECT_PACKET;
     }
+
+    bool isAckPacket() {
+        return this->type == ACK_PACKET;
+    }
 };
 
 #endif
