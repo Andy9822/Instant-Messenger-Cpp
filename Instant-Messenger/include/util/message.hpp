@@ -16,10 +16,11 @@ class Message {
         string group;
         long int time;
         bool isNotification;
+        bool isBackup;
     
     public:
         Message();
-        Message(string text, string user, string group, long int time);
+        Message(string text, string user, string group, long int time, bool isBackup);
         string getText();
         string getUser();
         string getGroup();
@@ -30,6 +31,8 @@ class Message {
         void setTime(long int time);
         bool getIsNotification();
         void setIsNotification(bool value);
+        bool getIsBackup();
+        void setIsBackup(bool value);
 };
 }  //namespace message
 

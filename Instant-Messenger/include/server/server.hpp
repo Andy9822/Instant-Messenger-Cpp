@@ -30,33 +30,34 @@ namespace server {
         ServerGroupManager *groupManager;
         ConnectionMonitor *connectionMonitor;
         int socket_fd;
+        int backup_socket_fd;
+        bool primaryServer;
         struct sockaddr_in serv_addr;
+        struct sockaddr_in backup_serv_addr;
         void closeListenClientCommunication(int client_socket);
         std::map<string, int> connectionsCount;
-        int limitOfConnectios;
         static void * monitorConnection(void *args);
-
 
     public:
         Server();
         static std::vector<int> openSockets;
+        static std::vector<int> replicationSockets;
         Semaphore* sockets_connections_semaphore;
         static void *listenClientCommunication(void *newsocket);
         static void closeClientConnection(int socket_fd);
         void setPort(int port);
+        void setPrimaryServer(bool isPrimaryServer);
+        bool getPrimaryServer();
         void prepareConnection();
         void printPortNumber();
         int registerUserToServer(void *socket);
         int registerUser(int socket, char *username, char *group);
         int handleClientConnection(pthread_t *tid);
+        int connectToBackupServers();
         void closeConnections();
         void closeSocket();
         void closeServer();
-        void init_semaphore();
-        void wait_semaphore();
-        void post_semaphore();
         void configureFilesystemManager(int maxNumberOfMessagesInHistory);
-        int getNumberOfConnectionsByUser(string user);
         int incrementNumberOfConnectionsFromUser(string user);
     };
 }

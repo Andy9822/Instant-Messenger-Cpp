@@ -41,6 +41,9 @@ struct Packet
     bool isElection() {
         return this->type == ELECTION_PACKET;
     }
+    bool isBackup() {
+        return this->type == BACKUP_PACKET;
+    }
 };
 
 #endif

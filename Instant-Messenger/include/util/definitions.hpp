@@ -63,3 +63,7 @@
 #ifndef ELECTION_PACKET
 #define ELECTION_PACKET 2
 #endif
+
+#ifndef BACKUP_PACKET
+#define BACKUP_PACKET 3
+#endif

@@ -65,7 +65,7 @@ std::vector<Message> FileSystemManager::readGroupHistoryMessages(string groupNam
 
         long int time = 0;
         intTime >> time;
-        Message message = Message((string) parsedRow[1], (string) parsedRow[0], groupName, time);
+        Message message = Message((string) parsedRow[1], (string) parsedRow[0], groupName, time, 0);
 
         messages.push_back(message);
 

@@ -9,12 +9,13 @@ Message::Message() {
 
 }
 
-Message::Message(string text, string user, string group, long int time) {
+Message::Message(string text, string user, string group, long int time, bool isBackup) {
     this->text = text;
     this->user = user;
     this->group = group;
     this->time = time;
     this->isNotification = false;
+    this->isBackup = isBackup;
 }
 
 string Message::getText() {
@@ -49,6 +50,13 @@ bool Message::getIsNotification() {
 
 void Message::setIsNotification(bool value) {
     this->isNotification = value;
+}
+
+bool Message::getIsBackup() {
+    return this->isBackup;
+}
+void Message::setIsBackup(bool backup) {
+    this->isBackup = backup;
 }
 
 

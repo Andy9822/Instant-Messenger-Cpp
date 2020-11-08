@@ -62,9 +62,16 @@ int main(int argc, char *argv[])
 
 	read_args(argc, argv, &port, &maxNumberOfMessagesInHistory, &isPrimaryServer);
     serverApp.setPort(port);
+    serverApp.setPrimaryServer(isPrimaryServer);
     serverApp.configureFilesystemManager(maxNumberOfMessagesInHistory);
     serverApp.prepareConnection();
     serverApp.printPortNumber();
+
+    if(serverApp.getPrimaryServer())
+    {
+        cout << "starting connections with backup server" << endl;
+        serverApp.connectToBackupServers();
+    }
 
 	while(1)
 	{

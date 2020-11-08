@@ -12,6 +12,7 @@
 
 namespace server {
     vector<int> Server::openSockets;
+    vector<int> Server::replicationSockets;
 
     Server::Server() {
         // Init semaphore for openSockets
@@ -59,6 +60,14 @@ namespace server {
 
     void Server::setPort(int port) {
         serv_addr.sin_port = htons(port);
+    }
+
+    void Server::setPrimaryServer(bool isPrimaryServer) {
+        primaryServer = isPrimaryServer;
+    }
+
+    bool Server::getPrimaryServer() {
+        return this->primaryServer;
     }
 
     void Server::prepareConnection() {
@@ -160,6 +169,31 @@ namespace server {
         return 0;
     }
 
+    int Server::connectToBackupServers() {
+        backup_serv_addr.sin_family = AF_INET;
+        backup_serv_addr.sin_port = htons(atoi("4042"));
+
+        if(inet_pton(AF_INET, "127.0.0.1", &backup_serv_addr.sin_addr)<=0)
+        {
+            std::cout << "\nInvalid address/ Address not supported \n" << std::endl;
+        }
+
+        bzero(&(backup_serv_addr.sin_zero), 8);
+
+        if ((backup_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        {
+            cout << "\n Socket creation error \n" << endl;
+            return -1;
+        }
+
+        if (connect(backup_socket_fd,(struct sockaddr *) &backup_serv_addr,sizeof(backup_serv_addr)) < 0)
+        {
+            cout << "ERROR connecting\n" << endl;
+            return -1;
+        }
+
+        cout << "connected to backup server with socket id " << backup_socket_fd << endl;
+    }
 
     int Server::handleClientConnection(pthread_t *tid) {
         int status;
@@ -239,7 +273,6 @@ namespace server {
         // Create a reference of the instance in this thread
         Server *_this = (Server *) args_pair->second;
 
-
         // Free pair created for sending arguments
         free(args_pair);
 
@@ -255,6 +288,9 @@ namespace server {
 
             if (receivedPacket->isMessage()) {
                 _this->groupManager->processReceivedPacket(receivedPacket);
+                if(_this->getPrimaryServer()) {
+                    _this->sendPacket(_this->backup_socket_fd, receivedPacket);
+                }
             } else if (receivedPacket->isKeepAlive()){
                 _this->connectionMonitor->refresh(client_socketfd);
             }

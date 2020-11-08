@@ -33,7 +33,6 @@ void * Group::consumeMessageQueue(void * args)
         bool hasMessagesInQueue = true;
         while (hasMessagesInQueue)
         {
-            
             _this->messageQueueSemaphore->wait();
 
             if (_this->messages_queue.empty())
@@ -48,10 +47,19 @@ void * Group::consumeMessageQueue(void * args)
 
                 _this->messageQueueSemaphore->post();
 
-
                 _this->fsManager->appendGroupMessageToHistory(message);
                 _this->usersSemaphore->wait();
-                _this->messageManager->broadcastMessageToUsers(message, _this->getAllActiveSockets());
+
+                if(!message.getIsBackup())
+                {
+                    _this->messageManager->broadcastMessageToUsers(message, _this->getAllActiveSockets());
+                }
+                else
+                {
+                    cout << "backup server received message from " << message.getUser() << "with text " << message.getText() << endl;
+                }
+
+
                 _this->usersSemaphore->post();
             }
         }
@@ -139,7 +147,7 @@ void Group::disconnectSession(int socketId, map<string, int> &numberOfConnection
  * @param userName
  */
 void Group::sendActivityMessage(const string &userName, const string &actionText) {
-    Message entryNotificationMessage = Message(actionText, userName, groupName, time(0));
+    Message entryNotificationMessage = Message(actionText, userName, groupName, time(0), 0);
     entryNotificationMessage.setIsNotification(true);
     addMessageToMessageQueue(entryNotificationMessage);
 }
@@ -166,8 +174,8 @@ void Group::sendHistoryToUser(int socketId) {
  * @param userName
  * @param message
  */
-void Group::processReceivedMessage(string userName, string message) {
-    Message receivedMessage = Message(message, userName, this->groupName, std::time(0));
+void Group::processReceivedMessage(string userName, string message, bool isBackup) {
+    Message receivedMessage = Message(message, userName, this->groupName, std::time(0), isBackup);
     addMessageToMessageQueue(receivedMessage);
 }
 
