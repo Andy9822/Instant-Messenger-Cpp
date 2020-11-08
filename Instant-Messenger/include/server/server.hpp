@@ -42,14 +42,15 @@ namespace server {
         Server();
         static std::vector<int> openSockets;
         Semaphore* sockets_connections_semaphore;
-        static void *listenFrontEndCommunication(void *newsocket);
         static void closeClientConnection(int socket_fd);
+        static void *listenFrontEndCommunication(void *newsocket);
         void setPort(int port);
         void prepareConnection();
         void printPortNumber();
         int registerUserToServer(Packet *registrationPacket, int frontEndSocket);
         int registerUser(pair<int, int> clientIdentifier, char *username, char *group);
-        int handleFrontEndConnection(pthread_t *tid);
+        int ConnectToFE();
+        int handleFrontEndConnection(pthread_t *tid, pthread_t *tid2);
         void closeFrontEndConnections();
         void closeSocket();
         void closeServer();

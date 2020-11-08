@@ -1,5 +1,6 @@
 #include "../../include/server/server.hpp"
 #include "../../include/util/definitions.hpp"
+#include "../../include/client/ConnectionKeeper.hpp"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -19,10 +20,13 @@ namespace server {
         groupManager = new ServerGroupManager();
         connectionMonitor = new ConnectionMonitor();
 
-        // Configure server address properties
-        serv_addr.sin_family = AF_INET;
-        serv_addr.sin_addr.s_addr = INADDR_ANY;
-        bzero(&(serv_addr.sin_zero), 8);
+        // TODO assim como proxyFE, o server vai ter que ter 2 sockets, um pra conectar nos FE e outro nos RM
+        {
+            // Configure server address properties
+            // serv_addr.sin_family = AF_INET;
+            // serv_addr.sin_addr.s_addr = INADDR_ANY;
+            // bzero(&(serv_addr.sin_zero), 8);
+        }
 
         // Initialize socket file descriptor
         socket_fd = 0;
@@ -57,12 +61,14 @@ namespace server {
     }
 
 
+    // TODO adaptar pra quando tiver 2 sockets, ou pelo menos deixa o TODO aqui
     void Server::setPort(int port) {
-        serv_addr.sin_port = htons(port);
+        /*serv_addr.sin_port = htons(atoi(port)); */
     }
 
+    // Same as above. BTW it doesn't mean to remove it
     void Server::prepareConnection() {
-        int opt = 1;
+        /*int opt = 1;
 
         // Create socket file descriptor
         if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) <= 0) {
@@ -90,10 +96,11 @@ namespace server {
             exit(1);
         }
 
-        std::cout << "server_socket_fd preparedConnection: " << socket_fd << std::endl;
+        std::cout << "server_socket_fd preparedConnection: " << socket_fd << std::endl;*/
     }
 
 
+    // TODO acho que isso so faz sentido pra um socket que recebe conexões, em modo server.
     void Server::printPortNumber() {
         socklen_t len = sizeof(serv_addr);
 
@@ -150,79 +157,63 @@ namespace server {
         return 0;
     }
 
+    // TODO think in IP as parameter etc...
+    int Server::ConnectToFE()
+    {
+        // TODO essa é a parte do socket pros FE
+        {
+            //TODO ip via params ou arquivos de texto
+            char ip_address[10] = "127.0.0.1";
+            char port[5] = "6969";
+            serv_addr.sin_family = AF_INET;    
+            serv_addr.sin_port = htons(atoi(port));     
+            if(inet_pton(AF_INET, ip_address, &serv_addr.sin_addr)<=0) 
+            { 
+                std::cout << "\nInvalid address/ Address not supported \n" << std::endl; 
+            } 
 
-    int Server::handleFrontEndConnection(pthread_t *tid) {
-        int status;
-        pthread_t monitoringThread;
+            bzero(&(serv_addr.sin_zero), 8); 
+        }
 
-        // Allocate memory space to store value in heap and be able to use it after this function ends
-        int *newsockfd = (int *) calloc(1, sizeof(int));
-        int *socketMonitoring = (int *) calloc(1, sizeof(int));
-
-        struct sockaddr_in cli_addr;
-        socklen_t clilen = sizeof(struct sockaddr_in);
-
-        if ((*newsockfd = accept(socket_fd, (struct sockaddr *) &cli_addr, &clilen)) == -1) {
-            cout << "ERROR on accept\n" << endl;
+        if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        {
+            cout << "\n Socket creation error \n" << endl;
             return -1;
         }
 
-        *socketMonitoring = *newsockfd; //duplicating this value in another address so that we have more flexibility to work in two threads
+        if (connect(socket_fd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
+        {
+            cout << "ERROR connecting\n" << endl;
+            return -1;
+        }
 
-        std::cout << "client connected with socket: " << *newsockfd << std::endl;
-
-        //Create a pair for sending more than 1 parameter to the new thread that we are about to create
-        std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
-
-        //Create another pair for the monitoring method
-        std::pair<int *, Server *> *monitoringArgs = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
-
-        // Send pointer of the previously allocated address and be able to access it's value in new thread's execution
-        args->first = newsockfd;
-        monitoringArgs->first = socketMonitoring;
-
-        // Also, send reference of this instance to the new thread
-        args->second = this;
-        monitoringArgs->second = this;
-
-        pthread_create(&monitoringThread, NULL, monitorConnection, (void *) monitoringArgs);
-        pthread_create(tid, NULL, listenFrontEndCommunication, (void *) args);
+        std::cout << "conectado ao FE com socket:" << this->socket_fd << std::endl;
 
         return 0;
     }
-    void * Server::monitorConnection(void *args) {
-        std::pair<int *, Server *> *args_pair = (std::pair<int *, Server *> *) args;
-        int client_socketfd = *(int *) args_pair->first;
-        Server *_this = (Server *) args_pair->second;
 
-        free(args_pair->first);
-        free(args_pair);
+    int Server::handleFrontEndConnection(pthread_t *tid, pthread_t *tid2) { //TODO same as in other places, tids mess
+        pthread_create(tid, NULL, listenFrontEndCommunication, (void *) this);
+        pthread_create(tid2, NULL, monitorConnection, (void *) this);
+        ConnectionKeeper(this->socket_fd); // starts the thread that keeps sending keep alives
+        return 0;
+    }
+    void * Server::monitorConnection(void *args) {
+        Server* _this = (Server *) args;
 
         cout << "monitorConnection" << endl;
-        _this->connectionMonitor->monitor(&client_socketfd);
-        _this->closeFrontEndConnection(client_socketfd);
+        _this->connectionMonitor->monitor(&(_this->socket_fd));
+        _this->closeFrontEndConnection(_this->socket_fd);
+
+        return NULL;
     }
 
     void *Server::listenFrontEndCommunication(void *args) {
-
-        // We cast our received void* args to a pair*
-        std::pair<int *, Server *> *args_pair = (std::pair<int *, Server *> *) args;
-
-        // Read socket pointer's value and free the previously allocated memory in the main thread
-        int frontEndSocket = *(int *) args_pair->first;
-        free(args_pair->first);
-
-        // Create a reference of the instance in this thread
-        Server *_this = (Server *) args_pair->second;
-
-
-        // Free pair created for sending arguments
-        free(args_pair);
-
+        Server* _this = (Server *) args;
         bool connectedFrontEnd = true;
         while (connectedFrontEnd) {
             // Listen for an incoming Packet from client
-            Packet *receivedPacket = _this->readPacket(frontEndSocket, &connectedFrontEnd);
+            Packet *receivedPacket = _this->readPacket(_this->socket_fd, &connectedFrontEnd);
             if (!connectedFrontEnd) {
                 // Free allocated memory for reading Packet
                 free(receivedPacket);
@@ -231,30 +222,30 @@ namespace server {
 
             if (receivedPacket->isMessage()) {
                 cout << "[DEBUG] " << receivedPacket->message << ", " << receivedPacket->clientDispositiveIdentifier <<
-                    " FE socket: " << frontEndSocket << endl;
+                    " FE socket: " << _this->socket_fd << endl;
                 //TODO: send this to the backup servers
 
                 Packet *ackPacket = new Packet(ACK_PACKET);
                 ackPacket->clientDispositiveIdentifier = receivedPacket->clientDispositiveIdentifier; // send a simple packet with the dispositive ID before sending it to the group
                 strcpy(ackPacket->message, "ACK_MESSAGE, mensagem meramente ilustrativa");
-                _this->sendPacket(frontEndSocket, ackPacket);
+                _this->sendPacket(_this->socket_fd, ackPacket);
                 _this->groupManager->processReceivedPacket(receivedPacket);
             } else if (receivedPacket->isKeepAlive()){
-                _this->connectionMonitor->refresh(frontEndSocket);
+                _this->connectionMonitor->refresh(_this->socket_fd);
             } else if (receivedPacket->isJoinMessage()) {
-                _this->registerUserToServer(receivedPacket, frontEndSocket); // considers the front end connection
+                _this->registerUserToServer(receivedPacket, _this->socket_fd); // considers the front end connection
             } else if (receivedPacket->isDisconnect()) {
                 pair<int, int> connectionId = pair<int, int>();
                 connectionId.first = receivedPacket->clientDispositiveIdentifier;
-                connectionId.second = frontEndSocket;
+                connectionId.second = _this->socket_fd;
                 _this->closeClientConnection(connectionId); // considers the front end connection
             }
 
         }
 
-        _this->connectionMonitor->killSocket(frontEndSocket);
+        _this->connectionMonitor->killSocket(_this->socket_fd);
         // Close all properties related to client connection
-        _this->closeFrontEndConnection(frontEndSocket);
+        _this->closeFrontEndConnection(_this->socket_fd);
 
         return 0;
     }

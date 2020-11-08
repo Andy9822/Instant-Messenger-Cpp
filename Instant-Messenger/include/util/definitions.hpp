@@ -18,6 +18,10 @@
 #define MESSAGE_MAX_SIZE 255
 #endif
 
+#ifndef UUID_SIZE
+#define UUID_SIZE 37
+#endif
+
 #ifndef JOIN_QUIT_STATUS_MESSAGE
 #define JOIN_QUIT_STATUS_MESSAGE 3
 #endif
@@ -25,12 +29,6 @@
 #ifndef DEBUG_MODE
 #define DEBUG_MODE false
 #endif
-
-
-#ifndef DEBUG_MODE
-#define DEBUG_MODE false
-#endif
-
 
 #ifndef JOINED_MESSAGE
 #define JOINED_MESSAGE "<Joined the group>"
@@ -48,34 +46,22 @@
 #define KEEP_ALIVE_INTERVAL 2
 #endif
 
-#ifndef MESSAGE_PACKET
-#define MESSAGE_PACKET 0
-#endif
-
-#ifndef KEEP_ALIVE_PACKET
-#define KEEP_ALIVE_PACKET 1
-#endif
-
-#ifndef ELECTION_PACKET
-#define ELECTION_PACKET 2
-#endif
-
-#ifndef JOIN_PACKET
-#define JOIN_PACKET 3
-#endif
-
-#ifndef CONNECTION_REFUSED_PACKET
-#define CONNECTION_REFUSED_PACKET 4
-#endif
-
-#ifndef DISCONNECT_PACKET
-#define DISCONNECT_PACKET 5
-#endif
-
-#ifndef ACK_PACKET
-#define ACK_PACKET 6
-#endif
-
 #ifndef FE_DISCONNECT
 #define FE_DISCONNECT -2
+#endif
+
+#ifndef PACKET_TYPES
+#define PACKET_TYPES
+/////// Types of Packet
+enum
+{
+    MESSAGE_PACKET = 0,
+    JOIN_PACKET,
+    ACK_PACKET,
+    KEEP_ALIVE_PACKET,
+    CONNECTION_REFUSED_PACKET,
+    DISCONNECT_PACKET,
+    ELECTION_PACKET,
+};
+////////
 #endif

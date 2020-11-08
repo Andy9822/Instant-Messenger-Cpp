@@ -57,16 +57,29 @@ int main(int argc, char *argv[])
 	pthread_t tid[MAXBACKLOG];
 
 	read_args(argc, argv, &port, &maxNumberOfMessagesInHistory);
-    serverApp.setPort(port);
-    serverApp.configureFilesystemManager(maxNumberOfMessagesInHistory);
-    serverApp.prepareConnection();
-    serverApp.printPortNumber();
+    // serverApp.setPort(port);
+    // serverApp.configureFilesystemManager(maxNumberOfMessagesInHistory);
+    // serverApp.prepareConnection();
+    // serverApp.printPortNumber();
 
-	while(1)
+	// while(1)
+	// {
+	// 	if(serverApp.handleFrontEndConnection(&tid[i++]) < 0)
+	// 		return -1;
+	// }
+
+	//TODO sorry for the mess, WIP
+
+
+	serverApp.ConnectToFE();
+	serverApp.handleFrontEndConnection(&tid[i++], &tid[i++]);
+	
+	//I'm not proud of this, I swear
+	while (true)
 	{
-		if(serverApp.handleFrontEndConnection(&tid[i++]) < 0)
-			return -1;
+		sleep(60);
 	}
+	
 
 	return 0;
 }
