@@ -6,6 +6,10 @@
 #define RANDOM_PORT_NUMBER 0
 #endif
 
+#ifndef IS_PRIMARY_SERVER
+#define IS_PRIMARY_SERVER false
+#endif
+
 #ifndef USERNAME_MAX_SIZE
 #define USERNAME_MAX_SIZE 20
 #endif
