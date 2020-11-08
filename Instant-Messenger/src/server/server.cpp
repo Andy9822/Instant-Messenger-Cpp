@@ -287,8 +287,10 @@ namespace server {
             }
 
             if (receivedPacket->isMessage()) {
+                cout << "processing packet from user " << receivedPacket->username << endl;
                 _this->groupManager->processReceivedPacket(receivedPacket);
                 if(_this->getPrimaryServer()) {
+                    cout << "sending packet to socket " << _this->backup_socket_fd << endl;
                     _this->sendPacket(_this->backup_socket_fd, receivedPacket);
                 }
             } else if (receivedPacket->isKeepAlive()){
