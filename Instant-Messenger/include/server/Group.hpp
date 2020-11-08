@@ -28,18 +28,18 @@ class Group
         std::queue<message::Message> messages_queue;  
         string groupName;
         static void *consumeMessageQueue(void * args);
-        int registerNewSession(int socket, string username);
+        int registerNewSession(pair<int, int> clientIdentifier, string userName);
         void processReceivedMessage(string userName, string message);
-        void handleDisconnectEvent(int socket, map<string, int> &numberOfConnectionsByUser);
+        void handleDisconnectEvent(pair<int, int> connectionId, map<string, int> &numberOfConnectionsByUser);
         void configureFileSystemManager(int maxNumberOfMessagesOnHistory);
 
     private:
-        vector<int> getAllActiveSockets();
-        void sendHistoryToUser(int socketId);
+        vector<pair<int, int>> getAllActiveConnectionIds();
+        void sendHistoryToUser(pair<int, int> clientIdentifier);
         void addMessageToMessageQueue(Message message);
         void sendActivityMessage(const string &userName, const string &actionText);
-        void disconnectSession(int socketId, map<string, int> &numberOfConnectionsByUser);
-        User *getUserFromSocket(int socketId) const;
+        void disconnectSession(pair<int, int> connectionId, map<string, int> &numberOfConnectionsByUser);
+        User *getUserFromSocket(pair<int, int> connectionId) const;
 
 };
 

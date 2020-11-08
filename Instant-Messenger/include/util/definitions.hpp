@@ -59,3 +59,15 @@
 #ifndef ELECTION_PACKET
 #define ELECTION_PACKET 2
 #endif
+
+#ifndef JOIN_PACKET
+#define JOIN_PACKET 3
+#endif
+
+#ifndef CONNECTION_REFUSED_PACKET
+#define CONNECTION_REFUSED_PACKET 4
+#endif
+
+#ifndef DISCONNECT_PACKET
+#define DISCONNECT_PACKET 5
+#endif

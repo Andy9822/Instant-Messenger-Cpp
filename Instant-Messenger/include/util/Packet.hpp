@@ -14,6 +14,8 @@ struct Packet
     char group[GROUP_MAX_SIZE];
     char message[MESSAGE_MAX_SIZE];
     int clientSocket;
+    int frontEndSocket;
+    int clientDispositiveIdentifier;
     time_t timestamp;
     int type;
 
@@ -25,11 +27,12 @@ struct Packet
         this->type = type;
     }
 
-    Packet(char* username, char* group, char* message, time_t timestamp) {
+    Packet(char* username, char* group, char* message, int clientDispositiveIdentifier, time_t timestamp) {
       this->status = 1440;
       strncpy(this->username, username, USERNAME_MAX_SIZE - 1);
       strncpy(this->group, group, GROUP_MAX_SIZE - 1);
       strncpy(this->message, message, MESSAGE_MAX_SIZE - 1);
+      this->clientDispositiveIdentifier = clientDispositiveIdentifier;
       this->timestamp = timestamp;
     }
     bool isKeepAlive() {
@@ -40,6 +43,14 @@ struct Packet
     }
     bool isElection() {
         return this->type == ELECTION_PACKET;
+    }
+
+    bool isJoinMessage() {
+        return this->type == JOIN_PACKET;
+    }
+
+    bool isDisconnect() {
+        return this->type == DISCONNECT_PACKET;
     }
 };
 

@@ -31,24 +31,25 @@ namespace server {
         ConnectionMonitor *connectionMonitor;
         int socket_fd;
         struct sockaddr_in serv_addr;
-        void closeListenClientCommunication(int client_socket);
+        void closeListenClientCommunication(pair<int, int> clientConnectionId);
         std::map<string, int> connectionsCount;
         int limitOfConnectios;
         static void * monitorConnection(void *args);
+        void closeFrontEndConnection(int socketId);
 
 
     public:
         Server();
         static std::vector<int> openSockets;
         Semaphore* sockets_connections_semaphore;
-        static void *listenClientCommunication(void *newsocket);
+        static void *listenFrontEndCommunication(void *newsocket);
         static void closeClientConnection(int socket_fd);
         void setPort(int port);
         void prepareConnection();
         void printPortNumber();
-        int registerUserToServer(void *socket);
-        int registerUser(int socket, char *username, char *group);
-        int handleClientConnection(pthread_t *tid);
+        int registerUserToServer(Packet *registrationPacket, int frontEndSocket);
+        int registerUser(pair<int, int> clientIdentifier, char *username, char *group);
+        int handleFrontEndConnection(pthread_t *tid);
         void closeConnections();
         void closeSocket();
         void closeServer();

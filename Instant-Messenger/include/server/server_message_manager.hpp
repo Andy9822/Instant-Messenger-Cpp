@@ -13,8 +13,8 @@ namespace servermessagemanager {
 
     class ServerMessageManager : public Socket{
         public:
-        void broadcastMessageToUsers(Message message, vector<int> sockets);
-        void sendMessageToSocketId(Message message, int socketId);
+        void broadcastMessageToUsers(Message message, vector< pair <int, int> > connectionIds);
+        void sendMessageToSocketId(Message message, pair<int, int> clientIdentifier);
     };
 }
 

@@ -10,7 +10,7 @@ namespace user {
 
     void User::initSessionList() {
         this->semaphore.wait();
-        this->sockets = std::vector<int>();
+        this->clientIdentifiers = std::vector< pair <int, int> >();
         this->semaphore.post();
     }
 
@@ -19,21 +19,21 @@ namespace user {
         return this->username;
     }
 
-    std::vector<int> User::getActiveSockets() {
-        return sockets;
+    std::vector<pair<int, int> > User::getActiveConnections() {
+        return this->clientIdentifiers;
     }
 
     /**
      * The validation for the number of sockets is not the hard verification that we needed,
      * It is a week on because it is only checking in the group level. Server has a function to verify it in the upper layer
      * But it is good to hava some kind of validation here, as well
-     * @param socket
+     * @param clientIdentifier
      * @return negative if error
      */
-    int User::registerSession(int socket) {
+    int User::registerSession(pair<int, int> clientIdentifier) {
         this->semaphore.wait();
-        if (sockets.size() < MAX_NUMBER_OF_SIMULTANEOUS_CONNECTIONS ) {
-            this->sockets.push_back(socket);
+        if (this->clientIdentifiers.size() < MAX_NUMBER_OF_SIMULTANEOUS_CONNECTIONS ) {
+            this->clientIdentifiers.push_back(clientIdentifier);
             this->semaphore.post();
             return 0;
         } else {
@@ -43,18 +43,17 @@ namespace user {
     }
 
     void User::printSockets() {
-        for (auto socket : this->sockets) {
-            cout << "printsockt::Socket: " << socket << endl;
+        for (auto identification : this->clientIdentifiers) {
+            cout << "printsockt::Client Dispositive Identifier: " << identification.first << " FE socket: " << identification.second << endl;
         }
     }
 
-    void User::releaseSession(int socketId) {
-        std::vector<int>::iterator position;
+    void User::releaseSession(pair<int, int> clientIdentifier) {
+        std::vector<pair <int, int> >::iterator element;
         this->semaphore.wait();
-        position = std::find(sockets.begin(), sockets.end(), socketId);
-
-        if (position != sockets.end()) {
-            sockets.erase(position);
+        element = find(this->clientIdentifiers.begin(), this->clientIdentifiers.end(), clientIdentifier); //TODO: check if it works
+        if ( element != this->clientIdentifiers.end() ) {
+            this->clientIdentifiers.erase(element);
         }
         this->semaphore.post();
     }

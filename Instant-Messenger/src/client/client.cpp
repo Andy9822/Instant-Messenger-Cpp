@@ -34,8 +34,9 @@ Packet Client::buildPacket(string input)
 	
 	// Adjust last character to end of string in case string was bigger than max size
 	messageBuffer[MESSAGE_MAX_SIZE - 1] = '\0';
-
-	return Packet(usernameBuffer, groupBuffer, messageBuffer, time(0));
+    Packet new_packet = Packet(usernameBuffer, groupBuffer, messageBuffer, 123, time(0)); // TODO: REMOVE THIS TEST
+	new_packet.type = JOIN_PACKET;
+    return new_packet;
 }
 
 
@@ -60,6 +61,8 @@ int Client::registerToServer()
 {
 	bool connectedClient = true;
 	Packet *sendingPacket = new Packet();
+
+	sendingPacket->clientDispositiveIdentifier = 123123; // TODO: remove, this is just a debug
 
 	*sendingPacket = buildPacket("<Entered the group>");
 

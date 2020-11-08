@@ -20,13 +20,13 @@ class User {
 
     private:
         string username;
-        std::vector<int> sockets;
+        std::vector<pair <int, int> > clientIdentifiers;
         Semaphore semaphore;
     
     public:
         User(string username);
         string getUsername();
-        std::vector<int> getActiveSockets();
+        std::vector<pair<int, int> > getActiveConnections();
 
         /*
         * Method to register a socket linked to a user
@@ -34,8 +34,8 @@ class User {
         * was not created due to limitation reached
         */
 
-        int registerSession(int socket);
-        void releaseSession(int socketId);
+        int registerSession(pair<int, int> clientIdentifier);
+        void releaseSession(pair<int, int> clientIdentifier);
         void initSessionList();
 
         bool operator == (const User& s) const { return username == s.username; }

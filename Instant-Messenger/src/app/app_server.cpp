@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 
 	while(1)
 	{
-		if(serverApp.handleClientConnection(&tid[i++]) < 0)
+		if(serverApp.handleFrontEndConnection(&tid[i++]) < 0)
 			return -1;
 	}
 

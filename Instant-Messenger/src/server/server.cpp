@@ -113,55 +113,45 @@ namespace server {
      * @param group
      * @return
      */
-    int Server::registerUser(int socket, char *username, char *group) {
-        return groupManager->registerUserToGroup(socket, username, group);
+    int Server::registerUser(pair<int, int> clientIdentifier, char *username, char *group) {
+        return groupManager->registerUserToGroup(clientIdentifier, username, group);
     }
 
-
-    int Server::registerUserToServer(void *args) {
-        char username[USERNAME_MAX_SIZE] = {0};
-        char group[GROUP_MAX_SIZE] = {0};
-        int registered;
-
-        std::pair<int *, Server *> *args_pair = (std::pair<int *, Server *> *) args;
-        int client_socketfd = *(int *) args_pair->first;
-        Server *_this = (Server *) args_pair->second;
-
-        bool connectedClient = true;
-        Packet *pack = new Packet();
-
-        // getting client info
-        Packet *receivedPacket = _this->readPacket(client_socketfd, &connectedClient);
-
-        strncpy(username, receivedPacket->username, USERNAME_MAX_SIZE - 1);
-        strncpy(group, receivedPacket->group, GROUP_MAX_SIZE - 1);
-
+    int Server::registerUserToServer(Packet *registrationPacket, int frontEndSocket) {
         // Store new crated socket in the vector of existing connections sockets and increment counter for the user
-        _this->sockets_connections_semaphore->wait();
-        if (incrementNumberOfConnectionsFromUser(username) == USER_SESSIONS_LIMIT_REACHED ) {
-            pack->clientSocket = -1;
-            _this->sendPacket(client_socketfd, pack);
-            delete pack;
+        this->sockets_connections_semaphore->wait();
+        if (incrementNumberOfConnectionsFromUser(registrationPacket->username) == USER_SESSIONS_LIMIT_REACHED ) { // we can keep this
+            Packet *connectionRefusedPacket = new Packet(CONNECTION_REFUSED_PACKET);
+            connectionRefusedPacket->clientDispositiveIdentifier = registrationPacket->clientDispositiveIdentifier;
+            this->sendPacket(frontEndSocket, connectionRefusedPacket);
+            delete connectionRefusedPacket;
             return -1;
         }
-        openSockets.push_back(client_socketfd);
-        _this->sockets_connections_semaphore->post();
+        this->sockets_connections_semaphore->post();
 
-        registered = _this->registerUser(client_socketfd, username, group);
+        std::pair<int, int> *clientFrontEndIdentifier = (std::pair<int, int> *) calloc(1, sizeof(std::pair<int, int>)); // this is the identifier for the client and we need to store this in the groups
+
+        clientFrontEndIdentifier->first = registrationPacket->clientDispositiveIdentifier;
+        clientFrontEndIdentifier->second = frontEndSocket;
+
+        int registered = this->registerUser(*clientFrontEndIdentifier, registrationPacket->username, registrationPacket->group);
 
         // if there was already one entry with the same username before, we don't print <entered the group> a second time 
         if(registered == 1)
         {
+            Packet *pack = new Packet();
 	        pack->clientSocket = JOIN_QUIT_STATUS_MESSAGE;
-	        _this->sendPacket(client_socketfd, pack);
+	        pack->clientDispositiveIdentifier = registrationPacket->clientDispositiveIdentifier;
+	        this->sendPacket(frontEndSocket, pack);
+            delete pack;
 	    }
 
-        delete pack;
+
         return 0;
     }
 
 
-    int Server::handleClientConnection(pthread_t *tid) {
+    int Server::handleFrontEndConnection(pthread_t *tid) {
         int status;
         pthread_t monitoringThread;
 
@@ -175,21 +165,6 @@ namespace server {
         if ((*newsockfd = accept(socket_fd, (struct sockaddr *) &cli_addr, &clilen)) == -1) {
             cout << "ERROR on accept\n" << endl;
             return -1;
-        }
-
-        // Registering user to server
-        std::pair<int *, Server *> *user = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
-        user->first = newsockfd;
-        user->second = this;
-
-        status = this->registerUserToServer(user);
-
-        free(user);
-
-        // if there are already two users with the same name -> close and ignore connection
-        if (status < 0) {
-            close(*newsockfd);
-            return 0;
         }
 
         *socketMonitoring = *newsockfd; //duplicating this value in another address so that we have more flexibility to work in two threads
@@ -211,7 +186,7 @@ namespace server {
         monitoringArgs->second = this;
 
         pthread_create(&monitoringThread, NULL, monitorConnection, (void *) monitoringArgs);
-        pthread_create(tid, NULL, listenClientCommunication, (void *) args);
+        pthread_create(tid, NULL, listenFrontEndCommunication, (void *) args);
 
         return 0;
     }
@@ -225,15 +200,16 @@ namespace server {
 
         cout << "monitorConnection" << endl;
         _this->connectionMonitor->monitor(&client_socketfd);
-        _this->closeListenClientCommunication(client_socketfd);
+        _this->closeFrontEndConnection(client_socketfd);
     }
 
-    void *Server::listenClientCommunication(void *args) {
-        // We cast our receveid void* args to a pair*
+    void *Server::listenFrontEndCommunication(void *args) {
+
+        // We cast our received void* args to a pair*
         std::pair<int *, Server *> *args_pair = (std::pair<int *, Server *> *) args;
 
         // Read socket pointer's value and free the previously allocated memory in the main thread
-        int client_socketfd = *(int *) args_pair->first;
+        int frontEndSocket = *(int *) args_pair->first;
         free(args_pair->first);
 
         // Create a reference of the instance in this thread
@@ -243,11 +219,11 @@ namespace server {
         // Free pair created for sending arguments
         free(args_pair);
 
-        bool connectedClient = true;
-        while (connectedClient) {
+        bool connectedFrontEnd = true;
+        while (connectedFrontEnd) {
             // Listen for an incoming Packet from client
-            Packet *receivedPacket = _this->readPacket(client_socketfd, &connectedClient);
-            if (!connectedClient) {
+            Packet *receivedPacket = _this->readPacket(frontEndSocket, &connectedFrontEnd);
+            if (!connectedFrontEnd) {
                 // Free allocated memory for reading Packet
                 free(receivedPacket);
                 break;
@@ -256,37 +232,33 @@ namespace server {
             if (receivedPacket->isMessage()) {
                 _this->groupManager->processReceivedPacket(receivedPacket);
             } else if (receivedPacket->isKeepAlive()){
-                _this->connectionMonitor->refresh(client_socketfd);
+                _this->connectionMonitor->refresh(frontEndSocket);
+            } else if (receivedPacket->isJoinMessage()) {
+                _this->registerUserToServer(receivedPacket, frontEndSocket); // considers the front end connection
+            } else if (receivedPacket->isDisconnect()) {
+                pair<int, int> connectionId = pair<int, int>();
+                connectionId.first = receivedPacket->clientDispositiveIdentifier;
+                connectionId.second = frontEndSocket;
+                _this->closeListenClientCommunication(connectionId); // considers the front end connection
             }
 
         }
 
-        _this->connectionMonitor->killSocket(client_socketfd);
+        _this->connectionMonitor->killSocket(frontEndSocket);
         // Close all properties related to client connection
-        _this->closeListenClientCommunication(client_socketfd);
+        _this->closeFrontEndConnection(frontEndSocket);
 
         return 0;
     }
 
-    void Server::closeListenClientCommunication(int client_socket) {
+    void Server::closeFrontEndConnection(int socketId) {
 
+    }
+
+    void Server::closeListenClientCommunication(pair<int, int> clientConnectionId) {
         sockets_connections_semaphore->wait();
-        if(std::find(openSockets.begin(), openSockets.end(), client_socket) == openSockets.end()) {
-            std::cout << "The connection was already closed: " << client_socket << std::endl;
-            sockets_connections_semaphore->post();
-            return;
-        }
-        std::cout << "\n\nFreeing allocated memory and closing client connection thread" << std::endl;
-        openSockets.erase(std::remove(openSockets.begin(), openSockets.end(), client_socket), openSockets.end());
-        groupManager->propagateSocketDisconnectionEvent(client_socket, this->connectionsCount);
-
+        groupManager->propagateSocketDisconnectionEvent(clientConnectionId, this->connectionsCount);
         sockets_connections_semaphore->post();
-
-        if ((close(client_socket)) == 0) {
-            std::cout << "\nClosed socket: " << client_socket << std::endl;
-        } else {
-            std::cout << "!!! Fatal error closing socket!!!!" << std::endl;
-        }
     }
 
 
