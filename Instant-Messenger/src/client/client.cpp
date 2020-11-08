@@ -7,6 +7,9 @@
 
 Client::Client(char *ip_address, char *port)
 {
+
+	
+	strcpy(this->userId, Uuid::generate_uuid_v4().c_str());
 	sockfd = 0;
 
 	serv_addr.sin_family = AF_INET;     
@@ -35,7 +38,7 @@ Packet Client::buildPacket(string input)
 	// Adjust last character to end of string in case string was bigger than max size
 	messageBuffer[MESSAGE_MAX_SIZE - 1] = '\0';
 
-	return Packet(usernameBuffer, groupBuffer, messageBuffer, time(0));
+	return Packet(usernameBuffer, groupBuffer, messageBuffer, time(0), this->userId);
 }
 
 

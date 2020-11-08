@@ -3,6 +3,7 @@
 #include <iterator>
 #include <string>
 #include <regex>
+#include <signal.h>
 
 int validateName(char *name)
 {
@@ -34,6 +35,7 @@ int validateName(char *name)
 
 int main(int argc, char *argv[])
 {
+    signal(SIGPIPE, SIG_IGN);
 	if(argc < 5)
     {
     	std::cout << "You forgot to include usename / group / IP address / PORT for the server connection!" << std::endl;

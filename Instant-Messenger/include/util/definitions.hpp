@@ -10,6 +10,10 @@
 #define USERNAME_MAX_SIZE 20
 #endif
 
+#ifndef UUID_SIZE
+#define UUID_SIZE 36
+#endif
+
 #ifndef GROUP_MAX_SIZE
 #define GROUP_MAX_SIZE 20
 #endif

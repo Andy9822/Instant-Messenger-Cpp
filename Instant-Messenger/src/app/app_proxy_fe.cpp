@@ -21,6 +21,7 @@ void my_handler(int signal){
 
 void capture_signals()
 {
+	signal(SIGPIPE, SIG_IGN);
 	sigIntHandler.sa_handler = my_handler;
 	sigemptyset(&sigIntHandler.sa_mask);
 	sigIntHandler.sa_flags = 0;

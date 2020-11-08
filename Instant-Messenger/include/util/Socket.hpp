@@ -10,6 +10,9 @@
 
 class Socket
 {
+	private:
+	void sigHandler(int signal);
+	void captureSignals();
 
 	public:
 		Socket();

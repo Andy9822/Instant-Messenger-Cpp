@@ -26,7 +26,6 @@ class ProxyFE : public Socket
 {
     private:
         int connections_server_socket_fd;
-        int server_socket_fd;
         int clients_socket_fd;
         struct sockaddr_in serv_sock_addr;
         struct sockaddr_in client_sock_addr;

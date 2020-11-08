@@ -34,12 +34,30 @@ Packet* Socket::readPacket(int client_socketfd, bool* connectedClient)
 	return (Packet*) incomingData;
 }
 
+// struct sigaction sigIntHandler;
+
+// void Socket::sigHandler(int signal){
+// 	if (signal == SIGPIPE)
+// 	{
+// 		exit(2);
+// 	}	
+// }
+
+// void Socket::captureSignals()
+// {
+// 	sigIntHandler.sa_handler = sigHandler;
+// 	sigemptyset(&sigIntHandler.sa_mask);
+// 	sigIntHandler.sa_flags = 0;
+// 	sigaction(SIGPIPE, &sigIntHandler, NULL);
+// }
+
 int Socket::sendPacket(int socket_fd, Packet* mypacket)
 {
     int n = write(socket_fd, mypacket, sizeof(Packet));
     if (n < 0)
     {
         cout << "ERROR writing to socket: " << socket_fd << endl ;
+		shutdown(socket_fd, 2);
     }
 
     return n >= 0;

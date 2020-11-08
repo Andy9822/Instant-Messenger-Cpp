@@ -12,6 +12,8 @@
 #include "client_message_manager.h"
 #include "user_interface.h"
 #include "../util/Socket.hpp"
+#include "../util/Uuid.hpp"
+#include "../util/definitions.hpp"
 
 using clientcommunicationmanager::ClientCommunicationManager;
 using clientmessagemanager::ClientMessageManager;
@@ -32,6 +34,8 @@ class Client : public Socket
 		Packet buildPacket(string input);
 		void showMessage(Packet* receivedPacket);
 	public:
+		char userId[UUID_SIZE];
+
 		Client(char *ip_address, char *port);
         static void * receiveFromServer(void* args);
         static void * sendToServer(void* args);

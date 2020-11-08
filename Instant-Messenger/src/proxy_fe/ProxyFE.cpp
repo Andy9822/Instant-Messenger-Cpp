@@ -6,6 +6,8 @@ Semaphore* ProxyFE::online_semaphore;
 bool ProxyFE::online_RMserver;
 int ProxyFE::serverRM_socket;
 
+////////////////////// Setup sockets and connection methods ////////////////////// 
+
 ProxyFE::ProxyFE() {
     // Configure serverRM address properties
     serv_sock_addr.sin_family = AF_INET;
@@ -116,7 +118,9 @@ void ProxyFE::printPortNumber() {
     cout << "Listening clients connections on PORT: " << ntohs(client_sock_addr.sin_port) << endl;
 
 }
+////////////////////// End of setup methods //////////////////////
 
+////////////////////////// SERVER METHODS //////////////////////////
 void ProxyFE::processServerPacket(Packet* receivedPacket, int socket)
 {
     switch (receivedPacket->type)
@@ -145,7 +149,7 @@ void* ProxyFE::listenServerCommunication(void *args)
     ProxyFE *_this = (ProxyFE *) args_pair->second;
 
     // Get socket from the new connected client
-    _this->server_socket_fd = args_pair->first; //TODO talvez proteger isso sob semaphore
+    _this->serverRM_socket = args_pair->first; //TODO talvez proteger isso sob semaphore
 
     // Free pair created for receiving arguments
     free(args_pair);
@@ -156,24 +160,24 @@ void* ProxyFE::listenServerCommunication(void *args)
         char messageBuffer[USERNAME_MAX_SIZE] = "welcome to FE land";
         char usernameBuffer[MESSAGE_MAX_SIZE] = "FE bro";
         char groupBuffer[GROUP_MAX_SIZE] = "algum group";
-        _this->readPacket(_this->server_socket_fd, &is_server_connected);
-        std::cout << "vou mandarl welcome pro _this->server_socket_fd: " << _this->server_socket_fd << std::endl;
-        _this->sendPacket(_this->server_socket_fd, new Packet(usernameBuffer, groupBuffer, messageBuffer, time(0)));
+        _this->readPacket(_this->serverRM_socket, &is_server_connected);
+        std::cout << "vou mandarl welcome pro _this->serverRM_socket: " << _this->serverRM_socket << std::endl;
+        _this->sendPacket(_this->serverRM_socket, new Packet(usernameBuffer, groupBuffer, messageBuffer, time(0)));
     }
 
         // Listen for incoming Packets from server until it disconnects
     while (is_server_connected) {
-        Packet* receivedPacket = _this->readPacket(_this->server_socket_fd, &is_server_connected);
+        Packet* receivedPacket = _this->readPacket(_this->serverRM_socket, &is_server_connected);
         if (!is_server_connected) {
             // Free allocated memory for reading Packet
             free(receivedPacket);
             break;
         }
-        _this->processServerPacket(receivedPacket, _this->server_socket_fd);
+        _this->processServerPacket(receivedPacket, _this->serverRM_socket);
     }
     
-    std::cout << "server socket " << _this->server_socket_fd <<  " has disconnected" << std::endl;
-    _this->handleServerDisconnection(_this->server_socket_fd);
+    std::cout << "serverRM socket " << _this->serverRM_socket <<  " has disconnected" << std::endl;
+    _this->handleServerDisconnection(_this->serverRM_socket);
     
     return NULL;
 }
@@ -258,8 +262,9 @@ void ProxyFE::handleServerReconnect(pthread_t *tid)
     
     pthread_create(&reconnect_server_tid, NULL, listenServerReconnect, (void*) args);
 }
+////////////////////////// End of server methods //////////////////////////
 
-
+////////////////////////// Client methods //////////////////////////
 int ProxyFE::handleClientConnection(pthread_t *tid) 
 {
     int newsockfd;
@@ -359,16 +364,15 @@ void* ProxyFE::listenClientCommunication(void *args)
 
 void ProxyFE::processClientPacket(Packet* receivedPacket, int socket)
 {
+    std::cout << "recebi packet com userID = " << receivedPacket->user_id << std::endl;
+    std::cout << "recebi packet com message_id = " << receivedPacket->message_id << std::endl;
     switch (receivedPacket->type)
     {
     case MESSAGE_PACKET:
-        // std::cout << "recebi: " << receivedPacket->message << std::endl;
-        // std::cout << "Vou esperar semaforo pra forwardar" << std::endl;
         processIncomingClientMessage(receivedPacket);
         break;
     
     case KEEP_ALIVE_PACKET:
-        // std::cout << "recebi: Keep Alive" << std::endl;
         keepAliveMonitor->refresh(socket);
         break;
     
@@ -395,35 +399,33 @@ void ProxyFE::handleServerDisconnection(int socket)
 }
     
 
-///////////////// FE Forwarding
+////////////////////////// Fe Forwarding methods //////////////////////////
 void ProxyFE::activateMessageConsumer(pthread_t* tid) 
 {
     pthread_create(tid, NULL, handleProcessingMessage, (void *) this);
 }
 
+// TODO tem cara que esse metodo thread vai virar um método apenas normal e o lidar com volta do RM ser outra thread
 void* ProxyFE::handleProcessingMessage(void* args) 
 {
     // Get a reference of the object instance in this thread
     ProxyFE *_this = (ProxyFE *) args;
-
+    int success;
     while (true)
     {
         pthread_mutex_lock(&(_this->mutex_consumer_message));
-        // std::cout << "I'm processing message: " << _this->processing_message->message << std::endl;
-        // sleep(4);
-        _this->sendPacket(_this->server_socket_fd, _this->processing_message);
+        
+        // TODO Socket agora dá shutdown quando dá erro, comprovar todos os pontos que tem sendPacket 
+        _this->sendPacket(_this->serverRM_socket, _this->processing_message);
+
         _this->processing_message_semaphore->post();
-        // std::cout << "liberei processamento mensagem: " << _this->processing_message->message << std::endl;
-    }
-    
+    }  
 }
 
 
 void ProxyFE::processIncomingClientMessage(Packet* message)
 {
     processing_message_semaphore->wait();
-
-    // std::cout << "entrei processamento mensagem: " << message->message << std::endl;
     processing_message = message;
     pthread_mutex_unlock(&mutex_consumer_message);
 } 
