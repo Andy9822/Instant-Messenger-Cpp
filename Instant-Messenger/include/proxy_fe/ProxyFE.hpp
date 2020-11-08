@@ -39,6 +39,8 @@ class ProxyFE : public Socket
         std::map<int, std::pair<pthread_t, time_t>> openClientsSockets;
         std::map<string, int> usersMap;
         static Semaphore* users_map_semaphore;
+        std::map<int, string> socketsMap;
+        static Semaphore* sockets_map_semaphore;
         static Semaphore* online_semaphore;
         Semaphore* processing_message_semaphore;
         Packet* processing_message;

@@ -4,6 +4,7 @@
 std::map<int, std::pair<pthread_t, time_t>> openClientsSockets;
 Semaphore* ProxyFE::online_semaphore;
 Semaphore* ProxyFE::users_map_semaphore;
+Semaphore* ProxyFE::sockets_map_semaphore;
 bool ProxyFE::online_RMserver;
 int ProxyFE::serverRM_socket;
 
@@ -31,8 +32,9 @@ ProxyFE::ProxyFE() {
     online_semaphore = new Semaphore(1);
     online_RMserver = false;
 
-    // Init semaphore for users map
+    // Init semaphore for users map and sockets map
     users_map_semaphore = new Semaphore(1);
+    sockets_map_semaphore = new Semaphore(1);
 
     // Init message consumer mutex
     pthread_mutex_init(&mutex_consumer_message, NULL);
@@ -360,14 +362,21 @@ void* ProxyFE::listenClientCommunication(void *args)
 
 void ProxyFE::registerUserSocket(Packet* receivedPacket, int socket)
 {
-    users_map_semaphore->wait();
     string userID(receivedPacket->user_id); 
+
+    users_map_semaphore->wait();
     usersMap[userID] = socket;
     users_map_semaphore->post();
 
+    sockets_map_semaphore->wait();
+    socketsMap[socket] = userID;
+    sockets_map_semaphore->post();
 
     std::cout << "id: " << userID << " socket:" << usersMap[userID] << std::endl;
-    std::cout << "map size:" << usersMap.size() << std::endl;
+    std::cout << "users map size:" << usersMap.size() << std::endl;
+
+    std::cout << "socket: " << socket << " user:" << socketsMap[socket] << std::endl;
+    std::cout << "sockets map size:" << socketsMap.size() << std::endl;
 
     // TODO remover isso, é so pra fingir que teve OK do server e cliente pode se conectar
     {
@@ -402,6 +411,16 @@ void ProxyFE::processClientPacket(Packet* receivedPacket, int socket)
 void ProxyFE::handleSocketDisconnection(int socket)
 {
     keepAliveMonitor->killSocket(socket);
+
+    sockets_map_semaphore->wait();
+    string userID = socketsMap[socket];
+    socketsMap.erase(socket);
+    sockets_map_semaphore->post();
+
+    users_map_semaphore->wait();
+    usersMap.erase(userID);
+    users_map_semaphore->post();
+
     close(socket);
 }
 
