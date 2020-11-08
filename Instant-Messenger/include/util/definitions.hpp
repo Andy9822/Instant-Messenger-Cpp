@@ -58,6 +58,7 @@
 enum
 {
     MESSAGE_PACKET = 0,
+    INVITE_PACKET,
     KEEP_ALIVE_PACKET,
     ELECTION_PACKET,
 };

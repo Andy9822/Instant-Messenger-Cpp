@@ -44,7 +44,7 @@ struct Packet
       strcpy(this->message_id, Uuid::generate_uuid_v4().c_str());
     }
 
-    Packet(char* username, char* group, char* message, time_t timestamp, char* userId) {
+    Packet(char* username, char* group, char* message, time_t timestamp, char* userId, int packetType) {
       this->status = 1440;
       strncpy(this->username, username, USERNAME_MAX_SIZE - 1);
       strncpy(this->group, group, GROUP_MAX_SIZE - 1);
@@ -52,6 +52,7 @@ struct Packet
       this->timestamp = timestamp;
       strcpy(this->message_id, Uuid::generate_uuid_v4().c_str());
       strcpy(this->user_id, userId);
+      this->type = packetType;
     }
 
 

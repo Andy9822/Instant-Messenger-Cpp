@@ -31,7 +31,7 @@ class Client : public Socket
 		UserInteface userInteface;
 		
 		string readInput();
-		Packet buildPacket(string input);
+		Packet buildPacket(string input, int packetType);
 		void showMessage(Packet* receivedPacket);
 	public:
 		char userId[UUID_SIZE];

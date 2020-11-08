@@ -25,7 +25,7 @@ Client::Client(char *ip_address, char *port)
 
 
 
-Packet Client::buildPacket(string input)
+Packet Client::buildPacket(string input, int packetType)
 {
 	char messageBuffer[MESSAGE_MAX_SIZE] = {0};
 	char groupBuffer[GROUP_MAX_SIZE] = {0};
@@ -38,7 +38,7 @@ Packet Client::buildPacket(string input)
 	// Adjust last character to end of string in case string was bigger than max size
 	messageBuffer[MESSAGE_MAX_SIZE - 1] = '\0';
 
-	return Packet(usernameBuffer, groupBuffer, messageBuffer, time(0), this->userId);
+	return Packet(usernameBuffer, groupBuffer, messageBuffer, time(0), this->userId, packetType);
 }
 
 
@@ -64,7 +64,7 @@ int Client::registerToServer()
 	bool connectedClient = true;
 	Packet *sendingPacket = new Packet();
 
-	*sendingPacket = buildPacket("<Entered the group>");
+	*sendingPacket = buildPacket("<Entered the group>", INVITE_PACKET);
 
 	// Asking server if username already exists
 	sendPacket(sockfd, sendingPacket);
@@ -182,7 +182,7 @@ void * Client::sendToServer(void* args)
 		string input = _this->readInput();
 
 		// Prepare Packet struct to be sent
-		*sendingPacket = _this->buildPacket(input);
+		*sendingPacket = _this->buildPacket(input, MESSAGE_PACKET);
 
 		//Send Packet struct via TCP socket
 		_this->sendPacket(_this->sockfd, sendingPacket);
