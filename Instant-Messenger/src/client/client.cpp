@@ -87,7 +87,8 @@ int Client::registerToServer()
 			waitingAccept = false;
 		}	
 	}
-
+	
+    std::cout << "\n" << "Bem-vindo ao grupo: " << group << std::endl;
 	showMessage(receivedPacket);
 
 	return 0;
@@ -125,8 +126,10 @@ int Client::ConnectToServer(char* username, char* group)
 	}
 
 	
-    std::cout << "\n" << "Bem-vindo ao grupo: " << group << std::endl;
+	ConnectionKeeper(this->sockfd); // starts the thread that keeps sending keep alives
 
+
+	//TODO refazer isso pra esperar register no main loop e com uma variável de offline ou algo assim 
 	return registerToServer();
 }
 
@@ -208,7 +211,6 @@ int Client::clientCommunication()
 
 	pthread_create(&receiverTid, NULL, receiveFromServer, (void*) this);
 	pthread_create(&senderTid, NULL, sendToServer, (void*) this);
-	ConnectionKeeper(this->sockfd); // starts the thread that keeps sending keep alives
 	pthread_join(receiverTid, NULL);
 
 	std::cout << "A conexão com o servidor foi perdida" << std::endl;
