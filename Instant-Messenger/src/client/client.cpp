@@ -64,24 +64,31 @@ int Client::registerToServer()
 	bool connectedClient = true;
 	Packet *sendingPacket = new Packet();
 
-	*sendingPacket = buildPacket("<Entered the group>", INVITE_PACKET);
-
-	// Asking server if username already exists
+	*sendingPacket = buildPacket("<Entered the group>", JOIN_PACKET);
 	sendPacket(sockfd, sendingPacket);
-	Packet *receivedPacket = readPacket(sockfd, &connectedClient);
 
-	if(receivedPacket->clientSocket == -1)
+	// Asking server if user can join with one more session
+	Packet *receivedPacket;
+	bool waitingAccept = true;
+	while (waitingAccept)
 	{
-		cout << "You are already logged in 2 sessions" << endl;
-		sockfd = -1;
-		delete sendingPacket;
-		close(sockfd);
-		return -1;
+		receivedPacket = readPacket(sockfd, &connectedClient);
+		if(receivedPacket->type == CONNECTION_REFUSED_PACKET)
+		{
+			cout << "You are already logged in 2 sessions" << endl;
+			sockfd = -1;
+			delete sendingPacket;
+			close(sockfd);
+			return -1;
+		}
+
+		if (receivedPacket->type == ACCEPT_PACKET)
+		{
+			waitingAccept = false;
+		}	
 	}
 
-	// print  <entered the group>
-	if(receivedPacket->clientSocket != JOIN_QUIT_STATUS_MESSAGE)
-		showMessage(receivedPacket);
+	showMessage(receivedPacket);
 
 	return 0;
 }

@@ -132,14 +132,24 @@ void ProxyFE::processServerPacket(Packet* receivedPacket, int socket)
     switch (receivedPacket->type)
     {
     case MESSAGE_PACKET:
-        std::cout << "recebi do server: " << receivedPacket->message << std::endl;
+        std::cout << "📮Recebi Message do server📨📩: " << receivedPacket->message << std::endl;
         std::cout << "receivedPacket->user_id" << receivedPacket->user_id << std::endl;
         std::cout << "receivedPacket->message_id" << receivedPacket->message_id << std::endl;
         break;
     
     case KEEP_ALIVE_PACKET:
-        std::cout << "recebi Keep Alive do server" << std::endl;
+        std::cout << "recebi Keep Alive do server 🖧" << std::endl;
         keepAliveMonitor->refresh(socket);
+        break;
+    
+    case JOIN_PACKET:
+        // TODO remover isso, é so pra fingir que teve OK pro client_rm mockado e ta apto a conectar
+        {
+            char messageBuffer[USERNAME_MAX_SIZE] = "welcome to FE land";
+            char usernameBuffer[MESSAGE_MAX_SIZE] = "FE bro";
+            char groupBuffer[GROUP_MAX_SIZE] = "algum group";
+            sendPacket(serverRM_socket, new Packet(ACCEPT_PACKET));
+        }
         break;
     
     default:
@@ -162,18 +172,8 @@ void* ProxyFE::listenServerCommunication(void *args)
     // Free pair created for receiving arguments
     free(args_pair);
 
+    // Listen for incoming Packets from server until it disconnects
     bool is_server_connected = true;
-    // TODO remover isso, é so pra fingir que teve OK e server ta apto a conectar
-    {
-        char messageBuffer[USERNAME_MAX_SIZE] = "welcome to FE land";
-        char usernameBuffer[MESSAGE_MAX_SIZE] = "FE bro";
-        char groupBuffer[GROUP_MAX_SIZE] = "algum group";
-        _this->readPacket(_this->serverRM_socket, &is_server_connected);
-        std::cout << "vou mandarl welcome pro _this->serverRM_socket: " << _this->serverRM_socket << std::endl;
-        _this->sendPacket(_this->serverRM_socket, new Packet(usernameBuffer, groupBuffer, messageBuffer, time(0)));
-    }
-
-        // Listen for incoming Packets from server until it disconnects
     while (is_server_connected) {
         Packet* receivedPacket = _this->readPacket(_this->serverRM_socket, &is_server_connected);
         if (!is_server_connected) {
@@ -374,18 +374,18 @@ void ProxyFE::registerUserSocket(Packet* receivedPacket, int socket)
     socketsMap[socket] = userID;
     sockets_map_semaphore->post();
 
-    std::cout << "id: " << userID << " socket:" << usersMap[userID] << std::endl;
-    std::cout << "users map size:" << usersMap.size() << std::endl;
+    std::cout << "🆔id: " << userID << " socket:" << usersMap[userID] << std::endl;
+    std::cout << "👦users map size:" << usersMap.size() << std::endl;
 
-    std::cout << "socket: " << socket << " user:" << socketsMap[socket] << std::endl;
-    std::cout << "sockets map size:" << socketsMap.size() << std::endl;
+    std::cout << "💻socket: " << socket << " user:" << socketsMap[socket] << std::endl;
+    std::cout << "💾sockets map size:" << socketsMap.size() << std::endl;
 
     // TODO remover isso, é so pra fingir que teve OK do server e cliente pode se conectar
     {
         char messageBuffer[USERNAME_MAX_SIZE] = "welcome to FE land";
         char usernameBuffer[MESSAGE_MAX_SIZE] = "FE bro";
         char groupBuffer[GROUP_MAX_SIZE] = "algum group";
-        sendPacket(socket, new Packet(usernameBuffer, groupBuffer, messageBuffer, time(0)));
+        sendPacket(socket, new Packet(ACCEPT_PACKET));
     }
 }
 void ProxyFE::processClientPacket(Packet* receivedPacket, int socket)
@@ -397,10 +397,11 @@ void ProxyFE::processClientPacket(Packet* receivedPacket, int socket)
         break;
     
     case KEEP_ALIVE_PACKET:
+        std::cout << "recebi Keep Alive do cliente 🙇" << std::endl;
         keepAliveMonitor->refresh(socket);
         break;
     
-    case INVITE_PACKET:
+    case JOIN_PACKET:
         registerUserSocket(receivedPacket, socket);
         break;
     
@@ -452,7 +453,7 @@ void* ProxyFE::handleProcessingMessage(void* args)
     while (true)
     {
         pthread_mutex_lock(&(_this->mutex_consumer_message));
-        
+        std::cout << "recebi mssagem cliente e to handleProcessingMessage" << std::endl;
         // TODO Socket agora dá shutdown quando dá erro, comprovar todos os pontos que tem sendPacket 
         _this->sendPacket(_this->serverRM_socket, _this->processing_message);
 
@@ -463,6 +464,9 @@ void* ProxyFE::handleProcessingMessage(void* args)
 
 void ProxyFE::processIncomingClientMessage(Packet* message)
 {
+    std::cout << "📮Recebi Message do usuario 👦: " << message->message << std::endl;
+    std::cout << "message->user_id" << message->user_id << std::endl;
+    std::cout << "message->message_id" << message->message_id << std::endl;
     processing_message_semaphore->wait();
     processing_message = message;
     pthread_mutex_unlock(&mutex_consumer_message);
