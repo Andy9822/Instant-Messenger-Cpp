@@ -1,5 +1,6 @@
 #include "../../include/proxy_fe/ProxyFE.hpp"
 #include "../../include/util/ConnectionKeeper.hpp"
+#include "../../include/util/Packet.hpp"
 
 std::map<int, std::pair<pthread_t, time_t>> openClientsSockets;
 Semaphore* ProxyFE::online_semaphore;
@@ -132,11 +133,22 @@ void ProxyFE::processServerPacket(Packet* receivedPacket, int socket)
     switch (receivedPacket->type)
     {
     case MESSAGE_PACKET:
+    {
         std::cout << "📮Recebi Message do server📨📩: " << receivedPacket->message << std::endl;
-        std::cout << "receivedPacket->user_id" << receivedPacket->user_id << std::endl;
-        std::cout << "receivedPacket->message_id" << receivedPacket->message_id << std::endl;
         break;
-    
+        std::cout << "user_id: " << receivedPacket->user_id << std::endl;
+        string userID(receivedPacket->user_id); //TODO talvez proteger aqui c semaforo se cai na hora ne
+        int clientSocket = usersMap[userID];
+        if(clientSocket != 0)
+        {
+            sendPacket(clientSocket, receivedPacket);
+            break;
+        }
+
+        //TODO acho que nao precisa, se usuario cair o FE ja vai avisar de qlqr forma
+        std::cout << "O usuário não está mais conectado" << std::endl;
+    }
+        break;
     case KEEP_ALIVE_PACKET:
         std::cout << "recebi Keep Alive do server 🖧" << std::endl;
         keepAliveMonitor->refresh(socket);
@@ -152,6 +164,57 @@ void ProxyFE::processServerPacket(Packet* receivedPacket, int socket)
         }
         break;
     
+    case ACCEPT_PACKET:
+    {
+        std::cout << "🛂Recebi ACCEPT do server🛂🎟🎫: " << receivedPacket->username << " pode dar join na sala" << std::endl;
+        std::cout << "user_id: " << receivedPacket->user_id << std::endl;
+        string userID(receivedPacket->user_id); //TODO talvez proteger aqui c semaforo se cai na hora ne
+        int clientSocket = usersMap[userID];
+        if(clientSocket != 0)
+        {
+            std::cout << "vou mandar ACCEPT_PACKET pro usuario " << clientSocket << std::endl;
+            sendPacket(clientSocket, new Packet(ACCEPT_PACKET));
+            break;
+        }
+
+        std::cout << "O usuário não está mais conectado" << std::endl;
+        break;
+    }
+    
+    case CONNECTION_REFUSED_PACKET:
+    {
+        std::cout << "⛔Recebi PROBIÇÃO do server🚫:  NÃO pode dar join na sala" << std::endl;
+        std::cout << "user_id: " << receivedPacket->user_id << std::endl;
+        string userID(receivedPacket->user_id); //TODO talvez proteger aqui c semaforo se cai na hora ne
+        int clientSocket = usersMap[userID];
+        if(clientSocket != 0)
+        {
+            std::cout << "vou mandar CONNECTION_REFUSED_PACKET pro usuario " << clientSocket << std::endl;
+            sendPacket(clientSocket, new Packet(CONNECTION_REFUSED_PACKET));
+            break;
+        }
+
+        std::cout << "O usuário não está mais conectado" << std::endl;
+        break;
+    }
+    
+    case ACK_PACKET:
+    {
+        std::cout << "📫Recebi ACK do server📫: " << std::endl;
+        std::cout << "user_id: " << receivedPacket->user_id << std::endl;
+        string userID(receivedPacket->user_id); //TODO talvez proteger aqui c semaforo se cai na hora ne
+        int clientSocket = usersMap[userID];
+        if(clientSocket != 0)
+        {
+            std::cout << "vou mandar ACK pro usuario " << clientSocket << std::endl;
+            sendPacket(clientSocket, new Packet(ACK_PACKET));
+            break;
+        }
+
+        std::cout << "O usuário não está mais conectado" << std::endl;
+        break;
+    }
+
     default:
         std::cout << "Undefined Packet type received" << std::endl;
         break;
@@ -384,13 +447,16 @@ void ProxyFE::registerUserSocket(Packet* receivedPacket, int socket)
     std::cout << "💾sockets map size:" << socketsMap.size() << std::endl;
 
     // TODO remover isso, é so pra fingir que teve OK do server e cliente pode se conectar
-    {
-        char messageBuffer[USERNAME_MAX_SIZE] = "welcome to FE land";
-        char usernameBuffer[MESSAGE_MAX_SIZE] = "FE bro";
-        char groupBuffer[GROUP_MAX_SIZE] = "algum group";
-        sendPacket(socket, new Packet(ACCEPT_PACKET));
-    }
+    // {
+    //     char messageBuffer[USERNAME_MAX_SIZE] = "welcome to FE land";
+    //     char usernameBuffer[MESSAGE_MAX_SIZE] = "FE bro";
+    //     char groupBuffer[GROUP_MAX_SIZE] = "algum group";
+    //     sendPacket(socket, new Packet(ACCEPT_PACKET));
+    // }
+    receivedPacket->clientSocket = socket;
+    sendPacket(serverRM_socket, receivedPacket);
 }
+
 void ProxyFE::processClientPacket(Packet* receivedPacket, int socket)
 {
     switch (receivedPacket->type)
