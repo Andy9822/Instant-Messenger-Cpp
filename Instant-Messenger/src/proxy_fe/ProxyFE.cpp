@@ -171,6 +171,9 @@ void* ProxyFE::listenServerCommunication(void *args)
 
     // Free pair created for receiving arguments
     free(args_pair);
+    
+    // Send keep alives to serverRM
+    ConnectionKeeper(_this->serverRM_socket); //TODO NAO MEXER NESSA LINHA SENÃO PODE QUEBRAR TUDO
 
     // Listen for incoming Packets from server until it disconnects
     bool is_server_connected = true;
@@ -222,9 +225,6 @@ int ProxyFE::handleServerConnection(pthread_t *tid) {
     
     args2->second = this; // Send reference of this instance to the new thread
     args2->first = serverRM_socket;
-
-    // Send keep alives to serverRM
-    ConnectionKeeper(this->serverRM_socket);
 
     //TODO ver esses tid totalmente errados
     pthread_create(tid, NULL, monitorConnectionKeepAlive, (void *) args2);
