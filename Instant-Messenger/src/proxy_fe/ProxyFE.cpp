@@ -1,5 +1,5 @@
 #include "../../include/proxy_fe/ProxyFE.hpp"
-
+#include "../../include/util/ConnectionKeeper.hpp"
 
 std::map<int, std::pair<pthread_t, time_t>> openClientsSockets;
 Semaphore* ProxyFE::online_semaphore;
@@ -222,6 +222,9 @@ int ProxyFE::handleServerConnection(pthread_t *tid) {
     
     args2->second = this; // Send reference of this instance to the new thread
     args2->first = serverRM_socket;
+
+    // Send keep alives to serverRM
+    ConnectionKeeper(this->serverRM_socket);
 
     //TODO ver esses tid totalmente errados
     pthread_create(tid, NULL, monitorConnectionKeepAlive, (void *) args2);
