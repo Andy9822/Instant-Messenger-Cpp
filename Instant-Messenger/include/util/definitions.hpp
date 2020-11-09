@@ -11,7 +11,7 @@
 #endif
 
 #ifndef UUID_SIZE
-#define UUID_SIZE 36
+#define UUID_SIZE 37
 #endif
 
 #ifndef GROUP_MAX_SIZE

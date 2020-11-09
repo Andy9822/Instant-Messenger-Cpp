@@ -133,10 +133,12 @@ void ProxyFE::processServerPacket(Packet* receivedPacket, int socket)
     {
     case MESSAGE_PACKET:
         std::cout << "recebi do server: " << receivedPacket->message << std::endl;
+        std::cout << "receivedPacket->user_id" << receivedPacket->user_id << std::endl;
+        std::cout << "receivedPacket->message_id" << receivedPacket->message_id << std::endl;
         break;
     
     case KEEP_ALIVE_PACKET:
-        // std::cout << "recebi Keep Alive do server" << std::endl;
+        std::cout << "recebi Keep Alive do server" << std::endl;
         keepAliveMonitor->refresh(socket);
         break;
     
