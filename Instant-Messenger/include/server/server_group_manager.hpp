@@ -33,7 +33,7 @@ namespace servergroupmanager {
 
         public:
             ServerGroupManager();
-            int registerUserToGroup(pair<int, int> clientIdentifier, string username, string groupName);
+            int registerUserToGroup(pair<int, int> clientIdentifier, string username, string groupName,char* userID);
             void processReceivedPacket(Packet* packet);
             void propagateSocketDisconnectionEvent(pair<int, int> connectionId, map<string, int> &numberOfConnectionsByUser);
             void configureFileSystemManager(int maxNumberOfMessagesOnHistory);

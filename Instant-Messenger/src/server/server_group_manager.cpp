@@ -15,7 +15,7 @@ namespace servergroupmanager {
      * @param groupName
      * @return
      */
-    int ServerGroupManager::registerUserToGroup(pair<int, int> clientIdentifier, string username, string groupName) {
+    int ServerGroupManager::registerUserToGroup(pair<int, int> clientIdentifier, string username, string groupName, char* userID) {
 
         // if groupName exists, send the registration to it. If it does not belong to the map of groups, we instantiate a new groupName and forward the information to it
         Group* group = NULL;
@@ -25,7 +25,7 @@ namespace servergroupmanager {
         }
         group =  this->groupMap[groupName];
 
-        return group->registerNewSession(clientIdentifier, username);
+        return group->registerNewSession(clientIdentifier, username, userID);
     }
 
 

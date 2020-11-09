@@ -16,6 +16,16 @@ namespace servermessagemanager {
         Packet* sendingPacket = new Packet((char*)message.getUser().c_str(), (char*)message.getGroup().c_str(), (char*)message.getText().c_str(), clientDispositiveIdentifier, message.getTime());
         sendPacket(frontEndSocket, sendingPacket);
     }
+    
+    /**
+     * This method is responsiblefor for sending a Packet to a socket :)
+     * @param packet
+     * @param clientIdentifier
+     */
+    void ServerMessageManager::sendPacketToSocketId(Packet* packet, int socket)
+    {
+        sendPacket(socket, packet);
+    }
 
     /**
      * This bro can be used to send the messages to a list of sockets.

@@ -120,8 +120,8 @@ namespace server {
      * @param group
      * @return
      */
-    int Server::registerUser(pair<int, int> clientIdentifier, char *username, char *group) {
-        return groupManager->registerUserToGroup(clientIdentifier, username, group);
+    int Server::registerUser(pair<int, int> clientIdentifier, char *username, char *group, char* userID) {
+        return groupManager->registerUserToGroup(clientIdentifier, username, group, userID);
     }
 
     int Server::registerUserToServer(Packet *registrationPacket, int frontEndSocket) {
@@ -129,7 +129,7 @@ namespace server {
         this->sockets_connections_semaphore->wait();
         if (incrementNumberOfConnectionsFromUser(registrationPacket->username) == USER_SESSIONS_LIMIT_REACHED ) { // we can keep this
             Packet *connectionRefusedPacket = new Packet(CONNECTION_REFUSED_PACKET);
-            connectionRefusedPacket->clientDispositiveIdentifier = registrationPacket->clientDispositiveIdentifier;
+            strcpy(connectionRefusedPacket->user_id, registrationPacket->user_id);
             this->sendPacket(frontEndSocket, connectionRefusedPacket);
             delete connectionRefusedPacket;
             return -1;
@@ -138,21 +138,10 @@ namespace server {
 
         std::pair<int, int> *clientFrontEndIdentifier = (std::pair<int, int> *) calloc(1, sizeof(std::pair<int, int>)); // this is the identifier for the client and we need to store this in the groups
 
-        clientFrontEndIdentifier->first = registrationPacket->clientDispositiveIdentifier;
+        clientFrontEndIdentifier->first = registrationPacket->clientDispositiveIdentifier; //TODO aqui mandar user_id e mudar tipos das funções
         clientFrontEndIdentifier->second = frontEndSocket;
 
-        int registered = this->registerUser(*clientFrontEndIdentifier, registrationPacket->username, registrationPacket->group);
-
-        // if there was already one entry with the same username before, we don't print <entered the group> a second time 
-        if(registered == 1)
-        {
-            Packet *pack = new Packet();
-	        pack->clientSocket = JOIN_QUIT_STATUS_MESSAGE;
-	        pack->clientDispositiveIdentifier = registrationPacket->clientDispositiveIdentifier;
-	        this->sendPacket(frontEndSocket, pack);
-            delete pack;
-	    }
-
+        int registered = this->registerUser(*clientFrontEndIdentifier, registrationPacket->username, registrationPacket->group, registrationPacket->user_id);
 
         return 0;
     }
@@ -224,11 +213,12 @@ namespace server {
                 cout << "[DEBUG] " << receivedPacket->message << ", " << receivedPacket->clientDispositiveIdentifier <<
                     " FE socket: " << _this->socket_fd << endl;
                 //TODO: send this to the backup servers
-
-                Packet *ackPacket = new Packet(ACK_PACKET);
-                ackPacket->clientDispositiveIdentifier = receivedPacket->clientDispositiveIdentifier; // send a simple packet with the dispositive ID before sending it to the group
-                strcpy(ackPacket->message, "ACK_MESSAGE, mensagem meramente ilustrativa");
-                _this->sendPacket(_this->socket_fd, ackPacket);
+                // replicateToBackupServers();
+                Packet *pack = new Packet();
+                pack->type = ACK_PACKET;
+                strcpy(pack->user_id, receivedPacket->user_id);
+                _this->sendPacket(_this->socket_fd, pack);
+                std::cout << "[DEBUG] mandei ACK para socket: " << _this->socket_fd << std::endl;
                 _this->groupManager->processReceivedPacket(receivedPacket);
             } else if (receivedPacket->isKeepAlive()){
                 _this->connectionMonitor->refresh(_this->socket_fd);

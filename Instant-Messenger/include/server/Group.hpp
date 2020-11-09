@@ -28,13 +28,14 @@ class Group
         std::queue<message::Message> messages_queue;  
         string groupName;
         static void *consumeMessageQueue(void * args);
-        int registerNewSession(pair<int, int> clientIdentifier, string userName);
+        int registerNewSession(pair<int, int> clientIdentifier, string userName, char* userID);
         void processReceivedMessage(string userName, string message);
         void handleDisconnectEvent(pair<int, int> connectionId, map<string, int> &numberOfConnectionsByUser);
         void configureFileSystemManager(int maxNumberOfMessagesOnHistory);
 
     private:
         vector<pair<int, int>> getAllActiveConnectionIds();
+        void sendAcceptToUser(int socket, char* userID);
         void sendHistoryToUser(pair<int, int> clientIdentifier);
         void addMessageToMessageQueue(Message message);
         void sendActivityMessage(const string &userName, const string &actionText);

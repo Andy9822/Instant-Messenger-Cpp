@@ -15,6 +15,7 @@ namespace servermessagemanager {
         public:
         void broadcastMessageToUsers(Message message, vector< pair <int, int> > connectionIds);
         void sendMessageToSocketId(Message message, pair<int, int> clientIdentifier);
+        void sendPacketToSocketId(Packet* packet, int socket);
     };
 }
 

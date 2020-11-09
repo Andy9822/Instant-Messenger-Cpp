@@ -60,6 +60,16 @@ void * Group::consumeMessageQueue(void * args)
     
 }
 
+//TODO so quero que funcione
+void Group::sendAcceptToUser(int socket, char* userID)
+{
+    Packet *pack = new Packet();
+    pack->type = ACCEPT_PACKET;
+    strcpy(pack->user_id, userID);
+    std::cout << "[DEBUG] mandei ACCEPT para socket: " << socket << std::endl;
+    messageManager->sendPacketToSocketId(pack, socket);
+}
+
 /**
  * This method will register the user in the group by adding it to the users list and adding the reference to the socket
  * If user already exists in the list, we just add the id for the socket in the connections
@@ -73,10 +83,10 @@ void * Group::consumeMessageQueue(void * args)
  * @param groupName
  * @return returns a negative number in case of a failure
  */
-int Group::registerNewSession(pair<int, int> clientIdentifier, string userName) {
+int Group::registerNewSession(pair<int, int> clientIdentifier, string userName, char* userID) {
     User* user = NULL;
     int result = 0;
-
+    sendAcceptToUser(clientIdentifier.second, userID);
     sendHistoryToUser(clientIdentifier);
     usersSemaphore->wait();
     for (auto userItr : this->users) {
