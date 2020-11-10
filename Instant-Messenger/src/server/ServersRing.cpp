@@ -7,6 +7,14 @@ namespace servers_ring
 
 	ServersRing::ServersRing()
 	{
+		myfile.open("config.txt");
+
+		int serverPort = getNewPortFromFile();
+
+		serv_addr.sin_port = htons(serverPort);
+		serv_addr.sin_family = AF_INET;
+        serv_addr.sin_addr.s_addr = INADDR_ANY;
+        bzero(&(serv_addr.sin_zero), 8);
 	}
 
 
@@ -40,19 +48,9 @@ namespace servers_ring
 	void ServersRing::connectServersRing(Server serverApp)
 	{	
 		pthread_t accepting;
-		int serverPort;
 		char *ip_adress = (char*)"127.0.0.1";
 
 		disconnected = false;
-
-	    myfile.open("config.txt");
-
-		serverPort = getNewPortFromFile();
-
-		serv_addr.sin_port = htons(serverPort);
-		serv_addr.sin_family = AF_INET;
-        serv_addr.sin_addr.s_addr = INADDR_ANY;
-        bzero(&(serv_addr.sin_zero), 8);
 
         prepareClientConnection(ip_adress);
         prepareServerConnection();
@@ -77,78 +75,6 @@ namespace servers_ring
 		} 
 
 		bzero(&(client_addr.sin_zero), 8);
-	}
-
-
-
-	void ServersRing::checkIfConnectionFailed()
-	{
-		ServersRing *_this = (ServersRing*)calloc(1, sizeof(ServersRing*));
-		_this = this;
-
-		// keep checking if TCP connection is ok
-		bool connectedToServer = true;
-		while(connectedToServer)
-    	{
-			// Listen from TCP connection in case a Packet is received
-			Packet* receivedPacket = _this->readPacket(_this->socket_client, &connectedToServer);
-
-			if (!connectedToServer)
-			{
-				break;
-			}
-		}
-
-		// if server gets disconnected we try to connect it with another server port from the list
-		pthread_t connecting;
-		disconnected = true;
-		pthread_create(&connecting, NULL, connectToServer, (void *) _this);
-	}
-
-
-
-	// client(server) connecting to server(server)
-	void* ServersRing::connectToServer(void * param)
-	{
-		int port;
-		ServersRing *_this = (ServersRing*)param;
-
-		if ((_this->socket_client = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-		{
-			cout << "\n Socket creation error \n" << endl;
-			exit(1);
-		}
-
-		port = _this->getNewPortFromFile();
-		_this->client_addr.sin_port = htons(port);
-
-		// server cannot connect with itself, so we read the next port on the list
-		if(port == ntohs(_this->serv_addr.sin_port))
-		{
-			port = _this->getNewPortFromFile();
-			_this->client_addr.sin_port = htons(port);
-		}
-
-		while (connect(_this->socket_client,(struct sockaddr *) &_this->client_addr,sizeof(_this->client_addr)) < 0)
-		{
-			// we only check for new ports if there were a disconnection
-		    if(_this->disconnected == true)
-		    {
-			    port = _this->getNewPortFromFile();
-				_this->client_addr.sin_port = htons(port);
-				_this->disconnected = false;
-			}
-
-			// server cannot connect with itself, so we read the next port on the list
-			if(port == ntohs(_this->serv_addr.sin_port))
-			{
-				port = _this->getNewPortFromFile();
-			    _this->client_addr.sin_port = htons(port);
-			}
-		}
-		cout << "ServerRing CONNECTED WITH PORT: " << ntohs(_this->client_addr.sin_port) << endl;
-
-		_this->checkIfConnectionFailed();	
 	}
 
 
@@ -194,9 +120,7 @@ namespace servers_ring
         ServersRing *_this = (ServersRing*)calloc(1, sizeof(ServersRing*));
         _this = (ServersRing *) param;
 
-        //_this->prepareServerConnection();
-
-        // make client(server) connection
+        // if there was a disconnection there is no need to call for connectToServer again
         if(_this->disconnected == false)
         	pthread_create(&connecting, NULL, connectToServer, (void *) _this);
         else
@@ -265,6 +189,75 @@ namespace servers_ring
 
 
 
+	// client(server) connecting to server(server)
+	void* ServersRing::connectToServer(void * param)
+	{
+		int port;
+		ServersRing *_this = (ServersRing*)param;
+
+		if ((_this->socket_client = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+		{
+			cout << "\n Socket creation error \n" << endl;
+			exit(1);
+		}
+
+		port = _this->getNewPortFromFile();
+		_this->client_addr.sin_port = htons(port);
+
+		// server cannot connect with itself, so we read the next port on the list
+		if(port == ntohs(_this->serv_addr.sin_port))
+		{
+			port = _this->getNewPortFromFile();
+			_this->client_addr.sin_port = htons(port);
+		}
+
+		while (connect(_this->socket_client,(struct sockaddr *) &_this->client_addr,sizeof(_this->client_addr)) < 0)
+		{
+			// we only check for new ports if there were a disconnection
+		    if(_this->disconnected == true)
+		    {
+			    port = _this->getNewPortFromFile();
+				_this->client_addr.sin_port = htons(port);
+				_this->disconnected = false;
+			}
+
+			// server cannot connect with itself, so we read the next port on the list
+			if(port == ntohs(_this->serv_addr.sin_port))
+			{
+				port = _this->getNewPortFromFile();
+			    _this->client_addr.sin_port = htons(port);
+			}
+		}
+		cout << "ServerRing CONNECTED WITH PORT: " << ntohs(_this->client_addr.sin_port) << endl;
+
+		_this->checkIfConnectionFailed();	
+	}
+
+
+
+	void ServersRing::checkIfConnectionFailed()
+	{
+		ServersRing *_this = (ServersRing*)calloc(1, sizeof(ServersRing*));
+		_this = this;
+
+		// keep checking if TCP connection is ok
+		bool connectedToServer = true;
+		while(connectedToServer)
+    	{
+			// Listen from TCP connection in case a Packet is received
+			Packet* receivedPacket = _this->readPacket(_this->socket_client, &connectedToServer);
+
+			if (!connectedToServer)
+			{
+				break;
+			}
+		}
+
+		// if server gets disconnected we try to connect it with another server port from the list
+		pthread_t connecting;
+		disconnected = true;
+		pthread_create(&connecting, NULL, connectToServer, (void *) _this);
+	}
 
 
 

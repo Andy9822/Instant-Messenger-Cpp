@@ -66,6 +66,7 @@ int main(int argc, char *argv[])
     serverApp.prepareConnection();
     serverApp.printPortNumber();
 
+    serverRing = ServersRing();
     serverRing.connectServersRing(serverApp);
 
 	while(1)
