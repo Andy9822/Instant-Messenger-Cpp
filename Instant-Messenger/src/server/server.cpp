@@ -130,8 +130,9 @@ namespace server {
         if (incrementNumberOfConnectionsFromUser(registrationPacket->username) == USER_SESSIONS_LIMIT_REACHED ) { // we can keep this
             Packet *connectionRefusedPacket = new Packet(CONNECTION_REFUSED_PACKET);
             strcpy(connectionRefusedPacket->user_id, registrationPacket->user_id);
+            std::cout << "[DEBUG|ERROR] limit sessoes alcanadas pelo user" << std::endl;
             this->sendPacket(frontEndSocket, connectionRefusedPacket);
-            delete connectionRefusedPacket;
+            this->sockets_connections_semaphore->post();
             return -1;
         }
         this->sockets_connections_semaphore->post();
@@ -210,8 +211,7 @@ namespace server {
             }
 
             if (receivedPacket->isMessage()) {
-                cout << "[DEBUG] " << receivedPacket->message << ", " << receivedPacket->clientDispositiveIdentifier <<
-                    " FE socket: " << _this->socket_fd << endl;
+                cout << "[DEBUG] recebi message" << receivedPacket->message << endl;
                 //TODO: send this to the backup servers
                 // replicateToBackupServers();
                 Packet *pack = new Packet();
@@ -223,6 +223,7 @@ namespace server {
             } else if (receivedPacket->isKeepAlive()){
                 _this->connectionMonitor->refresh(_this->socket_fd);
             } else if (receivedPacket->isJoinMessage()) {
+                std::cout << "[DEBUG] recebi joinMessage" << std::endl;
                 _this->registerUserToServer(receivedPacket, _this->socket_fd); // considers the front end connection
             } else if (receivedPacket->isDisconnect()) {
                 pair<int, int> connectionId = pair<int, int>();
