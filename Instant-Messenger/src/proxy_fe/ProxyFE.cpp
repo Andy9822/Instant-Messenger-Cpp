@@ -138,7 +138,9 @@ void ProxyFE::processServerPacket(Packet* receivedPacket, int socket)
         break;
         std::cout << "user_id: " << receivedPacket->user_id << std::endl;
         string userID(receivedPacket->user_id); //TODO talvez proteger aqui c semaforo se cai na hora ne
+        users_map_semaphore->wait();
         int clientSocket = usersMap[userID];
+        users_map_semaphore->post();       
         if(clientSocket != 0)
         {
             sendPacket(clientSocket, receivedPacket);
@@ -169,7 +171,9 @@ void ProxyFE::processServerPacket(Packet* receivedPacket, int socket)
         std::cout << "🛂Recebi ACCEPT do server🛂🎟🎫: " << receivedPacket->username << " pode dar join na sala" << std::endl;
         std::cout << "user_id: " << receivedPacket->user_id << std::endl;
         string userID(receivedPacket->user_id); //TODO talvez proteger aqui c semaforo se cai na hora ne
+        users_map_semaphore->wait();
         int clientSocket = usersMap[userID];
+        users_map_semaphore->post();
         if(clientSocket != 0)
         {
             std::cout << "vou mandar ACCEPT_PACKET pro usuario " << clientSocket << std::endl;
@@ -186,7 +190,9 @@ void ProxyFE::processServerPacket(Packet* receivedPacket, int socket)
         std::cout << "⛔Recebi PROBIÇÃO do server🚫:  NÃO pode dar join na sala" << std::endl;
         std::cout << "user_id: " << receivedPacket->user_id << std::endl;
         string userID(receivedPacket->user_id); //TODO talvez proteger aqui c semaforo se cai na hora ne
+        users_map_semaphore->wait();
         int clientSocket = usersMap[userID];
+        users_map_semaphore->post();
         if(clientSocket != 0)
         {
             std::cout << "vou mandar CONNECTION_REFUSED_PACKET pro usuario " << clientSocket << std::endl;
@@ -203,7 +209,9 @@ void ProxyFE::processServerPacket(Packet* receivedPacket, int socket)
         std::cout << "📫Recebi ACK do server📫: " << std::endl;
         std::cout << "user_id: " << receivedPacket->user_id << std::endl;
         string userID(receivedPacket->user_id); //TODO talvez proteger aqui c semaforo se cai na hora ne
+        users_map_semaphore->wait();
         int clientSocket = usersMap[userID];
+        users_map_semaphore->post();
         if(clientSocket != 0)
         {
             std::cout << "vou mandar ACK pro usuario " << clientSocket << std::endl;
