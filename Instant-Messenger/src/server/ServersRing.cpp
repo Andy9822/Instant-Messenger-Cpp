@@ -26,7 +26,7 @@ namespace servers_ring
 		  	{
 		  		// read file from the beginning
 		  		myfile.close();
-				myfile.open("src/server/config.txt");
+				myfile.open("config.txt");
 				getline(myfile, port);
 				portInt = stoi(port);
 			}
@@ -45,7 +45,7 @@ namespace servers_ring
 
 		disconnected = false;
 
-	    myfile.open("src/server/config.txt");
+	    myfile.open("config.txt");
 
 		serverPort = getNewPortFromFile();
 
