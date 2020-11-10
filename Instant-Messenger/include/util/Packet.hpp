@@ -87,6 +87,9 @@ struct Packet
     bool isJoinMessage() {
         return this->type == JOIN_PACKET;
     }
+    bool isReplicationMessage() {
+        return this->type == REPLICATION_PACKET;
+    }
 };
 
 #endif

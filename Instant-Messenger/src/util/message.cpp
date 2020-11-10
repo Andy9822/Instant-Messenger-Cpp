@@ -1,4 +1,5 @@
 #include "../../include/util/message.hpp"
+#include "../../include/util/definitions.hpp"
 #include <sstream>
 #include <iostream>
 
@@ -15,6 +16,11 @@ Message::Message(string text, string user, string group, long int time) {
     this->group = group;
     this->time = time;
     this->isNotification = false;
+}
+
+Message::Message(string text, string user, string group, long int time, int messageType) {
+    Message message = Message(text, user, group, time);
+    message.setIsReplication(messageType == REPLICATION_PACKET);
 }
 
 string Message::getText() {
@@ -48,6 +54,14 @@ bool Message::getIsNotification() {
 }
 
 void Message::setIsNotification(bool value) {
+    this->isNotification = value;
+}
+
+bool Message::getIsReplication() {
+    return this->isNotification;
+}
+
+void Message::setIsReplication(bool value) {
     this->isNotification = value;
 }
 

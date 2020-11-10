@@ -39,7 +39,7 @@ namespace servergroupmanager {
             cout << "[ERROR] group does not exist" << endl;
             return;
         }
-        this->groupMap[packet->group]->processReceivedMessage(packet->username, packet->message);
+        this->groupMap[packet->group]->processReceivedMessage(packet->username, packet->message, packet->type);
     }
 
 

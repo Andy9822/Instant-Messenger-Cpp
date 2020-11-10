@@ -26,15 +26,27 @@ namespace server {
         // TODO assim como proxyFE, o server vai ter que ter 2 sockets, um pra conectar nos FE e outro nos RM
         {
             // Configure server address properties
-            // serv_addr.sin_family = AF_INET;
-            // serv_addr.sin_addr.s_addr = INADDR_ANY;
-            // bzero(&(serv_addr.sin_zero), 8);
-        }
+            serv_addr.sin_family = AF_INET;
+            serv_addr.sin_addr.s_addr = INADDR_ANY;
+            bzero(&(serv_addr.sin_zero), 8);
 
-        // Initialize socket file descriptor
-        socket_fd = 0;
+            backup_serv_addr.sin_family = AF_INET;
+            backup_serv_addr.sin_addr.s_addr = INADDR_ANY;
+            bzero(&(backup_serv_addr.sin_zero), 8);
+
+            // configure sockets
+            socket_fd = 0;
+            backup_socket_fd = 0;
+        }
     }
 
+    void Server::setInboundPort(int port) {
+        serv_addr.sin_port = htons(port);
+    }
+
+    void Server::setOutboundPort(int port) {
+        backup_serv_addr.sin_port = htons(port);
+    }
 
     void Server::closeClientConnection(int socket_fd) {
         std::cout << "Closing socket: " << socket_fd << std::endl;
@@ -61,12 +73,6 @@ namespace server {
     void Server::closeServer() {
         closeFrontEndConnections();
         closeSocket();
-    }
-
-
-    // TODO adaptar pra quando tiver 2 sockets, ou pelo menos deixa o TODO aqui
-    void Server::setPort(int port) {
-        /*serv_addr.sin_port = htons(atoi(port)); */
     }
 
     // Same as above. BTW it doesn't mean to remove it
@@ -157,9 +163,9 @@ namespace server {
         char ip_address[10] = "127.0.0.1"; //backup ip
         char port[5] = "4040"; //get backup port from cmdline
 
-        backup_serv_addr.sin_family = AF_INET;
-        backup_serv_addr.sin_addr.s_addr = INADDR_ANY;
-        backup_serv_addr.sin_port = htons(atoi(port));
+        //backup_serv_addr.sin_family = AF_INET;
+        //backup_serv_addr.sin_addr.s_addr = INADDR_ANY;
+        //backup_serv_addr.sin_port = htons(atoi(port));
         if(inet_pton(AF_INET, ip_address, &serv_addr.sin_addr)<=0)
         {
             std::cout << "\nInvalid address/ Address not supported \n" << std::endl;
@@ -185,7 +191,7 @@ namespace server {
             exit(1);
         }
 
-        cout << "backup server listening on ip " << ip_address << " and port " << atoi(port) << endl;
+        cout << "PRIMARY server listening on ip " << ip_address << " and port " << ntohs(backup_serv_addr.sin_port) << endl;
 
         // Configure socket to listen for tcp connections
         if (listen(backup_socket_fd, MAXBACKLOG) < 0) // SOMAXCONN is the maximum value of backlog
@@ -195,55 +201,34 @@ namespace server {
         }
     }
 
-    int Server::connectToPrimaryServer()
-    {
-        {
-            //TODO ip via params ou arquivos de texto
-            char ip_address[10] = "127.0.0.1";
-            char port[5] = "4040";
-            serv_addr.sin_family = AF_INET;
-            serv_addr.sin_port = htons(atoi(port));
-            if(inet_pton(AF_INET, ip_address, &serv_addr.sin_addr)<=0)
-            {
-                std::cout << "\nInvalid address/ Address not supported \n" << std::endl;
-            }
-
-            bzero(&(serv_addr.sin_zero), 8);
-        }
-
-        if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-        {
-            cout << "\n Socket creation error \n" << endl;
-            return -1;
-        }
-
-        if (connect(socket_fd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
-        {
-            cout << "ERROR connecting\n" << endl;
-            return -1;
-        }
-
-        std::cout << "conectado ao SERVER PRIMARIO com socket:" << this->socket_fd << std::endl;
-
-        return 0;
-    }
-
     // TODO think in IP as parameter etc...
     int Server::ConnectToFE()
     {
+        char ip_address[10];
+        char port[5];
         // TODO essa é a parte do socket pros FE
         {
             //TODO ip via params ou arquivos de texto
-            char ip_address[10] = "127.0.0.1";
-            char port[5] = "6969";
-            serv_addr.sin_family = AF_INET;    
-            serv_addr.sin_port = htons(atoi(port));     
+            if(getIsPrimaryServer())
+            {
+                strlcpy(ip_address, "127.0.0.1", sizeof(ip_address));
+                strlcpy(port, "6969", sizeof(port));
+            }
+            else
+            {
+                strlcpy(ip_address, "127.0.0.1", sizeof(ip_address));
+                strlcpy(port, "4040", sizeof(port));
+            }
+
+            //serv_addr.sin_family = AF_INET;
+            //serv_addr.sin_port = htons(atoi(port));
+            bzero(&(serv_addr.sin_zero), 8);
             if(inet_pton(AF_INET, ip_address, &serv_addr.sin_addr)<=0) 
             { 
                 std::cout << "\nInvalid address/ Address not supported \n" << std::endl; 
             } 
 
-            bzero(&(serv_addr.sin_zero), 8); 
+
         }
 
         if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -258,10 +243,13 @@ namespace server {
             return -1;
         }
 
-        std::cout << "conectado ao FE com socket:" << this->socket_fd << std::endl;
+        if(getIsPrimaryServer())
+            std::cout << "conectado ao FE com socket:" << this->socket_fd << std::endl;
+        else
+            std::cout << "conectado ao SERVER PRIMARIO com socket:" << this->socket_fd << std::endl;
 
         return 0;
-    }
+    } // if it is a backup server, should connect to a primary server and not a FE
 
     int Server::handleFrontEndConnection(pthread_t *tid, pthread_t *tid2) { //TODO same as in other places, tids mess
         pthread_create(tid, NULL, listenFrontEndCommunication, (void *) this);
@@ -294,12 +282,6 @@ namespace server {
 
             if (receivedPacket->isMessage()) {
                 cout << "[DEBUG] recebi message" << receivedPacket->message << endl;
-                //TODO: send this to the backup servers
-                if(_this->getIsPrimaryServer())
-                {
-                    //todo: send to all sockets
-                    _this->sendPacket(_this->backup_socket_fd, receivedPacket);
-                }
                 Packet *pack = new Packet();
                 pack->type = ACK_PACKET;
                 strcpy(pack->user_id, receivedPacket->user_id);
@@ -311,23 +293,16 @@ namespace server {
             } else if (receivedPacket->isJoinMessage()) {
                 std::cout << "[DEBUG] recebi joinMessage" << std::endl;
                 _this->registerUserToServer(receivedPacket, _this->socket_fd); // considers the front end connection
-                if(_this->getIsPrimaryServer())
-                {
-                    //todo: send to all sockets
-                    _this->sendPacket(_this->backup_socket_fd, receivedPacket);
-                }
             } else if (receivedPacket->isDisconnect()) {
                 pair<int, int> connectionId = pair<int, int>();
                 connectionId.first = receivedPacket->clientDispositiveIdentifier;
                 connectionId.second = _this->socket_fd;
                 _this->closeClientConnection(connectionId); // considers the front end connection
-                if(_this->getIsPrimaryServer())
-                {
-                    //todo: send to all sockets
-                    _this->sendPacket(_this->backup_socket_fd, receivedPacket);
-                }
             }
 
+            if(_this->shouldSendReplicationPackage(receivedPacket)) {
+                _this->sendPacket(_this->backup_socket_fd, receivedPacket);
+            }
         }
 
         _this->connectionMonitor->killSocket(_this->socket_fd);
@@ -335,6 +310,16 @@ namespace server {
         _this->closeFrontEndConnection(_this->socket_fd);
 
         return 0;
+    }
+
+    /**
+     * Determine if a replication package should be send to backup servers
+     * @param _this server
+     * @param receivedPacket
+     * @return
+     */
+    bool Server::shouldSendReplicationPackage(Packet *receivedPacket) {
+        return getIsPrimaryServer() && (receivedPacket->isDisconnect() || receivedPacket->isMessage() || receivedPacket->isJoinMessage());
     }
 
     /**

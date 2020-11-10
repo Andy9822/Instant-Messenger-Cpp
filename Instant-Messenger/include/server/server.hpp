@@ -51,13 +51,13 @@ namespace server {
         Semaphore* sockets_connections_semaphore;
         static void closeClientConnection(int socket_fd);
         static void *listenFrontEndCommunication(void *newsocket);
-        void setPort(int port);
+        void setPort(int fePort);
         void prepareConnection();
         void printPortNumber();
         int registerUserToServer(Packet *registrationPacket, int frontEndSocket);
         int registerUser(pair<int, int> clientIdentifier, char *username, char *group,char* userID);
         int ConnectToFE();
-        int connectToPrimaryServer();
+        //int connectToPrimaryServer();
         int prepareBackupServersConnection();
         int handleFrontEndConnection(pthread_t *tid, pthread_t *tid2);
         void closeFrontEndConnections();
@@ -71,6 +71,10 @@ namespace server {
         int incrementNumberOfConnectionsFromUser(string user);
         bool getIsPrimaryServer();
         void setIsPrimaryServer(bool isPrimaryServer);
+        bool shouldSendReplicationPackage(Packet *receivedPacket);
+
+        void setOutboundPort(int port);
+        void setInboundPort(int port);
     };
 }
 #endif

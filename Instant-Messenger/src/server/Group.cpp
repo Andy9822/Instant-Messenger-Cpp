@@ -48,10 +48,10 @@ void * Group::consumeMessageQueue(void * args)
 
                 _this->messageQueueSemaphore->post();
 
-
                 _this->fsManager->appendGroupMessageToHistory(message);
                 _this->usersSemaphore->wait();
-                _this->messageManager->broadcastMessageToUsers(message, _this->getAllActiveConnectionIds());
+                if(!message.getIsReplication())
+                    _this->messageManager->broadcastMessageToUsers(message, _this->getAllActiveConnectionIds());
                 _this->usersSemaphore->post();
             }
         }
@@ -184,7 +184,7 @@ void Group::sendHistoryToUser(pair<int, int> clientIdentifier) {
  * @param userName
  * @param message
  */
-void Group::processReceivedMessage(string userName, string message) {
+void Group::processReceivedMessage(string userName, string message, int packetType) {
     Message receivedMessage = Message(message, userName, this->groupName, std::time(0));
     addMessageToMessageQueue(receivedMessage);
 }
