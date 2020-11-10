@@ -66,3 +66,7 @@ enum
 };
 ////////
 #endif
+
+#ifndef MAX_RM
+#define MAX_RM 4
+#endif

@@ -26,12 +26,64 @@ namespace server {
             // serv_addr.sin_family = AF_INET;
             // serv_addr.sin_addr.s_addr = INADDR_ANY;
             // bzero(&(serv_addr.sin_zero), 8);
+
+            rm_listening_serv_addr.sin_family = AF_INET;
+            rm_listening_serv_addr.sin_addr.s_addr = INADDR_ANY;
+            bzero(&(rm_listening_serv_addr.sin_zero), 8);
         }
 
         // Initialize socket file descriptor
         socket_fd = 0;
+        rm_listening_socket_fd = 0;
     }
 
+    void Server::setRmNumber(int rmNumber) {
+        this->rmNumber = rmNumber;
+    }
+    int Server::getRmNumber(int rmNumber){
+        return this->rmNumber;
+    }
+
+    void Server::createReplicationTree()
+    {
+     //conectar nos numeros acima até RM_MAX
+        //criar socket e machine information
+
+
+        int opt = 1;
+        int rmListeningPort = atoi("9990")+rmNumber;
+        rm_listening_serv_addr.sin_port = htons(rmListeningPort);
+
+        // Create socket file descriptor
+        if ((rm_listening_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) <= 0) {
+            cout << "ERROR opening socket\n" << endl;
+            exit(1);
+        }
+
+        // Forcefully attaching socket to the port
+        if (setsockopt(rm_listening_socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
+        {
+            perror("setsockopt");
+            exit(EXIT_FAILURE);
+        }
+
+        // Attach socket to server's port
+        if (::bind(rm_listening_socket_fd, (struct sockaddr *) &rm_listening_serv_addr, sizeof(rm_listening_serv_addr)) < 0) {
+            cout << "ERROR on binding\n" << endl;
+            exit(1);
+        }
+
+        // Configure socket to listen for tcp connections
+        if (listen(rm_listening_socket_fd, MAXBACKLOG) < 0) // SOMAXCONN is the maximum value of backlog
+        {
+            cout << "ERROR on listening\n" << endl;
+            exit(1);
+        }
+
+        std::cout << "\nSetting listener socket for Rm machine of number " << rmNumber << endl;
+        std::cout << "listening for backup connections on socket: " << rm_listening_socket_fd << " and port " << ntohs(rm_listening_serv_addr.sin_port) << std::endl;
+
+    }
 
     void Server::closeClientConnection(int socket_fd) {
         std::cout << "Closing socket: " << socket_fd << std::endl;
@@ -185,7 +237,7 @@ namespace server {
     int Server::handleFrontEndConnection(pthread_t *tid, pthread_t *tid2) { //TODO same as in other places, tids mess
         pthread_create(tid, NULL, listenFrontEndCommunication, (void *) this);
         pthread_create(tid2, NULL, monitorConnection, (void *) this);
-        ConnectionKeeper(this->socket_fd); // starts the thread that keeps sending keep alives
+        //ConnectionKeeper(this->socket_fd); // starts the thread that keeps sending keep alives
         return 0;
     }
     void * Server::monitorConnection(void *args) {

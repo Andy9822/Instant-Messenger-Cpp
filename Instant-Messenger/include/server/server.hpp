@@ -27,6 +27,11 @@ using namespace servergroupmanager;
 namespace server {
     class Server : public Socket {
     private:
+        int rmNumber;
+        int rm_listening_socket_fd;
+        sockaddr_in rm_listening_serv_addr;
+        // list of connected sockets and its machine information
+        std::vector<pair<int, sockaddr_in>> rm_connect_sockets_fd;
         ServerGroupManager *groupManager;
         ConnectionMonitor *connectionMonitor;
         int socket_fd;
@@ -60,6 +65,9 @@ namespace server {
         void configureFilesystemManager(int maxNumberOfMessagesInHistory);
         int getNumberOfConnectionsByUser(string user);
         int incrementNumberOfConnectionsFromUser(string user);
+        void setRmNumber(int rmNumber);
+        int getRmNumber(int rmNumber);
+        void createReplicationTree();
     };
 }
 #endif
