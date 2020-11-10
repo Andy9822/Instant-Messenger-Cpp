@@ -29,7 +29,14 @@ namespace server {
     private:
         ServerGroupManager *groupManager;
         ConnectionMonitor *connectionMonitor;
+        bool isPrimaryServer;
         int socket_fd;
+
+        //todo: review it
+        std::vector<pair<int, struct sockaddr_in>> backupConnections;
+        int backup_socket_fd;
+        struct sockaddr_in backup_serv_addr;
+
         struct sockaddr_in serv_addr;
         void closeClientConnection(pair<int, int> clientConnectionId);
         std::map<string, int> connectionsCount;
@@ -50,6 +57,8 @@ namespace server {
         int registerUserToServer(Packet *registrationPacket, int frontEndSocket);
         int registerUser(pair<int, int> clientIdentifier, char *username, char *group,char* userID);
         int ConnectToFE();
+        int connectToPrimaryServer();
+        int prepareBackupServersConnection();
         int handleFrontEndConnection(pthread_t *tid, pthread_t *tid2);
         void closeFrontEndConnections();
         void closeSocket();
@@ -60,6 +69,8 @@ namespace server {
         void configureFilesystemManager(int maxNumberOfMessagesInHistory);
         int getNumberOfConnectionsByUser(string user);
         int incrementNumberOfConnectionsFromUser(string user);
+        bool getIsPrimaryServer();
+        void setIsPrimaryServer(bool isPrimaryServer);
     };
 }
 #endif

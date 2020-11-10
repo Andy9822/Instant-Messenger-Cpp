@@ -66,3 +66,7 @@ enum
 };
 ////////
 #endif
+
+#ifndef IS_BACKUP_SERVER
+#define IS_BACKUP_SERVER 0
+#endif

@@ -18,7 +18,7 @@ run-client:
 	$(BUILD_DIR)/client.app JohnnyUser1 SampleRoom1 127.0.0.1 $(SERVER_PORT)
 
 run-server:
-	$(BUILD_DIR)/server.app $(SERVER_PORT) 4
+	$(BUILD_DIR)/server.app $(SERVER_PORT) 4 1
 
 clean:
 	rm -rf $(SRC_DIR)/*~ $(INC_DIR)/*~ client server *~

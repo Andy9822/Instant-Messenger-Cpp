@@ -28,22 +28,24 @@ void capture_signals()
 	sigaction(SIGINT, &sigIntHandler, NULL);
 }
 
-void read_args(int argc, char *argv[], int *port, int *maxNumberOfMessagesInHistory)
+void read_args(int argc, char *argv[], int *port, int *maxNumberOfMessagesInHistory, bool *isPrimaryServer)
 {	
 	*port = RANDOM_PORT_NUMBER; //Set any available port as default
 	*maxNumberOfMessagesInHistory = DEFAULT_NUMBER_OF_RECORDED_MESSAGES;
+	*isPrimaryServer = IS_BACKUP_SERVER;
 
-	if(argc == 3)
+	if(argc == 4)
     {
 			try {
 				*port = stoi(argv[1]); // In case it's received a specific port as argv
                 *maxNumberOfMessagesInHistory = stoi(argv[2]);
+                *isPrimaryServer = stoi(argv[3]);
 			}
 			catch(std::invalid_argument e) {
                 cout << "[ERROR] Invalid arguments" << endl;
 			}
     } else {
-	    cout << "[WARNING] using random port and " << DEFAULT_NUMBER_OF_RECORDED_MESSAGES << "messages on history" << endl;
+	    cout << "[WARNING] using random port, " << DEFAULT_NUMBER_OF_RECORDED_MESSAGES << "messages on history and " << "is a backup server" << endl;
 	}
 }
 
@@ -51,12 +53,13 @@ int main(int argc, char *argv[])
 {
     int i = 0;
     int port, maxNumberOfMessagesInHistory;
+    bool isPrimaryServer;
     // Capture and process SO signals
 	capture_signals();
 
 	pthread_t tid[MAXBACKLOG];
 
-	read_args(argc, argv, &port, &maxNumberOfMessagesInHistory);
+	read_args(argc, argv, &port, &maxNumberOfMessagesInHistory, &isPrimaryServer);
     // serverApp.setPort(port);
     // serverApp.configureFilesystemManager(maxNumberOfMessagesInHistory);
     // serverApp.prepareConnection();
@@ -70,10 +73,16 @@ int main(int argc, char *argv[])
 
 	//TODO sorry for the mess, WIP
 
+    serverApp.setIsPrimaryServer(isPrimaryServer);
+    if(isPrimaryServer) {
+        //serverApp.ConnectToFE();
+        //serverApp.handleFrontEndConnection(&tid[i++], &tid[i++]);
+        serverApp.prepareBackupServersConnection();
+    }
+    else {
+        serverApp.connectToPrimaryServer();
+    }
 
-	serverApp.ConnectToFE();
-	serverApp.handleFrontEndConnection(&tid[i++], &tid[i++]);
-	
 	//I'm not proud of this, I swear
 	while (true)
 	{
