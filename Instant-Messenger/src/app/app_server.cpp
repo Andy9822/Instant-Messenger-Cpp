@@ -1,4 +1,5 @@
 #include "../../include/server/server.hpp"
+#include "../../include/server/ServersRing.hpp"
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,7 +9,9 @@
 
 using namespace std;
 using namespace server;
+using namespace servers_ring;
 
+ServersRing serverRing;
 Server serverApp;
 struct sigaction sigIntHandler;
 
@@ -57,10 +60,13 @@ int main(int argc, char *argv[])
 	pthread_t tid[MAXBACKLOG];
 
 	read_args(argc, argv, &port, &maxNumberOfMessagesInHistory);
+
     serverApp.setPort(port);
     serverApp.configureFilesystemManager(maxNumberOfMessagesInHistory);
     serverApp.prepareConnection();
     serverApp.printPortNumber();
+
+    serverRing.connectServersRing(serverApp);
 
 	while(1)
 	{

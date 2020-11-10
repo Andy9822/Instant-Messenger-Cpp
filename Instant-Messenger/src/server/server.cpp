@@ -29,6 +29,7 @@ namespace server {
     }
 
 
+
     void Server::closeClientConnection(int socket_fd) {
         std::cout << "Closing socket: " << socket_fd << std::endl;
         openSockets.erase(std::remove(openSockets.begin(), openSockets.end(), socket_fd), openSockets.end());
