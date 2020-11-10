@@ -233,7 +233,7 @@ namespace server {
         if(getIsPrimaryServer())
             std::cout << "conectado ao FE com socket:" << this->socket_fd << std::endl;
         else
-            std::cout << "conectado ao SERVER PRIMARIO com socket:" << this->socket_fd << std::endl;
+            std::cout << "conectado ao SERVER PRIMARIO com socket:" << this->socket_fd << "de porta " << ntohs(serv_addr.sin_port)  << std::endl;
 
         return 0;
     } // if it is a backup server, should connect to a primary server and not a FE
