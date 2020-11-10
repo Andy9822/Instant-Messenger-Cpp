@@ -82,7 +82,8 @@ int main(int argc, char *argv[])
 
     if(isPrimaryServer)
         serverApp.prepareBackupServersConnection();
-    serverApp.ConnectToFE();
+    serverApp.connectToInbound();
+    serverApp.printPortNumber();
     serverApp.handleFrontEndConnection(&tid[i++], &tid[i++]);
 
 	//I'm not proud of this, I swear

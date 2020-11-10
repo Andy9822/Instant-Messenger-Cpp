@@ -128,7 +128,7 @@ namespace server {
                 exit(1);
             }
 
-            cout << "Serve replicating on PORT: " << ntohs(backup_serv_addr.sin_port) << endl;
+            cout << "Server replicating on PORT: " << ntohs(backup_serv_addr.sin_port) << endl;
         }
     }
 
@@ -198,28 +198,24 @@ namespace server {
             exit(1);
         }
 
-        cout << "PRIMARY server listening on ip " << ip_address << " and port " << ntohs(backup_serv_addr.sin_port) << endl;
-
         // Configure socket to listen for tcp connections
         if (listen(backup_socket_fd, MAXBACKLOG) < 0) // SOMAXCONN is the maximum value of backlog
         {
             cout << "ERROR on listening\n" << endl;
             exit(1);
         }
+
+        cout << "PRIMARY server listening on ip " << ip_address << " and port " << ntohs(backup_serv_addr.sin_port) << endl;
     }
 
     // TODO think in IP as parameter etc...
-    int Server::ConnectToFE()
+    int Server::connectToInbound()
     {
         char ip_address[10] = "127.0.0.1";
 
-        // TODO essa é a parte do socket pros FE
+        if(inet_pton(AF_INET, ip_address, &serv_addr.sin_addr)<=0)
         {
-            //TODO ip via params ou arquivos de texto
-            if(inet_pton(AF_INET, ip_address, &serv_addr.sin_addr)<=0) 
-            { 
-                std::cout << "\nInvalid address/ Address not supported \n" << std::endl; 
-            }
+            std::cout << "\nInvalid address/ Address not supported \n" << std::endl;
         }
 
         if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -245,6 +241,7 @@ namespace server {
     int Server::handleFrontEndConnection(pthread_t *tid, pthread_t *tid2) { //TODO same as in other places, tids mess
         pthread_create(tid, NULL, listenFrontEndCommunication, (void *) this);
         pthread_create(tid2, NULL, monitorConnection, (void *) this);
+        // todo: create new thread for listening?
         //ConnectionKeeper(this->socket_fd); // starts the thread that keeps sending keep alives
         return 0;
     }

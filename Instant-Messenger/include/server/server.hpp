@@ -56,8 +56,7 @@ namespace server {
         void printPortNumber();
         int registerUserToServer(Packet *registrationPacket, int frontEndSocket);
         int registerUser(pair<int, int> clientIdentifier, char *username, char *group,char* userID);
-        int ConnectToFE();
-        //int connectToPrimaryServer();
+        int connectToInbound();
         int prepareBackupServersConnection();
         int handleFrontEndConnection(pthread_t *tid, pthread_t *tid2);
         void closeFrontEndConnections();
