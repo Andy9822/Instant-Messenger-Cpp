@@ -49,9 +49,44 @@ namespace server {
      //conectar nos numeros acima até RM_MAX
         //criar socket e machine information
 
+        //for(int connectMachineNumber = rmNumber+1; connectMachineNumber <= MAX_RM; connectMachineNumber++)
+        //{
+        if(rmNumber < MAX_RM) {
+            int connectMachineNumber = rmNumber + 1;
+            int connectSocket = 0;
+            char ip_address[10] = "127.0.0.1";
+            struct sockaddr_in rm_connect_socket{};
 
+            rm_connect_socket.sin_family = AF_INET;
+            rm_connect_socket.sin_port = RM_BASE_PORT_NUMBER + connectMachineNumber;
+
+            if (inet_pton(AF_INET, ip_address, &rm_connect_socket.sin_addr) <= 0) {
+                std::cout << "\nInvalid address/ Address not supported \n" << std::endl;
+            }
+
+            bzero(&(rm_connect_socket.sin_zero), 8);
+
+            if ((connectSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+                cout << "\n Socket creation error \n" << endl;
+            }
+
+            if (connect(connectSocket, (struct sockaddr *) &rm_connect_socket, sizeof(rm_connect_socket)) < 0) {
+                cout << "ERROR connecting\n" << endl;
+            }
+
+            std::cout << "Conectado ao servidor RM de porta " << ntohs(rm_connect_socket.sin_port) << " e socket "
+                      << connectSocket << std::endl;
+            // }
+        }
+
+        createRMListenerSocket();
+    }
+    /**
+    * This method creates listener sockets based on RM number
+    */
+    void Server::createRMListenerSocket() {
         int opt = 1;
-        int rmListeningPort = atoi("9990")+rmNumber;
+        int rmListeningPort = RM_BASE_PORT_NUMBER + rmNumber;
         rm_listening_serv_addr.sin_port = htons(rmListeningPort);
 
         // Create socket file descriptor
@@ -74,16 +109,17 @@ namespace server {
         }
 
         // Configure socket to listen for tcp connections
-        if (listen(rm_listening_socket_fd, MAXBACKLOG) < 0) // SOMAXCONN is the maximum value of backlog
+        if (::listen(rm_listening_socket_fd, MAXBACKLOG) < 0) // SOMAXCONN is the maximum value of backlog
         {
             cout << "ERROR on listening\n" << endl;
             exit(1);
         }
 
-        std::cout << "\nSetting listener socket for Rm machine of number " << rmNumber << endl;
-        std::cout << "listening for backup connections on socket: " << rm_listening_socket_fd << " and port " << ntohs(rm_listening_serv_addr.sin_port) << std::endl;
-
+        cout << "\nSetting listener socket for Rm machine of number " << rmNumber << endl;
+        cout << "listening for backup connections on socket: " << rm_listening_socket_fd << " and port " << ntohs(
+                rm_listening_serv_addr.sin_port) << endl;
     }
+
 
     void Server::closeClientConnection(int socket_fd) {
         std::cout << "Closing socket: " << socket_fd << std::endl;

@@ -70,3 +70,7 @@ enum
 #ifndef MAX_RM
 #define MAX_RM 4
 #endif
+
+#ifndef RM_BASE_PORT_NUMBER
+#define RM_BASE_PORT_NUMBER 9990
+#endif
