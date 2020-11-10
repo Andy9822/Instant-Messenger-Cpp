@@ -44,7 +44,7 @@ namespace server {
         serv_addr.sin_port = htons(port);
     }
 
-    void Server::setOutboundPort(int port) {
+    void Server::setReplicationPort(int port) {
         backup_serv_addr.sin_port = htons(port);
     }
 
@@ -114,11 +114,22 @@ namespace server {
         socklen_t len = sizeof(serv_addr);
 
         if (getsockname(socket_fd, (struct sockaddr *) &serv_addr, &len) < 0) {
-            cout << "Unable to print port Number!" << endl;
+            cout << "Unable to print port Number from inbound!" << endl;
             exit(1);
         }
 
-        cout << "Server running on PORT: " << ntohs(serv_addr.sin_port) << endl;
+        cout << "Inbound communication coming from PORT: " << ntohs(serv_addr.sin_port) << endl;
+
+        socklen_t backup_len = sizeof(backup_serv_addr);
+
+        if(getIsPrimaryServer()) {
+            if (getsockname(backup_socket_fd, (struct sockaddr *) &backup_serv_addr, &backup_len) < 0) {
+                cout << "Unable to print port Number from replication!" << endl;
+                exit(1);
+            }
+
+            cout << "Serve replicating on PORT: " << ntohs(backup_serv_addr.sin_port) << endl;
+        }
     }
 
 
@@ -159,13 +170,9 @@ namespace server {
     int Server::prepareBackupServersConnection()
     {
         int opt = 1;
-        //Configure server address properties
+        //todo: configure IP
         char ip_address[10] = "127.0.0.1"; //backup ip
-        char port[5] = "4040"; //get backup port from cmdline
 
-        //backup_serv_addr.sin_family = AF_INET;
-        //backup_serv_addr.sin_addr.s_addr = INADDR_ANY;
-        //backup_serv_addr.sin_port = htons(atoi(port));
         if(inet_pton(AF_INET, ip_address, &serv_addr.sin_addr)<=0)
         {
             std::cout << "\nInvalid address/ Address not supported \n" << std::endl;
@@ -204,31 +211,15 @@ namespace server {
     // TODO think in IP as parameter etc...
     int Server::ConnectToFE()
     {
-        char ip_address[10];
-        char port[5];
+        char ip_address[10] = "127.0.0.1";
+
         // TODO essa é a parte do socket pros FE
         {
             //TODO ip via params ou arquivos de texto
-            if(getIsPrimaryServer())
-            {
-                strlcpy(ip_address, "127.0.0.1", sizeof(ip_address));
-                strlcpy(port, "6969", sizeof(port));
-            }
-            else
-            {
-                strlcpy(ip_address, "127.0.0.1", sizeof(ip_address));
-                strlcpy(port, "4040", sizeof(port));
-            }
-
-            //serv_addr.sin_family = AF_INET;
-            //serv_addr.sin_port = htons(atoi(port));
-            bzero(&(serv_addr.sin_zero), 8);
             if(inet_pton(AF_INET, ip_address, &serv_addr.sin_addr)<=0) 
             { 
                 std::cout << "\nInvalid address/ Address not supported \n" << std::endl; 
-            } 
-
-
+            }
         }
 
         if ((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -237,7 +228,7 @@ namespace server {
             return -1;
         }
 
-        if (connect(socket_fd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
+        if (connect(socket_fd,(struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
         {
             cout << "ERROR connecting\n" << endl;
             return -1;

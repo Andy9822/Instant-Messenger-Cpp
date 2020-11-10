@@ -73,7 +73,7 @@ namespace server {
         void setIsPrimaryServer(bool isPrimaryServer);
         bool shouldSendReplicationPackage(Packet *receivedPacket);
 
-        void setOutboundPort(int port);
+        void setReplicationPort(int port);
         void setInboundPort(int port);
     };
 }

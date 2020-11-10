@@ -63,12 +63,12 @@ int main(int argc, char *argv[])
 	read_args(argc, argv, &port, &backupPort, &maxNumberOfMessagesInHistory, &isPrimaryServer);
 
 	serverApp.setInboundPort(port);
-	serverApp.setOutboundPort(backupPort);
+	serverApp.setReplicationPort(backupPort);
 
     // serverApp.setPort(port);
     // serverApp.configureFilesystemManager(maxNumberOfMessagesInHistory);
     // serverApp.prepareConnection();
-    // serverApp.printPortNumber();
+    //serverApp.printPortNumber();
 
 	// while(1)
 	// {
