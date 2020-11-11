@@ -292,17 +292,14 @@ namespace server {
     }
 
     void *Server::acceptRMConnection(void *param) {
-        int *newsockfd = (int *) calloc(1, sizeof(int *));
-        socklen_t clilen = sizeof(struct sockaddr_in);
-
-        // reference to this class
-        Server *_this;
-        _this = (Server *) param;
-
-        cout << "Esperando conexão pelo socket " << _this->rm_listening_socket_fd << " de porta "
-             << ntohs(_this->rm_listening_serv_addr.sin_port) << endl;
-
         while(1) {
+            int *newsockfd = (int *) calloc(1, sizeof(int *));
+            socklen_t clilen = sizeof(struct sockaddr_in);
+
+            // reference to this class
+            Server *_this;
+            _this = (Server *) param;
+
             if ((*newsockfd = accept(_this->rm_listening_socket_fd, (struct sockaddr *) &_this->rm_listening_serv_addr,
                                      &clilen)) == -1) {
                 cout << "ERROR on accept\n" << endl;
