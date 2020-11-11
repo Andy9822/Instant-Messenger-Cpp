@@ -119,6 +119,10 @@ namespace server {
         cout << "\nSetting listener socket for Rm machine of number " << rmNumber << endl;
         cout << "listening for backup connections on socket: " << rm_listening_socket_fd << " and port " << ntohs(
                 rm_listening_serv_addr.sin_port) << endl;
+
+        pthread_t acceptRMConnectionThread;
+
+        pthread_create(&acceptRMConnectionThread, NULL, acceptRMConnection, (void *) this);
     }
 
 
@@ -273,9 +277,7 @@ namespace server {
 
     int Server::handleFrontEndConnection(pthread_t *tid, pthread_t *tid2) { //TODO same as in other places, tids mess
         pthread_create(tid, NULL, listenFrontEndCommunication, (void *) this);
-        pthread_create(tid2, NULL, acceptRMConnection, (void *) this);
         //pthread_create(tid2, NULL, monitorConnection, (void *) this);
-
         //ConnectionKeeper(this->socket_fd); // starts the thread that keeps sending keep alives
         return 0;
     }
@@ -325,8 +327,6 @@ namespace server {
 
     void *Server::listenRMCommunication(void *args)
     {
-        pthread_t accepting;
-
         // We cast our receveid void* args to a pair*
         std::pair<int *, Server *> *args_pair = (std::pair<int *, Server *> *) args;
 
