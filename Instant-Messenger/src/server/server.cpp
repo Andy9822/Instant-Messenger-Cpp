@@ -58,7 +58,7 @@ namespace server {
             struct sockaddr_in rm_connect_socket{};
 
             rm_connect_socket.sin_family = AF_INET;
-            rm_connect_socket.sin_port = RM_BASE_PORT_NUMBER + connectMachineNumber;
+            rm_connect_socket.sin_port = htons(RM_BASE_PORT_NUMBER + connectMachineNumber);
 
             if (inet_pton(AF_INET, ip_address, &rm_connect_socket.sin_addr) <= 0) {
                 std::cout << "\nInvalid address/ Address not supported \n" << std::endl;
@@ -297,6 +297,8 @@ namespace server {
         // reference to this class
         Server *_this = (Server*)calloc(1, sizeof(Server*));
         _this = (Server *) param;
+
+        cout << "Esperando conexão pelo socket " << _this->rm_listening_socket_fd << "e porta " << ntohs(_this->rm_listening_serv_addr.sin_port) << endl;
 
         if ((*newsockfd = accept(_this->rm_listening_socket_fd, (struct sockaddr *) &_this->rm_listening_serv_addr, &clilen)) == -1) {
             cout << "ERROR on accept\n" << endl;
