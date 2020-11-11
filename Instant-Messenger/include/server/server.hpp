@@ -70,6 +70,7 @@ namespace server {
         void createReplicationTree();
 
         void createRMListenerSocket();
+        static void *listenRMCommunication(void *args);
     };
 }
 #endif

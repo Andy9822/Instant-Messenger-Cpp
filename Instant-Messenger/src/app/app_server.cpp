@@ -73,10 +73,10 @@ int main(int argc, char *argv[])
 	//TODO sorry for the mess, WIP
 
 
-	serverApp.ConnectToFE();
-	serverApp.handleFrontEndConnection(&tid[i++], &tid[i++]);
+	//serverApp.ConnectToFE();
 	serverApp.setRmNumber(rmNumber);
 	serverApp.createReplicationTree();
+    serverApp.handleFrontEndConnection(&tid[i++], &tid[i++]);
 
 	//I'm not proud of this, I swear
 	while (true)

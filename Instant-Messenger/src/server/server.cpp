@@ -272,7 +272,9 @@ namespace server {
 
     int Server::handleFrontEndConnection(pthread_t *tid, pthread_t *tid2) { //TODO same as in other places, tids mess
         pthread_create(tid, NULL, listenFrontEndCommunication, (void *) this);
-        pthread_create(tid2, NULL, monitorConnection, (void *) this);
+        //pthread_create(tid2, NULL, listenRMCommunication, (void *) this);
+        //pthread_create(tid2, NULL, monitorConnection, (void *) this);
+
         //ConnectionKeeper(this->socket_fd); // starts the thread that keeps sending keep alives
         return 0;
     }
@@ -284,6 +286,34 @@ namespace server {
         _this->closeFrontEndConnection(_this->socket_fd);
 
         return NULL;
+    }
+
+    void *Server::listenRMCommunication(void *param) {
+        int *newsockfd = (int*)calloc(1, sizeof(int*));
+        pthread_t connecting, listenClientcomm;
+        struct sockaddr_in cli_addr;
+        socklen_t clilen = sizeof(struct sockaddr_in);
+
+        // reference to this class
+        Server *_this = (Server*)calloc(1, sizeof(Server*));
+        _this = (Server *) param;
+
+        if ((*newsockfd = accept(_this->rm_listening_socket_fd, (struct sockaddr *) &_this->rm_listening_serv_addr, &clilen)) == -1) {
+            cout << "ERROR on accept\n" << endl;
+            exit(1);
+        }
+
+        std::cout << "CONECTOUUUUUUUU!!!!!!!" << std::endl;
+
+        //Create another pair for the monitoring method
+        std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
+
+        // Send pointer of the previously allocated address and be able to access it's value in new thread's execution
+        args->first = newsockfd;
+        // Also, send reference of this instance to the new thread
+        args->second = _this;
+
+        //pthread_create(&listenClientcomm, NULL, listenClientCommunication, (void *) args);
     }
 
     void *Server::listenFrontEndCommunication(void *args) {
