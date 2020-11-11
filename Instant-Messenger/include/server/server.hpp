@@ -79,9 +79,8 @@ namespace server {
         void setIsPrimaryServer(bool value);
 
         void printRMConnections() const;
-        void removeRMSockets(int rm_socket_fd);
+
         void connectToRmServers();
-        static bool *isEqual(const std::pair<int, sockaddr_in>& element, int socket_id);
     };
 }
 #endif
