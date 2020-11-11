@@ -71,6 +71,7 @@ namespace server {
 
         void createRMListenerSocket();
         static void *listenRMCommunication(void *args);
+        static void *handleCommunicationRM(void *args);
     };
 }
 #endif

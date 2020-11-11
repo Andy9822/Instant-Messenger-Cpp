@@ -312,12 +312,41 @@ namespace server {
 
         std::cout << "CONECTOUUUUUUUU!!!!!!!" << std::endl;
 
-        //todo: should we do it?
+        std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
+
+        // Send pointer of the previously allocated address and be able to access it's value in new thread's execution
+        args->first = newsockfd;
+        // Also, send reference of this instance to the new thread
+        args->second = _this;
+
+        pthread_t listenClientcomm;
+
+        pthread_create(&listenClientcomm, NULL, handleCommunicationRM, (void *) args);
+    }
+
+    void *Server::handleCommunicationRM(void *args)
+    {
+        pthread_t accepting;
+
+        // We cast our receveid void* args to a pair*
+        std::pair<int *, Server *> *args_pair = (std::pair<int *, Server *> *) args;
+
+        // Read socket pointer's value and free the previously allocated memory in the main thread
+        int client_socketfd = *(int *) args_pair->first;
+        free(args_pair->first);
+
+        // Create a reference of the instance in this thread
+        Server *_this = (Server*)calloc(1, sizeof(Server*));
+        _this = (Server *) args_pair->second;
+
+        // Free pair created for sending arguments
+        free(args_pair);
+
         bool connectedClient = true;
         while (connectedClient)
         {
-            // Listen for an incoming Packet from RM
-            Packet *receivedPacket = _this->readPacket(_this->rm_listening_socket_fd, &connectedClient);
+            // Listen for an incoming Packet from client
+            Packet *receivedPacket = _this->readPacket(client_socketfd, &connectedClient);
             if (!connectedClient)
             {
                 // Free allocated memory for reading Packet
@@ -326,7 +355,9 @@ namespace server {
             }
         }
 
-        close(_this->rm_listening_socket_fd);
+        close(client_socketfd);
+
+        return 0;
     }
 
     void *Server::listenFrontEndCommunication(void *args) {
