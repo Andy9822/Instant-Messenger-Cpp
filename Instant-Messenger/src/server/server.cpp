@@ -144,10 +144,10 @@ namespace server {
         strcpy(clientFrontEndIdentifier.first, registrationPacket->user_id);
         clientFrontEndIdentifier.second = frontEndSocket;
 
-        int registered = this->registerUser(clientFrontEndIdentifier, registrationPacket->username,
+        return this->registerUser(clientFrontEndIdentifier, registrationPacket->username,
                                             registrationPacket->group);
 
-        return 0;
+
     }
 
     // TODO think in IP as parameter etc...
@@ -191,13 +191,14 @@ namespace server {
         ConnectionKeeper(this->socket_fd); // starts the thread that keeps sending keep alives
         return 0;
     }
+
     void * Server::monitorConnection(void *args) {
         Server* _this = (Server *) args;
 
-        cout << "monitorConnection" << endl;
+        cout << "monitorConnection FE" << endl;
         _this->connectionMonitor->monitor(&(_this->socket_fd));
         _this->closeFrontEndConnection(_this->socket_fd);
-
+        cout << "monitorConnection died for FE" << endl;
         return NULL;
     }
 
@@ -230,8 +231,11 @@ namespace server {
                 _this->registerUserToServer(receivedPacket, _this->socket_fd); // considers the front end connection
             } else if (receivedPacket->isDisconnect()) {
                 pair<char *, int> connectionId = pair<char *, int>();
+                connectionId.first = (char*)malloc(UUID_SIZE*sizeof(char));
                 strcpy(connectionId.first, receivedPacket->user_id);
                 connectionId.second = _this->socket_fd;
+
+                std::cout << "[DEBUG] vou chamar a rotina para o disconnect do client " << receivedPacket->user_id << std::endl;
                 _this->closeClientConnection(connectionId); // considers the front end connection
             }
 

@@ -129,7 +129,7 @@ void Group::handleDisconnectEvent(char *clientID, int feSocket, map<string, int>
         for (auto groupConnection : allActiveSockets) {
             if (groupConnection.second == feSocket) { // if there is a match in the FE socket ID
                 cout << "Killing clientConnection [" << groupConnection.first << "," << groupConnection.second << "]" << endl;
-                this->disconnectSession(clientID, feSocket, numberOfConnectionsByUser);
+                this->disconnectSession(groupConnection.first, feSocket, numberOfConnectionsByUser);
             }
         }
     }
@@ -147,10 +147,11 @@ void Group::handleDisconnectEvent(char *clientID, int feSocket, map<string, int>
  * @param feSocket
  */
 void Group::disconnectSession(char *clientID, int feSocket, map<string, int> &numberOfConnectionsByUser) {
-    user::User* user = getUserFromConnectionId(nullptr, feSocket);
+    user::User* user = getUserFromConnectionId(clientID, feSocket);
+    cout << "disconnectSession  [" << clientID << "," << feSocket << "]" << endl;
     if ( user != NULL) {
         numberOfConnectionsByUser[user->getUsername()] -= 1;
-        user->releaseSession(nullptr, feSocket);
+        user->releaseSession(clientID, feSocket);
         if (user->getActiveConnections().size() < 1) {
             sendActivityMessage(user->getUsername(), LEFT_GROUP_MESSAGE);
             users.remove(user);
@@ -177,6 +178,7 @@ void Group::sendActivityMessage(const string &userName, const string &actionText
  */
 void Group::sendHistoryToUser(char *clientID, int feSocket) {
     std::vector<Message> messages = fsManager->readGroupHistoryMessages(this->groupName);
+    cout << "Vou printar as mensagens do user " << endl;
     messageQueueSemaphore->wait();
     for(auto  message : messages) {
         message.setIsNotification(true);

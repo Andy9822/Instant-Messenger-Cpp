@@ -72,6 +72,9 @@ namespace user {
             }
             deletion_index += 1;
         }
+
+        this->printSockets();
+
         this->semaphore.post();
     }
 
@@ -79,5 +82,7 @@ namespace user {
         for (auto identification : this->clientIdentifiers) {
             cout << "printsockt::Client Dispositive Identifier: " << identification.first << " FE socket: " << identification.second << endl;
         }
+
+
     }
 } // namespace user;

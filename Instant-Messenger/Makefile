@@ -17,7 +17,7 @@ build-server:
 run-client:
 	$(BUILD_DIR)/client.app JohnnyUser1 SampleRoom1 127.0.0.1 $(SERVER_PORT)
 
-run-server:
+run-server: build-server
 	$(BUILD_DIR)/server.app $(SERVER_PORT) 4
 
 clean:
