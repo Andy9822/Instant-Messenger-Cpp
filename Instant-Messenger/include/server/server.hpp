@@ -66,12 +66,12 @@ namespace server {
         int getNumberOfConnectionsByUser(string user);
         int incrementNumberOfConnectionsFromUser(string user);
         void setRmNumber(int rmNumber);
-        int getRmNumber(int rmNumber);
+        int getRmNumber();
         void createReplicationTree();
 
         void createRMListenerSocket();
         static void *listenRMCommunication(void *args);
-        static void *handleCommunicationRM(void *args);
+        static void *acceptRMConnection(void *args);
     };
 }
 #endif

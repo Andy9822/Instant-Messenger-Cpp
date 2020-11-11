@@ -40,19 +40,15 @@ namespace server {
     void Server::setRmNumber(int rmNumber) {
         this->rmNumber = rmNumber;
     }
-    int Server::getRmNumber(int rmNumber){
+    int Server::getRmNumber(){
         return this->rmNumber;
     }
 
     void Server::createReplicationTree()
     {
-     //conectar nos numeros acima até RM_MAX
-        //criar socket e machine information
-
+        //make connections to rm servers
         for(int connectMachineNumber = rmNumber; connectMachineNumber < MAX_RM; connectMachineNumber++)
         {
-        //if(rmNumber < MAX_RM) {
-            //int connectMachineNumber = rmNumber + 1;
             int connectSocket = 0;
             char ip_address[10] = "127.0.0.1";
             struct sockaddr_in rm_connect_socket{};
@@ -74,11 +70,8 @@ namespace server {
                 cout << "ERROR connecting\n" << endl;
             }
 
-
-
             rm_connect_sockets_fd.push_back(make_pair(connectSocket, rm_connect_socket));
          }
-        //}
 
         for ( const pair<int, struct sockaddr_in> &connectedMachine : rm_connect_sockets_fd )
         {
@@ -86,7 +79,8 @@ namespace server {
                       << connectedMachine.first << std::endl;
         }
 
-        createRMListenerSocket();
+        if(getRmNumber() > 0)
+            createRMListenerSocket();
     }
     /**
     * This method creates listener sockets based on RM number
@@ -279,7 +273,7 @@ namespace server {
 
     int Server::handleFrontEndConnection(pthread_t *tid, pthread_t *tid2) { //TODO same as in other places, tids mess
         pthread_create(tid, NULL, listenFrontEndCommunication, (void *) this);
-        pthread_create(tid2, NULL, listenRMCommunication, (void *) this);
+        pthread_create(tid2, NULL, acceptRMConnection, (void *) this);
         //pthread_create(tid2, NULL, monitorConnection, (void *) this);
 
         //ConnectionKeeper(this->socket_fd); // starts the thread that keeps sending keep alives
@@ -295,7 +289,7 @@ namespace server {
         return NULL;
     }
 
-    void *Server::listenRMCommunication(void *param) {
+    void *Server::acceptRMConnection(void *param) {
         while(1) {
             int *newsockfd = (int *) calloc(1, sizeof(int *));
             socklen_t clilen = sizeof(struct sockaddr_in);
@@ -325,11 +319,11 @@ namespace server {
 
             pthread_t listenClientcomm;
 
-            pthread_create(&listenClientcomm, NULL, handleCommunicationRM, (void *) args);
+            pthread_create(&listenClientcomm, NULL, listenRMCommunication, (void *) args);
         }
     }
 
-    void *Server::handleCommunicationRM(void *args)
+    void *Server::listenRMCommunication(void *args)
     {
         pthread_t accepting;
 
@@ -352,7 +346,7 @@ namespace server {
         {
             // Listen for an incoming Packet from client
             Packet *receivedPacket = _this->readPacket(client_socketfd, &connectedClient);
-            cout << "Received another connection!" << endl;
+            //cout << "Received another connection!" << endl;
             if (!connectedClient)
             {
                 // Free allocated memory for reading Packet
