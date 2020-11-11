@@ -272,7 +272,7 @@ namespace server {
 
     int Server::handleFrontEndConnection(pthread_t *tid, pthread_t *tid2) { //TODO same as in other places, tids mess
         pthread_create(tid, NULL, listenFrontEndCommunication, (void *) this);
-        //pthread_create(tid2, NULL, listenRMCommunication, (void *) this);
+        pthread_create(tid2, NULL, listenRMCommunication, (void *) this);
         //pthread_create(tid2, NULL, monitorConnection, (void *) this);
 
         //ConnectionKeeper(this->socket_fd); // starts the thread that keeps sending keep alives
