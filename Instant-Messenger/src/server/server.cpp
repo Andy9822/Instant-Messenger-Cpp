@@ -49,16 +49,16 @@ namespace server {
      //conectar nos numeros acima até RM_MAX
         //criar socket e machine information
 
-        //for(int connectMachineNumber = rmNumber+1; connectMachineNumber <= MAX_RM; connectMachineNumber++)
-        //{
-        if(rmNumber < MAX_RM) {
-            int connectMachineNumber = rmNumber + 1;
+        for(int connectMachineNumber = rmNumber; connectMachineNumber < MAX_RM; connectMachineNumber++)
+        {
+        //if(rmNumber < MAX_RM) {
+            //int connectMachineNumber = rmNumber + 1;
             int connectSocket = 0;
             char ip_address[10] = "127.0.0.1";
             struct sockaddr_in rm_connect_socket{};
 
             rm_connect_socket.sin_family = AF_INET;
-            rm_connect_socket.sin_port = htons(RM_BASE_PORT_NUMBER + connectMachineNumber);
+            rm_connect_socket.sin_port = htons(RM_BASE_PORT_NUMBER + connectMachineNumber + 1); // port is base port + next machine RM number (rmNumber+1)
 
             if (inet_pton(AF_INET, ip_address, &rm_connect_socket.sin_addr) <= 0) {
                 std::cout << "\nInvalid address/ Address not supported \n" << std::endl;
@@ -74,9 +74,16 @@ namespace server {
                 cout << "ERROR connecting\n" << endl;
             }
 
-            std::cout << "Conectado ao servidor RM de porta " << ntohs(rm_connect_socket.sin_port) << " e socket "
-                      << connectSocket << std::endl;
-            // }
+
+
+            rm_connect_sockets_fd.push_back(make_pair(connectSocket, rm_connect_socket));
+         }
+        //}
+
+        for ( const pair<int, struct sockaddr_in> &connectedMachine : rm_connect_sockets_fd )
+        {
+            std::cout << "Conectado ao servidor RM de porta " << ntohs(connectedMachine.second.sin_port) << " e socket "
+                      << connectedMachine.first << std::endl;
         }
 
         createRMListenerSocket();
@@ -290,12 +297,10 @@ namespace server {
 
     void *Server::listenRMCommunication(void *param) {
         int *newsockfd = (int*)calloc(1, sizeof(int*));
-        pthread_t connecting, listenClientcomm;
-        struct sockaddr_in cli_addr;
         socklen_t clilen = sizeof(struct sockaddr_in);
 
         // reference to this class
-        Server *_this = (Server*)calloc(1, sizeof(Server*));
+        Server *_this;
         _this = (Server *) param;
 
         cout << "Esperando conexão pelo socket " << _this->rm_listening_socket_fd << " de porta " << ntohs(_this->rm_listening_serv_addr.sin_port) << endl;
@@ -307,20 +312,11 @@ namespace server {
 
         std::cout << "CONECTOUUUUUUUU!!!!!!!" << std::endl;
 
-        //Create another pair for the monitoring method
-        std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
-
-        // Send pointer of the previously allocated address and be able to access it's value in new thread's execution
-        args->first = newsockfd;
-        // Also, send reference of this instance to the new thread
-        args->second = _this;
-
-        //pthread_create(&listenClientcomm, NULL, listenClientCommunication, (void *) args);
-
+        //todo: should we do it?
         bool connectedClient = true;
         while (connectedClient)
         {
-            // Listen for an incoming Packet from client
+            // Listen for an incoming Packet from RM
             Packet *receivedPacket = _this->readPacket(_this->rm_listening_socket_fd, &connectedClient);
             if (!connectedClient)
             {
