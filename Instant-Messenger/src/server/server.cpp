@@ -309,8 +309,7 @@ namespace server {
                 exit(1);
             }
 
-            std::cout << "Máquina conectada pela porta " << _this->rm_listening_socket_fd << " e ip " << ntohs(_this->rm_listening_serv_addr.sin_addr.s_addr) << std::endl;
-            std::cout << "Máquina conectada pela porta " << _this->rm_listening_socket_fd << " e ip " << _this->rm_listening_serv_addr.sin_addr.s_addr << std::endl;
+            std::cout << "Máquina conectada pelo socket " << _this->rm_listening_socket_fd << " de porta " << ntohs(_this->rm_listening_serv_addr.sin_port) << std::endl;
 
             std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1,
                                                                                      sizeof(std::pair<int *, Server *>));
