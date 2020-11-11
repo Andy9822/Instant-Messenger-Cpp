@@ -43,6 +43,7 @@ add_executable(Instant_Messenger
         src/util/message.cpp
         src/util/Semaphore.cpp
         src/util/Socket.cpp
-        src/util/user.cpp src/client/ConnectionKeeper.cpp include/client/ConnectionKeeper.hpp src/server/ConnectionMonitor.cpp include/server/ConnectionMonitor.hpp)
+        src/util/Uuid.cpp
+        src/util/user.cpp src/client/ConnectionKeeper.cpp include/client/ConnectionKeeper.hpp src/server/ConnectionMonitor.cpp include/server/ConnectionMonitor.hpp include/util/StringConstants.hpp src/util/StringConstants.cpp)
 
 target_link_libraries( Instant_Messenger ${CMAKE_THREAD_LIBS_INIT})

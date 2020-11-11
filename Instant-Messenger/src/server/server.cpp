@@ -1,6 +1,8 @@
 #include "../../include/server/server.hpp"
 #include "../../include/util/definitions.hpp"
 #include "../../include/client/ConnectionKeeper.hpp"
+#include "../../include/util/StringConstants.hpp"
+
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -120,8 +122,8 @@ namespace server {
      * @param group
      * @return
      */
-    int Server::registerUser(pair<int, int> clientIdentifier, char *username, char *group, char* userID) {
-        return groupManager->registerUserToGroup(clientIdentifier, username, group, userID);
+    int Server::registerUser(pair<char *, int> clientIdentifier, char *username, char *group) {
+        return groupManager->registerUserToGroup(clientIdentifier, username, group);
     }
 
     int Server::registerUserToServer(Packet *registrationPacket, int frontEndSocket) {
@@ -137,12 +139,13 @@ namespace server {
         }
         this->sockets_connections_semaphore->post();
 
-        std::pair<int, int> *clientFrontEndIdentifier = (std::pair<int, int> *) calloc(1, sizeof(std::pair<int, int>)); // this is the identifier for the client and we need to store this in the groups
+        std::pair<char *, int> clientFrontEndIdentifier = std::pair<char *, int>(); // this is the identifier for the client and we need to store this in the groups
+        clientFrontEndIdentifier.first = (char*)malloc(UUID_SIZE*sizeof(char));
+        strcpy(clientFrontEndIdentifier.first, registrationPacket->user_id);
+        clientFrontEndIdentifier.second = frontEndSocket;
 
-        clientFrontEndIdentifier->first = registrationPacket->clientDispositiveIdentifier; //TODO aqui mandar user_id e mudar tipos das funções
-        clientFrontEndIdentifier->second = frontEndSocket;
-
-        int registered = this->registerUser(*clientFrontEndIdentifier, registrationPacket->username, registrationPacket->group, registrationPacket->user_id);
+        int registered = this->registerUser(clientFrontEndIdentifier, registrationPacket->username,
+                                            registrationPacket->group);
 
         return 0;
     }
@@ -226,8 +229,8 @@ namespace server {
                 std::cout << "[DEBUG] recebi joinMessage" << std::endl;
                 _this->registerUserToServer(receivedPacket, _this->socket_fd); // considers the front end connection
             } else if (receivedPacket->isDisconnect()) {
-                pair<int, int> connectionId = pair<int, int>();
-                connectionId.first = receivedPacket->clientDispositiveIdentifier;
+                pair<char *, int> connectionId = pair<char *, int>();
+                strcpy(connectionId.first, receivedPacket->user_id);
                 connectionId.second = _this->socket_fd;
                 _this->closeClientConnection(connectionId); // considers the front end connection
             }
@@ -246,14 +249,15 @@ namespace server {
      * @param socketId
      */
     void Server::closeFrontEndConnection(int socketId) {
-        pair <int, int> connectionId = pair<int, int>();
-        connectionId.first = FE_DISCONNECT;
+        pair <char *, int> connectionId = pair<char*, int>();
+        connectionId.first = (char*)malloc(UUID_SIZE*sizeof(char));
+        strcpy(connectionId.first, FE_DISCONNECT);
         connectionId.second = socketId;
         closeClientConnection(connectionId);
 //        close(socketId); TODO: fechar a conexão do FE em si
     }
 
-    void Server::closeClientConnection(pair<int, int> clientConnectionId) {
+    void Server::closeClientConnection(pair<char *, int> clientConnectionId) {
         sockets_connections_semaphore->wait();
         groupManager->propagateSocketDisconnectionEvent(clientConnectionId, this->connectionsCount);
         sockets_connections_semaphore->post();

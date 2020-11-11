@@ -46,10 +46,6 @@
 #define KEEP_ALIVE_INTERVAL 2
 #endif
 
-#ifndef FE_DISCONNECT
-#define FE_DISCONNECT -2
-#endif
-
 #ifndef PACKET_TYPES
 #define PACKET_TYPES
 /////// Types of Packet

@@ -31,7 +31,7 @@ namespace server {
         ConnectionMonitor *connectionMonitor;
         int socket_fd;
         struct sockaddr_in serv_addr;
-        void closeClientConnection(pair<int, int> clientConnectionId);
+        void closeClientConnection(pair<char *, int> clientConnectionId);
         std::map<string, int> connectionsCount;
         int limitOfConnectios;
         static void * monitorConnection(void *args);
@@ -48,7 +48,7 @@ namespace server {
         void prepareConnection();
         void printPortNumber();
         int registerUserToServer(Packet *registrationPacket, int frontEndSocket);
-        int registerUser(pair<int, int> clientIdentifier, char *username, char *group,char* userID);
+        int registerUser(pair<char *, int> clientIdentifier, char *username, char *group);
         int ConnectToFE();
         int handleFrontEndConnection(pthread_t *tid, pthread_t *tid2);
         void closeFrontEndConnections();
