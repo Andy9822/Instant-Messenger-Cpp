@@ -67,7 +67,7 @@ namespace server {
             }
 
             rm_connect_sockets_fd.push_back(make_pair(*connectSocket, rm_connect_socket_addr));
-            cout << "Connected to socket " << connectSocket << " and port " << ntohs(rm_connect_socket_addr.sin_port) << endl;
+            cout << "Connected to socket " << *connectSocket << " and port " << ntohs(rm_connect_socket_addr.sin_port) << endl;
 
             std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
 
@@ -75,9 +75,6 @@ namespace server {
             args->first = connectSocket;
             args->second = this;
 
-            //create thread for each socket created here so it can read things
-            //todo: listen to rm servers responses
-            // depende se o lister já nao for feito em outro lugar
             pthread_t connectedRMThread;
             //pthread_create(&connectedRMThread, NULL, handleConnectedRMCommunication, (void *) args);
             pthread_create(&connectedRMThread, NULL, handleRMCommunication, (void *) args);
@@ -346,7 +343,7 @@ namespace server {
         bool connectedClient = true;
         while (connectedClient)
         {
-            cout << "Waiting socket " << rm_socket_fd << " messages" << endl;
+            cout << "[Communication Thread] - Waiting socket " << rm_socket_fd << " messages" << endl;
             // Listen for an incoming Packet from client
             // todo: we will receive messages here and we need to process them accordingly
             Packet *receivedPacket = _this->readPacket(rm_socket_fd, &connectedClient);
