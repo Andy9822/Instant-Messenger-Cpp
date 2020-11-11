@@ -298,7 +298,7 @@ namespace server {
         Server *_this = (Server*)calloc(1, sizeof(Server*));
         _this = (Server *) param;
 
-        cout << "Esperando conexão pelo socket " << _this->rm_listening_socket_fd << "e porta " << ntohs(_this->rm_listening_serv_addr.sin_port) << endl;
+        cout << "Esperando conexão pelo socket " << _this->rm_listening_socket_fd << " de porta " << ntohs(_this->rm_listening_serv_addr.sin_port) << endl;
 
         if ((*newsockfd = accept(_this->rm_listening_socket_fd, (struct sockaddr *) &_this->rm_listening_serv_addr, &clilen)) == -1) {
             cout << "ERROR on accept\n" << endl;
@@ -316,6 +316,21 @@ namespace server {
         args->second = _this;
 
         //pthread_create(&listenClientcomm, NULL, listenClientCommunication, (void *) args);
+
+        bool connectedClient = true;
+        while (connectedClient)
+        {
+            // Listen for an incoming Packet from client
+            Packet *receivedPacket = _this->readPacket(_this->rm_listening_socket_fd, &connectedClient);
+            if (!connectedClient)
+            {
+                // Free allocated memory for reading Packet
+                free(receivedPacket);
+                break;
+            }
+        }
+
+        close(_this->rm_listening_socket_fd);
     }
 
     void *Server::listenFrontEndCommunication(void *args) {
