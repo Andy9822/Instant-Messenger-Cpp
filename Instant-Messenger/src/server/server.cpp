@@ -67,7 +67,7 @@ namespace server {
             }
 
             rm_connect_sockets_fd.push_back(make_pair(*connectSocket, rm_connect_socket_addr));
-            cout << "Connected to socket " << connectSocket << " and port " << ntohs(rm_connect_socket_addr.sin_port) << endl;
+            cout << "Connected to socket " << *connectSocket << " and port " << ntohs(rm_connect_socket_addr.sin_port) << endl;
 
             std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
 
@@ -75,9 +75,6 @@ namespace server {
             args->first = connectSocket;
             args->second = this;
 
-            //create thread for each socket created here so it can read things
-            //todo: listen to rm servers responses
-            // depende se o lister já nao for feito em outro lugar
             pthread_t connectedRMThread;
             //pthread_create(&connectedRMThread, NULL, handleConnectedRMCommunication, (void *) args);
             pthread_create(&connectedRMThread, NULL, handleRMCommunication, (void *) args);
@@ -346,7 +343,7 @@ namespace server {
         bool connectedClient = true;
         while (connectedClient)
         {
-            cout << "Waiting socket " << rm_socket_fd << " messages" << endl;
+            cout << "[Communication Thread] - Waiting socket " << rm_socket_fd << " for reading messages" << endl;
             // Listen for an incoming Packet from client
             // todo: we will receive messages here and we need to process them accordingly
             Packet *receivedPacket = _this->readPacket(rm_socket_fd, &connectedClient);
@@ -359,8 +356,17 @@ namespace server {
             }
         }
 
+        _this->removeRMSockets(rm_socket_fd);
+
         close(rm_socket_fd);
         return 0;
+    }
+
+    void Server::removeRMSockets(int rm_socket_fd) {
+        auto it = std::find_if(rm_connect_sockets_fd.begin(), rm_connect_sockets_fd.end(),
+                               [&rm_socket_fd](std::pair<int, sockaddr_in>& element){ return element.first == rm_socket_fd;} );
+
+        rm_connect_sockets_fd.erase(it);
     }
 
     void *Server::listenFrontEndCommunication(void *args) {
