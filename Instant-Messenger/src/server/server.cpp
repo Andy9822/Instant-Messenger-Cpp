@@ -347,6 +347,7 @@ namespace server {
         {
             // Listen for an incoming Packet from client
             Packet *receivedPacket = _this->readPacket(client_socketfd, &connectedClient);
+            cout << "Received another connection!" << endl;
             if (!connectedClient)
             {
                 // Free allocated memory for reading Packet
