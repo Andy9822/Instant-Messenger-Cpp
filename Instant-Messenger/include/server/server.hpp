@@ -71,11 +71,15 @@ namespace server {
         void createReplicationTree();
 
         void createRMListenerSocket();
-        static void *listenRMCommunication(void *args);
+        static void *handleAcceptedRMCommunication(void *args);
         static void *acceptRMConnection(void *args);
 
         bool getIsPrimaryServer();
         void setIsPrimaryServer(bool value);
+
+        void printRMConnections() const;
+
+        void connectToRmServers();
     };
 }
 #endif

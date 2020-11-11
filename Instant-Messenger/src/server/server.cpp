@@ -44,44 +44,38 @@ namespace server {
         return this->rmNumber;
     }
 
-    void Server::createReplicationTree()
-    {
-        //make connections to rm servers
-        for(int connectMachineNumber = rmNumber; connectMachineNumber < MAX_RM; connectMachineNumber++)
-        {
+    void Server::connectToRmServers() {
+        for(int connectMachineNumber = rmNumber; connectMachineNumber < MAX_RM; connectMachineNumber++) {
             int connectSocket = 0;
             char ip_address[10] = "127.0.0.1";
-            struct sockaddr_in rm_connect_socket{};
+            struct sockaddr_in rm_connect_socket_addr{};
 
-            rm_connect_socket.sin_family = AF_INET;
-            rm_connect_socket.sin_port = htons(RM_BASE_PORT_NUMBER + connectMachineNumber + 1); // port is base port + next machine RM number (rmNumber+1)
+            rm_connect_socket_addr.sin_family = AF_INET;
+            rm_connect_socket_addr.sin_port = htons(RM_BASE_PORT_NUMBER + connectMachineNumber + 1); // port is base port + next machine RM number (rmNumber+1)
+            bzero(&(rm_connect_socket_addr.sin_zero), 8);
 
-            if (inet_pton(AF_INET, ip_address, &rm_connect_socket.sin_addr) <= 0) {
-                std::cout << "\nInvalid address/ Address not supported \n" << std::endl;
+            if (inet_pton(AF_INET, ip_address, &rm_connect_socket_addr.sin_addr) <= 0) {
+                cout << "\n RM Invalid address/ Address not supported \n" << endl;
             }
-
-            bzero(&(rm_connect_socket.sin_zero), 8);
 
             if ((connectSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-                cout << "\n Socket creation error \n" << endl;
+                cout << "\n RM Socket creation error \n" << endl;
             }
 
-            if (connect(connectSocket, (struct sockaddr *) &rm_connect_socket, sizeof(rm_connect_socket)) < 0) {
-                cout << "ERROR connecting\n" << endl;
+            if (connect(connectSocket, (struct sockaddr *) &rm_connect_socket_addr, sizeof(rm_connect_socket_addr)) < 0) {
+                cout << "ERROR connecting on RM sockets\n" << endl;
             }
 
-            rm_connect_sockets_fd.push_back(make_pair(connectSocket, rm_connect_socket));
+            rm_connect_sockets_fd.push_back(make_pair(connectSocket, rm_connect_socket_addr));
+            cout << "Connected to socket " << connectSocket << " and port " << ntohs(rm_connect_socket_addr.sin_port) << endl;
+
+            //create thread for each socket created here so it can read things
+            //todo: listen to rm servers responses
+            // depende se o lister já nao for feito em outro lugar
          }
-
-        for ( const pair<int, struct sockaddr_in> &connectedMachine : rm_connect_sockets_fd )
-        {
-            std::cout << "Conectado ao servidor RM de porta " << ntohs(connectedMachine.second.sin_port) << " e socket "
-                      << connectedMachine.first << std::endl;
-        }
-
-        if(getRmNumber() > 0)
-            createRMListenerSocket();
     }
+
+
     /**
     * This method creates listener sockets based on RM number
     */
@@ -116,12 +110,11 @@ namespace server {
             exit(1);
         }
 
-        cout << "\nSetting listener socket for Rm machine of number " << rmNumber << endl;
-        cout << "listening for backup connections on socket: " << rm_listening_socket_fd << " and port " << ntohs(
+        cout << "\nSetting listener socket for RM machine of number " << rmNumber << endl;
+        cout << "Listening for RM connections on socket: " << rm_listening_socket_fd << " and port " << ntohs(
                 rm_listening_serv_addr.sin_port) << endl;
 
         pthread_t acceptRMConnectionThread;
-
         pthread_create(&acceptRMConnectionThread, NULL, acceptRMConnection, (void *) this);
     }
 
@@ -312,24 +305,27 @@ namespace server {
                                                                                      sizeof(std::pair<int *, Server *>));
             _this->rm_connect_sockets_fd.push_back(make_pair(_this->rm_listening_socket_fd, _this->rm_listening_serv_addr));
 
+            cout << "### Vetor de sockets de Replicacao ###" << endl;
+            _this->printRMConnections();
+            cout << "######################################" << endl;
+
             // Send pointer of the previously allocated address and be able to access it's value in new thread's execution
             args->first = newsockfd;
             // Also, send reference of this instance to the new thread
             args->second = _this;
 
             pthread_t listenRMThread;
-
-            pthread_create(&listenRMThread, NULL, listenRMCommunication, (void *) args);
+            pthread_create(&listenRMThread, NULL, handleAcceptedRMCommunication, (void *) args);
         }
     }
 
-    void *Server::listenRMCommunication(void *args)
+    void *Server::handleAcceptedRMCommunication(void *args)
     {
-        // We cast our receveid void* args to a pair*
+        // We cast our receve id void* args to a pair*
         std::pair<int *, Server *> *args_pair = (std::pair<int *, Server *> *) args;
 
         // Read socket pointer's value and free the previously allocated memory in the main thread
-        int client_socketfd = *(int *) args_pair->first;
+        int rm_socket_fd = *(int *) args_pair->first;
         free(args_pair->first);
 
         // Create a reference of the instance in this thread
@@ -343,7 +339,8 @@ namespace server {
         while (connectedClient)
         {
             // Listen for an incoming Packet from client
-            Packet *receivedPacket = _this->readPacket(client_socketfd, &connectedClient);
+            // todo: we will receive messages here and we need to process them accordingly
+            Packet *receivedPacket = _this->readPacket(rm_socket_fd, &connectedClient);
             //cout << "Received another connection!" << endl;
             if (!connectedClient)
             {
@@ -353,8 +350,7 @@ namespace server {
             }
         }
 
-        close(client_socketfd);
-
+        close(rm_socket_fd);
         return 0;
     }
 
@@ -372,8 +368,6 @@ namespace server {
 
             if (receivedPacket->isMessage()) {
                 cout << "[DEBUG] recebi message" << receivedPacket->message << endl;
-                //TODO: send this to the backup servers
-                // replicateToBackupServers();
                 Packet *pack = new Packet();
                 pack->type = ACK_PACKET;
                 strcpy(pack->user_id, receivedPacket->user_id);
@@ -390,15 +384,17 @@ namespace server {
                 connectionId.first = receivedPacket->clientDispositiveIdentifier;
                 connectionId.second = _this->socket_fd;
                 _this->closeClientConnection(connectionId); // considers the front end connection
+            } else if (receivedPacket->isReplicationMessage()) {
+                cout << "[DEBUG] recebi replicacao" << receivedPacket->message << endl;
+                _this->groupManager->processReceivedPacket(receivedPacket);
             }
 
+            // verify if should send replication socket or not
             if(_this->getIsPrimaryServer() && (receivedPacket->isMessage() || receivedPacket->isJoinMessage() || receivedPacket->isDisconnect())) {
-                //todo: what if server 3 is down? how server 4 replicates to server 2?
-                // are we treating things like that?
                 for(auto socket : _this->rm_connect_sockets_fd) {
-                    _this->sendPacket(socket.first, receivedPacket);
+                    receivedPacket->type = REPLICATION_MESSAGE;
+                    _this->sendPacket(socket.first, receivedPacket); // send message for each socket on RM socket list
                 }
-                _this->sendPacket(_this->rm_listening_socket_fd, receivedPacket);
             }
         }
 
@@ -445,6 +441,14 @@ namespace server {
         } else {
             connectionsCount[user] = 1;
             return 0;
+        }
+    }
+
+    void Server::printRMConnections() const {
+        for ( const pair<int, struct sockaddr_in> &connectedMachine : rm_connect_sockets_fd)
+        {
+            cout << "Conectado ao servidor RM de porta " << ntohs(connectedMachine.second.sin_port) << " e socket "
+                 << connectedMachine.first << endl;
         }
     }
 
