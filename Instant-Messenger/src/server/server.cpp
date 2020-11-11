@@ -46,7 +46,7 @@ namespace server {
 
     void Server::connectToRmServers() {
         for(int connectMachineNumber = rmNumber; connectMachineNumber < MAX_RM; connectMachineNumber++) {
-            int connectSocket = 0;
+            int *connectSocket = (int *) calloc(1, sizeof(int *));
             char ip_address[10] = "127.0.0.1";
             struct sockaddr_in rm_connect_socket_addr{};
 
@@ -58,20 +58,29 @@ namespace server {
                 cout << "\n RM Invalid address/ Address not supported \n" << endl;
             }
 
-            if ((connectSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+            if ((*connectSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
                 cout << "\n RM Socket creation error \n" << endl;
             }
 
-            if (connect(connectSocket, (struct sockaddr *) &rm_connect_socket_addr, sizeof(rm_connect_socket_addr)) < 0) {
+            if (connect(*connectSocket, (struct sockaddr *) &rm_connect_socket_addr, sizeof(rm_connect_socket_addr)) < 0) {
                 cout << "ERROR connecting on RM sockets\n" << endl;
             }
 
-            rm_connect_sockets_fd.push_back(make_pair(connectSocket, rm_connect_socket_addr));
+            rm_connect_sockets_fd.push_back(make_pair(*connectSocket, rm_connect_socket_addr));
             cout << "Connected to socket " << connectSocket << " and port " << ntohs(rm_connect_socket_addr.sin_port) << endl;
+
+            std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
+
+            // Send pointer of the previously allocated address and be able to access it's value in new thread's execution
+            args->first = connectSocket;
+            args->second = this;
 
             //create thread for each socket created here so it can read things
             //todo: listen to rm servers responses
             // depende se o lister já nao for feito em outro lugar
+            pthread_t connectedRMThread;
+            //pthread_create(&connectedRMThread, NULL, handleConnectedRMCommunication, (void *) args);
+            pthread_create(&connectedRMThread, NULL, handleRMCommunication, (void *) args);
          }
     }
 
@@ -301,8 +310,7 @@ namespace server {
 
             std::cout << "Máquina conectada pelo socket " << _this->rm_listening_socket_fd << " de porta " << ntohs(_this->rm_listening_serv_addr.sin_port) << std::endl;
 
-            std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1,
-                                                                                     sizeof(std::pair<int *, Server *>));
+            std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
             _this->rm_connect_sockets_fd.push_back(make_pair(_this->rm_listening_socket_fd, _this->rm_listening_serv_addr));
 
             cout << "### Vetor de sockets de Replicacao ###" << endl;
@@ -315,11 +323,11 @@ namespace server {
             args->second = _this;
 
             pthread_t listenRMThread;
-            pthread_create(&listenRMThread, NULL, handleAcceptedRMCommunication, (void *) args);
+            pthread_create(&listenRMThread, NULL, handleRMCommunication, (void *) args);
         }
     }
 
-    void *Server::handleAcceptedRMCommunication(void *args)
+    void *Server::handleRMCommunication(void *args)
     {
         // We cast our receve id void* args to a pair*
         std::pair<int *, Server *> *args_pair = (std::pair<int *, Server *> *) args;
@@ -338,6 +346,7 @@ namespace server {
         bool connectedClient = true;
         while (connectedClient)
         {
+            cout << "Waiting socket " << rm_socket_fd << " messages" << endl;
             // Listen for an incoming Packet from client
             // todo: we will receive messages here and we need to process them accordingly
             Packet *receivedPacket = _this->readPacket(rm_socket_fd, &connectedClient);

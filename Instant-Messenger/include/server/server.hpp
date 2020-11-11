@@ -71,7 +71,8 @@ namespace server {
         void createReplicationTree();
 
         void createRMListenerSocket();
-        static void *handleAcceptedRMCommunication(void *args);
+        static void *handleRMCommunication(void *args);
+        //static void *handleConnectedRMCommunication(void *args);
         static void *acceptRMConnection(void *args);
 
         bool getIsPrimaryServer();
