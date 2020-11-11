@@ -27,6 +27,7 @@ using namespace servergroupmanager;
 namespace server {
     class Server : public Socket {
     private:
+        bool isPrimaryServer;
         int rmNumber;
         int rm_listening_socket_fd;
         struct sockaddr_in rm_listening_serv_addr;
@@ -72,6 +73,9 @@ namespace server {
         void createRMListenerSocket();
         static void *listenRMCommunication(void *args);
         static void *acceptRMConnection(void *args);
+
+        bool getIsPrimaryServer();
+        void setIsPrimaryServer(bool value);
     };
 }
 #endif

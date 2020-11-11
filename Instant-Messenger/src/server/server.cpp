@@ -309,19 +309,21 @@ namespace server {
                 exit(1);
             }
 
-            std::cout << "CONECTOUUUUUUUU!!!!!!!" << std::endl;
+            std::cout << "Máquina conectada pela porta " << _this->rm_listening_socket_fd << " e ip " << ntohs(_this->rm_listening_serv_addr.sin_addr.s_addr) << std::endl;
+            std::cout << "Máquina conectada pela porta " << _this->rm_listening_socket_fd << " e ip " << _this->rm_listening_serv_addr.sin_addr.s_addr << std::endl;
 
             std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1,
                                                                                      sizeof(std::pair<int *, Server *>));
+            _this->rm_connect_sockets_fd.push_back(make_pair(_this->rm_listening_socket_fd, _this->rm_listening_serv_addr));
 
             // Send pointer of the previously allocated address and be able to access it's value in new thread's execution
             args->first = newsockfd;
             // Also, send reference of this instance to the new thread
             args->second = _this;
 
-            pthread_t listenClientcomm;
+            pthread_t listenRMThread;
 
-            pthread_create(&listenClientcomm, NULL, listenRMCommunication, (void *) args);
+            pthread_create(&listenRMThread, NULL, listenRMCommunication, (void *) args);
         }
     }
 
@@ -394,6 +396,14 @@ namespace server {
                 _this->closeClientConnection(connectionId); // considers the front end connection
             }
 
+            if(_this->getIsPrimaryServer() && (receivedPacket->isMessage() || receivedPacket->isJoinMessage() || receivedPacket->isDisconnect())) {
+                //todo: what if server 3 is down? how server 4 replicates to server 2?
+                // are we treating things like that?
+                for(auto socket : _this->rm_connect_sockets_fd) {
+                    _this->sendPacket(socket.first, receivedPacket);
+                }
+                _this->sendPacket(_this->rm_listening_socket_fd, receivedPacket);
+            }
         }
 
         _this->connectionMonitor->killSocket(_this->socket_fd);
@@ -440,5 +450,14 @@ namespace server {
             connectionsCount[user] = 1;
             return 0;
         }
+    }
+
+    bool Server::getIsPrimaryServer()
+    {
+        return this->isPrimaryServer;
+    }
+    void Server::setIsPrimaryServer(bool value)
+    {
+        this->isPrimaryServer = value;
     }
 }
