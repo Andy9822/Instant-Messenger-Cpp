@@ -20,7 +20,7 @@ namespace server {
         sockets_connections_semaphore = new Semaphore(1);
         groupManager = new ServerGroupManager();
         connectionMonitor = new ConnectionMonitor();
-        replicationManager = new ReplicationManager();
+        replicationManager = new ReplicationManager(groupManager);
 
         // TODO assim como proxyFE, o server vai ter que ter 2 sockets, um pra conectar nos FE e outro nos RM
         {

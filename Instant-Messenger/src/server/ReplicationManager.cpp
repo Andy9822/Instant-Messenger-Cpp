@@ -1,12 +1,10 @@
 #include "../../include/server/ReplicationManager.hpp"
-#include "../../include/util/definitions.hpp"
-#include "../../include/server/server.hpp"
+
 #include <unistd.h>
 
-using namespace server;
-
-ReplicationManager::ReplicationManager() {
+ReplicationManager::ReplicationManager(ServerGroupManager *groupManager) {
     sockets_connections_semaphore = new Semaphore(1);
+    groupManager = groupManager;
 
     rm_listening_serv_addr.sin_family = AF_INET;
     rm_listening_serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -140,7 +138,7 @@ void *ReplicationManager::handleRMCommunication(void *args)
     free(args_pair->first);
 
     // Create a reference of the instance in this thread
-    ReplicationManager *_this = (ReplicationManager*)calloc(1, sizeof(Server*));
+    ReplicationManager *_this = (ReplicationManager*)calloc(1, sizeof(ReplicationManager*));
     _this = (ReplicationManager *) args_pair->second;
 
     // Free pair created for sending arguments
@@ -162,6 +160,17 @@ void *ReplicationManager::handleRMCommunication(void *args)
             free(receivedPacket);
             break;
         }
+
+        /*if (receivedPacket->isMessage()) {
+            _this->groupManager->processReceivedPacket(receivedPacket);
+        } else if (receivedPacket->isJoinMessage()) {
+            _this->registerUserToServer(receivedPacket, _this->socket_fd); // considers the front end connection
+        } else if (receivedPacket->isDisconnect()) {
+            pair<int, int> connectionId = pair<int, int>();
+            connectionId.first = receivedPacket->clientDispositiveIdentifier;
+            connectionId.second = _this->socket_fd;
+            _this->closeClientConnection(connectionId); // considers the front end connection
+        }*/
     }
 
     auto socket_it = _this->rm_connect_sockets_fd.find(rm_socket_fd);
