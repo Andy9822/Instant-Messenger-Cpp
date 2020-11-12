@@ -15,6 +15,12 @@ namespace servers_ring
 		serv_addr.sin_family = AF_INET;
         serv_addr.sin_addr.s_addr = INADDR_ANY;
         bzero(&(serv_addr.sin_zero), 8);
+
+        // sets the first port on the list as being the primary
+        primary = serverPort;
+        isPrimary = true;
+        disconnected = false;   
+        elect = Election();   
 	}
 
 
@@ -49,8 +55,6 @@ namespace servers_ring
 	{	
 		pthread_t accepting;
 		char *ip_adress = (char*)"127.0.0.1";
-
-		disconnected = false;
 
         prepareClientConnection(ip_adress);
         prepareServerConnection();
@@ -94,7 +98,13 @@ namespace servers_ring
         {
         	int port = getNewPortFromFile();
         	serv_addr.sin_port = htons(port);
+
+        	// initialy we set the first port on the list as being the primary server
+        	isPrimary = false;
         }
+
+        // set server id for election purpose
+        server_ID = ntohs(serv_addr.sin_port);
 
         // Configure socket to listen for tcp connections
         if (listen(socket_server, MAXBACKLOG) < 0) // SOMAXCONN is the maximum value of backlog
@@ -104,7 +114,7 @@ namespace servers_ring
         }
 
         cout << "server_socket_fd preparedConnection: " << socket_server << endl;
-        cout << "ServerRing running on PORT: " << ntohs(serv_addr.sin_port) << endl;
+        cout << "ServerRing running on PORT: " << server_ID << endl;
 	}
 
 
@@ -175,6 +185,18 @@ namespace servers_ring
 	            free(receivedPacket);
 	            break;
 	        }
+
+	        if(int newPrimary = _this->elect.processElectionInfo(receivedPacket->message, _this->server_ID, _this->socket_client))
+	        {
+	        	_this->primary = newPrimary;
+
+	        	if(_this->primary == _this->server_ID)
+	        	{
+	        		_this->isPrimary = true;
+	        		cout << "EU SOU O NOVO MAIORAL !!!!!!!" << endl;
+	        	}
+
+	        }
 	    }
 
 	    close(client_socketfd);
@@ -193,6 +215,8 @@ namespace servers_ring
 	void* ServersRing::connectToServer(void * param)
 	{
 		int port;
+		int numberOfRounds = 0;
+		bool canStartElection = false;
 		ServersRing *_this = (ServersRing*)param;
 
 		if ((_this->socket_client = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -200,6 +224,9 @@ namespace servers_ring
 			cout << "\n Socket creation error \n" << endl;
 			exit(1);
 		}
+
+		if(ntohs(_this->client_addr.sin_port) == _this->primary)
+			canStartElection = true;
 
 		port = _this->getNewPortFromFile();
 		_this->client_addr.sin_port = htons(port);
@@ -216,19 +243,47 @@ namespace servers_ring
 			// we only check for new ports if there were a disconnection
 		    if(_this->disconnected == true)
 		    {
-			    port = _this->getNewPortFromFile();
-				_this->client_addr.sin_port = htons(port);
-				_this->disconnected = false;
+		    	if(port != ntohs(_this->serv_addr.sin_port))
+		    	{
+				    port = _this->getNewPortFromFile();
+					_this->client_addr.sin_port = htons(port);
+				}
+				if(port == ntohs(_this->serv_addr.sin_port))
+		    	{
+		    		numberOfRounds++;
+
+		    		if(numberOfRounds == 2)
+		    		{
+		    			_this->primary = _this->server_ID;
+	        			_this->isPrimary = true;
+	        			cout << "EU SOU O NOVO MAIORAL !!!!!!!" << endl;
+
+						_this->disconnected == false;
+		    		}
+
+		    		port = _this->getNewPortFromFile();
+	        		_this->client_addr.sin_port = htons(port);
+		    	}
 			}
 
 			// server cannot connect with itself, so we read the next port on the list
-			if(port == ntohs(_this->serv_addr.sin_port))
+			/*if(port == ntohs(_this->serv_addr.sin_port))
 			{
 				port = _this->getNewPortFromFile();
 			    _this->client_addr.sin_port = htons(port);
-			}
+			}*/
 		}
 		cout << "ServerRing CONNECTED WITH PORT: " << ntohs(_this->client_addr.sin_port) << endl;
+
+		if(_this->disconnected == true)
+		{
+			if(canStartElection)
+			{
+				_this->elect.startElection(_this->server_ID, _this->socket_client);
+				canStartElection = false;
+			}
+			_this->disconnected = false;
+		}
 
 		_this->checkIfConnectionFailed();	
 	}
