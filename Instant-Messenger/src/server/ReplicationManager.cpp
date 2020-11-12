@@ -155,7 +155,7 @@ void *ReplicationManager::handleRMCommunication(void *args)
         // Listen for an incoming Packet from client
         // todo: we will receive messages here and we need to process them accordingly
         Packet *receivedPacket = _this->readPacket(rm_socket_fd, &connectedClient);
-        //cout << "Received another connection!" << endl;
+        cout << "Received packet from socket " << rm_socket_fd << " of type " << receivedPacket->type << endl;
         if (!connectedClient)
         {
             // Free allocated memory for reading Packet
