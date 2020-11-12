@@ -32,7 +32,7 @@ namespace server {
         int rm_listening_socket_fd;
         struct sockaddr_in rm_listening_serv_addr;
         // list of connected sockets and its machine information
-        std::vector<pair<int, sockaddr_in>> rm_connect_sockets_fd;
+        std::map<int, sockaddr_in> rm_connect_sockets_fd;
         ServerGroupManager *groupManager;
         ConnectionMonitor *connectionMonitor;
         int socket_fd;

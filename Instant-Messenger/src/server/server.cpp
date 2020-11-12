@@ -66,7 +66,7 @@ namespace server {
                 cout << "ERROR connecting on RM sockets\n" << endl;
             }
 
-            rm_connect_sockets_fd.push_back(make_pair(*connectSocket, rm_connect_socket_addr));
+            rm_connect_sockets_fd.insert({*connectSocket, rm_connect_socket_addr});
             cout << "Connected to socket " << *connectSocket << " and port " << ntohs(rm_connect_socket_addr.sin_port) << endl;
 
             std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
@@ -308,7 +308,7 @@ namespace server {
             std::cout << "Máquina conectada pelo socket " << _this->rm_listening_socket_fd << " de porta " << ntohs(_this->rm_listening_serv_addr.sin_port) << std::endl;
 
             std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
-            _this->rm_connect_sockets_fd.push_back(make_pair(_this->rm_listening_socket_fd, _this->rm_listening_serv_addr));
+            _this->rm_connect_sockets_fd.insert({_this->rm_listening_socket_fd, _this->rm_listening_serv_addr});
 
             cout << "### Vetor de sockets de Replicacao ###" << endl;
             _this->printRMConnections();
@@ -355,6 +355,8 @@ namespace server {
                 break;
             }
         }
+
+        //todo: remove sockets from list after closing     '
 
         close(rm_socket_fd);
         return 0;
