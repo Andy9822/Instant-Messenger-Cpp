@@ -4,15 +4,18 @@
 
 #include "../util/Socket.hpp"
 #include "../util/definitions.hpp"
+#include <vector>
 
 class ConnectionKeeper : public Socket{
 
 public:
     ConnectionKeeper(int socket);
+    ConnectionKeeper(vector<int> socket);
 
 private:
     int sleepTime = KEEP_ALIVE_INTERVAL;
     int communicationSocket;
+    void startSendingKeepAlive();
     static void * sendKeepAliveForever(void *args);
 
 };

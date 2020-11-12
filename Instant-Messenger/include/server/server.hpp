@@ -29,19 +29,22 @@ namespace server {
     private:
         ServerGroupManager *groupManager;
         ConnectionMonitor *connectionMonitor;
-        int socket_fd;
+
         struct sockaddr_in serv_addr;
         void closeClientConnection(pair<char *, int> clientConnectionId);
         std::map<string, int> connectionsCount;
         int limitOfConnectios;
         static void * monitorConnection(void *args);
         void closeFrontEndConnection(int socketId);
+        pthread_t tid[MAXBACKLOG];
 
 
     public:
         Server();
+        vector<int> socketFeList;
         static std::vector<int> openSockets;
         Semaphore* sockets_connections_semaphore;
+        Semaphore* feConnectionInitializationSemaphore;
         static void closeClientConnection(int socket_fd);
         static void *listenFrontEndCommunication(void *newsocket);
         void setPort(int port);
@@ -49,10 +52,10 @@ namespace server {
         void printPortNumber();
         int registerUserToServer(Packet *registrationPacket, int frontEndSocket);
         int registerUser(pair<char *, int> clientIdentifier, char *username, char *group);
-        int ConnectToFE();
-        int handleFrontEndConnection(pthread_t *tid, pthread_t *tid2);
+        int connectToFE(string feAddress, int fePort);
+        int handleFrontEndsConnections();
         void closeFrontEndConnections();
-        void closeSocket();
+        void closeSocket(int socketId);
         void closeServer();
         void init_semaphore();
         void wait_semaphore();
