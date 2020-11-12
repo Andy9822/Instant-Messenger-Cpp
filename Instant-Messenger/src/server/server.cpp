@@ -308,7 +308,7 @@ namespace server {
             std::cout << "Máquina conectada pelo socket " << _this->rm_listening_socket_fd << " de porta " << ntohs(_this->rm_listening_serv_addr.sin_port) << std::endl;
 
             std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
-            _this->rm_connect_sockets_fd.insert({_this->rm_listening_socket_fd, _this->rm_listening_serv_addr});
+            _this->rm_connect_sockets_fd.insert({*newsockfd, _this->rm_listening_serv_addr});
 
             cout << "### Vetor de sockets de Replicacao ###" << endl;
             _this->printRMConnections();
