@@ -171,6 +171,20 @@ void *ReplicationManager::handleRMCommunication(void *args)
     return 0;
 }
 
+void ReplicationManager::sendMockDataToRMServers() {
+    sockets_connections_semaphore->wait();
+    for ( const pair<int, struct sockaddr_in> &connectedMachine : rm_connect_sockets_fd)
+    {
+        cout << "Mandando pacote  ao servidor RM de porta " << ntohs(connectedMachine.second.sin_port) << " e socket "
+             << connectedMachine.first << endl;
+        Packet *mockPacket = new Packet();
+        mockPacket->type = REPLICATION_MESSAGE;
+
+        sendPacket(connectedMachine.first, mockPacket);
+    }
+    sockets_connections_semaphore->post();
+}
+
 void ReplicationManager::printRMConnections() const {
     sockets_connections_semaphore->wait();
     cout << " rm sockets map size " << rm_connect_sockets_fd.size() << endl;

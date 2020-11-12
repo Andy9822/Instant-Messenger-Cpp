@@ -39,8 +39,12 @@ namespace server {
         replicationManager->setRmNumber(rmNumber);
         replicationManager->connectToRmServers();
 
-        if(replicationManager->getRmNumber() > 0)
+        if(replicationManager->getRmNumber() > 0) {
             replicationManager->createRMListenerSocket();
+        }
+        else {
+            replicationManager->sendMockDataToRMServers();
+        }
     }
 
 

@@ -25,9 +25,9 @@ class ReplicationManager : public Socket{
         Semaphore* sockets_connections_semaphore;
         void setRmNumber(int rmNumber);
         int getRmNumber();
+        void sendMockDataToRMServers();
 
     private:
-
 
 };
 
