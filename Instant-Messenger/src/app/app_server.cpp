@@ -74,13 +74,16 @@ int main(int argc, char *argv[])
 
 
 	//serverApp.ConnectToFE();
-	serverApp.setRmNumber(rmNumber);
-	serverApp.connectToRmServers();
+	serverApp.replicationManager->setRmNumber(rmNumber);
+	serverApp.replicationManager->connectToRmServers();
+	//serverApp.setRmNumber(rmNumber);
+	//serverApp.connectToRmServers();
 
-    if(serverApp.getRmNumber() > 0)
-        serverApp.createRMListenerSocket();
+    if(serverApp.replicationManager->getRmNumber() > 0)
+        serverApp.replicationManager->createRMListenerSocket();
 
-    serverApp.printRMConnections();
+    //serverApp.replicationManager->printRMConnections();
+    //serverApp.printRMConnections();
 
     serverApp.handleFrontEndConnection(&tid[i++], &tid[i++]);
 

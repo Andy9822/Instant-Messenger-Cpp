@@ -1,6 +1,7 @@
 #include "../../include/server/server.hpp"
 #include "../../include/util/definitions.hpp"
 #include "../../include/client/ConnectionKeeper.hpp"
+#include "../../include/server/ReplicationManager.hpp"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -19,6 +20,7 @@ namespace server {
         sockets_connections_semaphore = new Semaphore(1);
         groupManager = new ServerGroupManager();
         connectionMonitor = new ConnectionMonitor();
+        replicationManager = new ReplicationManager();
 
         // TODO assim como proxyFE, o server vai ter que ter 2 sockets, um pra conectar nos FE e outro nos RM
         {
@@ -27,24 +29,25 @@ namespace server {
             // serv_addr.sin_addr.s_addr = INADDR_ANY;
             // bzero(&(serv_addr.sin_zero), 8);
 
-            rm_listening_serv_addr.sin_family = AF_INET;
-            rm_listening_serv_addr.sin_addr.s_addr = INADDR_ANY;
-            bzero(&(rm_listening_serv_addr.sin_zero), 8);
+            //rm_listening_serv_addr.sin_family = AF_INET;
+            //rm_listening_serv_addr.sin_addr.s_addr = INADDR_ANY;
+            //bzero(&(rm_listening_serv_addr.sin_zero), 8);
         }
 
         // Initialize socket file descriptor
         socket_fd = 0;
-        rm_listening_socket_fd = 0;
+        //rm_listening_socket_fd = 0;
+
     }
 
-    void Server::setRmNumber(int rmNumber) {
+    /*void Server::setRmNumber(int rmNumber) {
         this->rmNumber = rmNumber;
     }
     int Server::getRmNumber(){
         return this->rmNumber;
-    }
+    }*/
 
-    void Server::connectToRmServers() {
+    /*void Server::connectToRmServers() {
         for(int connectMachineNumber = rmNumber; connectMachineNumber < MAX_RM; connectMachineNumber++) {
             int *connectSocket = (int *) calloc(1, sizeof(int *));
             char ip_address[10] = "127.0.0.1";
@@ -79,13 +82,13 @@ namespace server {
             //pthread_create(&connectedRMThread, NULL, handleConnectedRMCommunication, (void *) args);
             pthread_create(&connectedRMThread, NULL, handleRMCommunication, (void *) args);
          }
-    }
+    }*/
 
 
     /**
     * This method creates listener sockets based on RM number
     */
-    void Server::createRMListenerSocket() {
+    /*void Server::createRMListenerSocket() {
         int opt = 1;
         int rmListeningPort = RM_BASE_PORT_NUMBER + rmNumber;
         rm_listening_serv_addr.sin_port = htons(rmListeningPort);
@@ -122,7 +125,7 @@ namespace server {
 
         pthread_t acceptRMConnectionThread;
         pthread_create(&acceptRMConnectionThread, NULL, acceptRMConnection, (void *) this);
-    }
+    }*/
 
 
     void Server::closeClientConnection(int socket_fd) {
@@ -290,7 +293,7 @@ namespace server {
         return NULL;
     }
 
-    void *Server::acceptRMConnection(void *param) {
+    /*void *Server::acceptRMConnection(void *param) {
         while(1) {
             int *newsockfd = (int *) calloc(1, sizeof(int *));
             socklen_t clilen = sizeof(struct sockaddr_in);
@@ -323,9 +326,9 @@ namespace server {
                 pthread_create(&listenRMThread, NULL, handleRMCommunication, (void *) args);
             }
         }
-    }
+    }*/
 
-    void *Server::handleRMCommunication(void *args)
+    /*void *Server::handleRMCommunication(void *args)
     {
         // We cast our receve id void* args to a pair*
         std::pair<int *, Server *> *args_pair = (std::pair<int *, Server *> *) args;
@@ -365,7 +368,7 @@ namespace server {
 
         close(rm_socket_fd);
         return 0;
-    }
+    }*/
 
     void *Server::listenFrontEndCommunication(void *args) {
         Server* _this = (Server *) args;
@@ -457,7 +460,7 @@ namespace server {
         }
     }
 
-    void Server::printRMConnections() const {
+    /*void Server::printRMConnections() const {
         sockets_connections_semaphore->wait();
         cout << " rm sockets map size " << rm_connect_sockets_fd.size() << endl;
         for ( const pair<int, struct sockaddr_in> &connectedMachine : rm_connect_sockets_fd)
@@ -466,7 +469,7 @@ namespace server {
                  << connectedMachine.first << endl;
         }
         sockets_connections_semaphore->post();
-    }
+    }*/
 
     bool Server::getIsPrimaryServer()
     {
