@@ -302,25 +302,26 @@ namespace server {
             if ((*newsockfd = accept(_this->rm_listening_socket_fd, (struct sockaddr *) &_this->rm_listening_serv_addr,
                                      &clilen)) == -1) {
                 cout << "ERROR on accept\n" << endl;
-                exit(1);
+                cout << "Could not connect to port " << _this->rm_listening_serv_addr.sin_port << endl;
             }
+            else {
+                std::cout << "Máquina conectada pelo socket " << *newsockfd << " de porta " << ntohs(_this->rm_listening_serv_addr.sin_port) << std::endl;
 
-            std::cout << "Máquina conectada pelo socket " << _this->rm_listening_socket_fd << " de porta " << ntohs(_this->rm_listening_serv_addr.sin_port) << std::endl;
+                std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
+                _this->rm_connect_sockets_fd.insert({*newsockfd, _this->rm_listening_serv_addr});
 
-            std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
-            _this->rm_connect_sockets_fd.insert({*newsockfd, _this->rm_listening_serv_addr});
+                cout << "### Vetor de sockets de Replicacao ###" << endl;
+                _this->printRMConnections();
+                cout << "######################################" << endl;
 
-            cout << "### Vetor de sockets de Replicacao ###" << endl;
-            _this->printRMConnections();
-            cout << "######################################" << endl;
+                // Send pointer of the previously allocated address and be able to access it's value in new thread's execution
+                args->first = newsockfd;
+                // Also, send reference of this instance to the new thread
+                args->second = _this;
 
-            // Send pointer of the previously allocated address and be able to access it's value in new thread's execution
-            args->first = newsockfd;
-            // Also, send reference of this instance to the new thread
-            args->second = _this;
-
-            pthread_t listenRMThread;
-            pthread_create(&listenRMThread, NULL, handleRMCommunication, (void *) args);
+                pthread_t listenRMThread;
+                pthread_create(&listenRMThread, NULL, handleRMCommunication, (void *) args);
+            }
         }
     }
 
@@ -343,7 +344,9 @@ namespace server {
         bool connectedClient = true;
         while (connectedClient)
         {
+            _this->sockets_connections_semaphore->wait();
             cout << "[Communication Thread] - Waiting socket " << rm_socket_fd << " messages" << endl;
+            _this->sockets_connections_semaphore->post();
             // Listen for an incoming Packet from client
             // todo: we will receive messages here and we need to process them accordingly
             Packet *receivedPacket = _this->readPacket(rm_socket_fd, &connectedClient);
@@ -354,9 +357,11 @@ namespace server {
                 free(receivedPacket);
                 break;
             }
+
         }
 
-        //todo: remove sockets from list after closing     '
+        auto socket_it = _this->rm_connect_sockets_fd.find(rm_socket_fd);
+        _this->rm_connect_sockets_fd.erase(socket_it);
 
         close(rm_socket_fd);
         return 0;
@@ -453,12 +458,14 @@ namespace server {
     }
 
     void Server::printRMConnections() const {
+        sockets_connections_semaphore->wait();
         cout << " rm sockets map size " << rm_connect_sockets_fd.size() << endl;
         for ( const pair<int, struct sockaddr_in> &connectedMachine : rm_connect_sockets_fd)
         {
             cout << "Conectado ao servidor RM de porta " << ntohs(connectedMachine.second.sin_port) << " e socket "
                  << connectedMachine.first << endl;
         }
+        sockets_connections_semaphore->post();
     }
 
     bool Server::getIsPrimaryServer()
