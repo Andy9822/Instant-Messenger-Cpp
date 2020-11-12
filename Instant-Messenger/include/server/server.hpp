@@ -29,13 +29,10 @@ namespace server {
     class Server : public Socket {
     private:
         bool isPrimaryServer;
-        //int rmNumber;
-        //int rm_listening_socket_fd;
-       // struct sockaddr_in rm_listening_serv_addr;
-        // list of connected sockets and its machine information
         std::map<int, sockaddr_in> rm_connect_sockets_fd;
         ServerGroupManager *groupManager;
         ConnectionMonitor *connectionMonitor;
+        ReplicationManager *replicationManager;
 
         int socket_fd;
         struct sockaddr_in serv_addr;
@@ -47,7 +44,6 @@ namespace server {
 
 
     public:
-        ReplicationManager *replicationManager;
         Server();
         static std::vector<int> openSockets;
         Semaphore* sockets_connections_semaphore;
@@ -69,21 +65,10 @@ namespace server {
         void configureFilesystemManager(int maxNumberOfMessagesInHistory);
         int getNumberOfConnectionsByUser(string user);
         int incrementNumberOfConnectionsFromUser(string user);
-        //void setRmNumber(int rmNumber);
-        //int getRmNumber();
-        //void createReplicationTree();
-
-        //void createRMListenerSocket();
-        //static void *handleRMCommunication(void *args);
-        //static void *handleConnectedRMCommunication(void *args);
-        //static void *acceptRMConnection(void *args);
 
         bool getIsPrimaryServer();
         void setIsPrimaryServer(bool value);
-
-        void printRMConnections() const;
-
-        void connectToRmServers();
+        void prepareReplicationManager(bool rmNumber);
     };
 }
 #endif
