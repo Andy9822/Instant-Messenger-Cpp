@@ -453,6 +453,7 @@ namespace server {
     }
 
     void Server::printRMConnections() const {
+        cout << " rm sockets map size " << rm_connect_sockets_fd.size() << endl;
         for ( const pair<int, struct sockaddr_in> &connectedMachine : rm_connect_sockets_fd)
         {
             cout << "Conectado ao servidor RM de porta " << ntohs(connectedMachine.second.sin_port) << " e socket "
