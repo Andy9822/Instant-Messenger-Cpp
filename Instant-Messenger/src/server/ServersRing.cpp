@@ -133,8 +133,8 @@ namespace servers_ring
         // if there was a disconnection there is no need to call for connectToServer again
         if(_this->disconnected == false)
         	pthread_create(&connecting, NULL, connectToServer, (void *) _this);
-        else
-        	_this->disconnected = false;
+        //else
+        //	_this->disconnected = false;
 
         if ((*newsockfd = accept(_this->socket_server, (struct sockaddr *) &cli_addr, &clilen)) == -1) {
             cout << "ERROR on accept\n" << endl;
@@ -215,7 +215,7 @@ namespace servers_ring
 	void* ServersRing::connectToServer(void * param)
 	{
 		int port;
-		int numberOfRounds = 0;
+		//int numberOfRounds = 0;
 		bool canStartElection = false;
 		ServersRing *_this = (ServersRing*)param;
 
@@ -231,47 +231,26 @@ namespace servers_ring
 		port = _this->getNewPortFromFile();
 		_this->client_addr.sin_port = htons(port);
 
-		// server cannot connect with itself, so we read the next port on the list
-		if(port == ntohs(_this->serv_addr.sin_port))
-		{
-			port = _this->getNewPortFromFile();
-			_this->client_addr.sin_port = htons(port);
-		}
-
 		while (connect(_this->socket_client,(struct sockaddr *) &_this->client_addr,sizeof(_this->client_addr)) < 0)
 		{
 			// we only check for new ports if there were a disconnection
 		    if(_this->disconnected == true)
 		    {
-		    	if(port != ntohs(_this->serv_addr.sin_port))
-		    	{
-				    port = _this->getNewPortFromFile();
+		    	port = _this->getNewPortFromFile();
+				_this->client_addr.sin_port = htons(port);
+
+				if(ntohs(_this->client_addr.sin_port) == ntohs(_this->serv_addr.sin_port))
+				{
+					_this->primary = _this->server_ID;
+			        _this->isPrimary = true;
+			        _this->disconnected = false;
+			        cout << "EU SOU O NOVO MAIORAL !!!!!!!" << endl;
+
+			        port = _this->getNewPortFromFile();
 					_this->client_addr.sin_port = htons(port);
 				}
-				if(port == ntohs(_this->serv_addr.sin_port))
-		    	{
-		    		numberOfRounds++;
-
-		    		if(numberOfRounds == 2)
-		    		{
-		    			_this->primary = _this->server_ID;
-	        			_this->isPrimary = true;
-	        			cout << "EU SOU O NOVO MAIORAL !!!!!!!" << endl;
-
-						_this->disconnected == false;
-		    		}
-
-		    		port = _this->getNewPortFromFile();
-	        		_this->client_addr.sin_port = htons(port);
-		    	}
+				
 			}
-
-			// server cannot connect with itself, so we read the next port on the list
-			/*if(port == ntohs(_this->serv_addr.sin_port))
-			{
-				port = _this->getNewPortFromFile();
-			    _this->client_addr.sin_port = htons(port);
-			}*/
 		}
 		cout << "ServerRing CONNECTED WITH PORT: " << ntohs(_this->client_addr.sin_port) << endl;
 
@@ -282,8 +261,8 @@ namespace servers_ring
 				_this->elect.startElection(_this->server_ID, _this->socket_client);
 				canStartElection = false;
 			}
-			_this->disconnected = false;
 		}
+		_this->disconnected = false;
 
 		_this->checkIfConnectionFailed();	
 	}
