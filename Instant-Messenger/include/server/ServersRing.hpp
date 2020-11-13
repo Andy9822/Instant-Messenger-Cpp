@@ -39,6 +39,7 @@ namespace servers_ring {
         static void *AcceptServerConnection(void * args);
         static void *listenClientCommunication(void *args); 
         void checkIfConnectionFailed();
+        bool isServerPrimary();
     };
 }
 

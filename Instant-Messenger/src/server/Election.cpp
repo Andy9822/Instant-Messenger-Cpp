@@ -30,7 +30,7 @@ namespace election
 	}
 
 
-
+	// status == "ELECTED" || status == "ELECTION"
 	Packet Election::buildPacket(int server_ID, string status)
 	{
 		char messageBuffer[MESSAGE_MAX_SIZE] = {0};
@@ -84,6 +84,7 @@ namespace election
 
     			isParticipating = false;
 
+    			// returns the new primary id
     			return client_ID;
     		}
     	}

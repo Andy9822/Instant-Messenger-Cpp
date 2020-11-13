@@ -103,6 +103,9 @@ namespace servers_ring
         	isPrimary = false;
         }
 
+        if(isPrimary)
+        	cout << "I AM THE PRIMARY SERVER" << endl;
+
         // set server id for election purpose
         server_ID = ntohs(serv_addr.sin_port);
 
@@ -113,8 +116,7 @@ namespace servers_ring
             exit(1);
         }
 
-        cout << "server_socket_fd preparedConnection: " << socket_server << endl;
-        cout << "ServerRing running on PORT: " << server_ID << endl;
+        cout << "\nSERVER_RING RUNNING ON PORT: " << server_ID << endl;
 	}
 
 
@@ -140,8 +142,6 @@ namespace servers_ring
             cout << "ERROR on accept\n" << endl;
             exit(1);
         }
-
-        std::cout << "CONECTOUUUUUUUU!!!!!!!" << std::endl;
 
         //Create another pair for the monitoring method
         std::pair<int *, ServersRing *> *args = (std::pair<int *, ServersRing *> *) calloc(1, sizeof(std::pair<int *, ServersRing *>));
@@ -193,7 +193,7 @@ namespace servers_ring
 	        	if(_this->primary == _this->server_ID)
 	        	{
 	        		_this->isPrimary = true;
-	        		cout << "EU SOU O NOVO MAIORAL !!!!!!!" << endl;
+	        		cout << "I AM THE NEW PRIMARY SERVER!!!" << endl;
 	        	}
 
 	        }
@@ -215,7 +215,6 @@ namespace servers_ring
 	void* ServersRing::connectToServer(void * param)
 	{
 		int port;
-		//int numberOfRounds = 0;
 		bool canStartElection = false;
 		ServersRing *_this = (ServersRing*)param;
 
@@ -225,6 +224,7 @@ namespace servers_ring
 			exit(1);
 		}
 
+		// if connection with the primary fails, this server can start the election
 		if(ntohs(_this->client_addr.sin_port) == _this->primary)
 			canStartElection = true;
 
@@ -239,12 +239,13 @@ namespace servers_ring
 		    	port = _this->getNewPortFromFile();
 				_this->client_addr.sin_port = htons(port);
 
+				// if the actual server port is the only one available, it means that this is the only server left
 				if(ntohs(_this->client_addr.sin_port) == ntohs(_this->serv_addr.sin_port))
 				{
 					_this->primary = _this->server_ID;
 			        _this->isPrimary = true;
 			        _this->disconnected = false;
-			        cout << "EU SOU O NOVO MAIORAL !!!!!!!" << endl;
+			        cout << "I AM THE NEW PRIMARY SERVER!!!" << endl;
 
 			        port = _this->getNewPortFromFile();
 					_this->client_addr.sin_port = htons(port);
@@ -252,7 +253,7 @@ namespace servers_ring
 				
 			}
 		}
-		cout << "ServerRing CONNECTED WITH PORT: " << ntohs(_this->client_addr.sin_port) << endl;
+		cout << "SERVER_RING CONNECTED WITH PORT: " << ntohs(_this->client_addr.sin_port) << endl;
 
 		if(_this->disconnected == true)
 		{
@@ -295,6 +296,8 @@ namespace servers_ring
 
 
 
-
-
+	bool ServersRing::isServerPrimary()
+	{
+		return isPrimary;
+	}
 }
