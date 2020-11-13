@@ -28,7 +28,7 @@ void capture_signals()
 	sigaction(SIGINT, &sigIntHandler, NULL);
 }
 
-void read_args(int argc, char *argv[], int *port, int *maxNumberOfMessagesInHistory, int *rmNumber)
+void read_args(int argc, char *argv[], int *port, int *maxNumberOfMessagesInHistory, int *rmNumber, bool *isPrimaryServer)
 {	
 	*port = RANDOM_PORT_NUMBER; //Set any available port as default
 	*maxNumberOfMessagesInHistory = DEFAULT_NUMBER_OF_RECORDED_MESSAGES;
@@ -39,6 +39,7 @@ void read_args(int argc, char *argv[], int *port, int *maxNumberOfMessagesInHist
 				*port = stoi(argv[1]); // In case it's received a specific port as argv
                 *maxNumberOfMessagesInHistory = stoi(argv[2]);
                 *rmNumber = stoi(argv[3]);
+                *isPrimaryServer = stoi(argv[4]);
 			}
 			catch(std::invalid_argument e) {
                 cout << "[ERROR] Invalid arguments" << endl;
@@ -53,12 +54,13 @@ int main(int argc, char *argv[])
     int i = 0;
     int port, maxNumberOfMessagesInHistory;
     int rmNumber;
+    bool isPrimaryServer;
     // Capture and process SO signals
 	capture_signals();
 
 	pthread_t tid[MAXBACKLOG];
 
-	read_args(argc, argv, &port, &maxNumberOfMessagesInHistory, &rmNumber);
+	read_args(argc, argv, &port, &maxNumberOfMessagesInHistory, &rmNumber, &isPrimaryServer);
     // serverApp.setPort(port);
     // serverApp.configureFilesystemManager(maxNumberOfMessagesInHistory);
     // serverApp.prepareConnection();
@@ -74,6 +76,7 @@ int main(int argc, char *argv[])
 
 
 	//serverApp.ConnectToFE();
+	serverApp.setIsPrimaryServer(isPrimaryServer);
 	serverApp.prepareReplicationManager(rmNumber);
     serverApp.handleFrontEndConnection(&tid[i++], &tid[i++]);
 

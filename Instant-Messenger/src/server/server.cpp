@@ -468,48 +468,49 @@ namespace server {
         // Free pair created for sending arguments
         free(args_pair);
 
-        bool connectedClient = true;
-        while (connectedClient)
-        {
-            _this->sockets_connections_semaphore->wait();
-            cout << "[Communication Thread] - Waiting socket " << rm_socket_fd << " messages" << endl;
-            _this->sockets_connections_semaphore->post();
-            // Listen for an incoming Packet from client
-            // todo: we will receive messages here and we need to process them accordingly
-            Packet *receivedPacket = _this->readPacket(rm_socket_fd, &connectedClient);
-            cout << "Received packet from socket " << rm_socket_fd << " of type " << receivedPacket->type << endl;
-            if (!connectedClient)
-            {
-                // Free allocated memory for reading Packet
-                free(receivedPacket);
-                break;
+        if(!_this->getIsPrimaryServer()) {
+            bool connectedClient = true;
+            while (connectedClient) {
+                _this->sockets_connections_semaphore->wait();
+                cout << "[Communication Thread] - Waiting socket " << rm_socket_fd << " messages" << endl;
+                _this->sockets_connections_semaphore->post();
+                // Listen for an incoming Packet from client
+                // todo: we will receive messages here and we need to process them accordingly
+                Packet *receivedPacket = _this->readPacket(rm_socket_fd, &connectedClient);
+                cout << "Received packet from socket " << rm_socket_fd << " of type " << receivedPacket->type << endl;
+                if (!connectedClient) {
+                    // Free allocated memory for reading Packet
+                    free(receivedPacket);
+                    break;
+                }
+
+                //create field on socket to store customer socket id
+                /*if (receivedPacket->isMessage()) {
+                    receivedPacket->type = REPLICATION_PACKET;
+                    _this->groupManager->processReceivedPacket(receivedPacket);
+                } else if (receivedPacket->isJoinMessage()) {
+                    receivedPacket->type = REPLICATION_PACKET;
+                    _this->registerUserToServer(receivedPacket, receivedPacket->frontEndSocket); // considers the front end connection
+                } else if (receivedPacket->isDisconnect()) {
+                    receivedPacket->type = REPLICATION_PACKET;
+                    pair<int, int> connectionId = pair<int, int>();
+                    connectionId.first = receivedPacket->clientDispositiveIdentifier;
+                    connectionId.second = receivedPacket->clientSocket;
+                    _this->closeClientConnection(connectionId); // considers the front end connection
+                }*/
+
+                cout << "Sending replication packet confirmation to Primary Server from socket " << rm_socket_fd
+                     << endl;
+                Packet *confirmationPackage = new Packet();
+                confirmationPackage->type = REPLICATION_CONFIRMATION_PACKET;
+                _this->sendPacket(rm_socket_fd, confirmationPackage);
             }
 
-            //create field on socket to store customer socket id
-            /*if (receivedPacket->isMessage()) {
-                receivedPacket->type = REPLICATION_PACKET;
-                _this->groupManager->processReceivedPacket(receivedPacket);
-            } else if (receivedPacket->isJoinMessage()) {
-                receivedPacket->type = REPLICATION_PACKET;
-                _this->registerUserToServer(receivedPacket, receivedPacket->frontEndSocket); // considers the front end connection
-            } else if (receivedPacket->isDisconnect()) {
-                receivedPacket->type = REPLICATION_PACKET;
-                pair<int, int> connectionId = pair<int, int>();
-                connectionId.first = receivedPacket->clientDispositiveIdentifier;
-                connectionId.second = receivedPacket->clientSocket;
-                _this->closeClientConnection(connectionId); // considers the front end connection
-            }*/
+            auto socket_it = _this->rm_connect_sockets_fd.find(rm_socket_fd);
+            _this->rm_connect_sockets_fd.erase(socket_it);
 
-            cout << "Sending replication packet confirmation to Primary Server from socket " << rm_socket_fd << endl;
-            Packet *confirmationPackage = new Packet();
-            confirmationPackage->type = REPLICATION_CONFIRMATION_PACKET;
-            _this->sendPacket(rm_socket_fd, confirmationPackage);
+            close(rm_socket_fd);
         }
-
-        auto socket_it = _this->rm_connect_sockets_fd.find(rm_socket_fd);
-        _this->rm_connect_sockets_fd.erase(socket_it);
-
-        close(rm_socket_fd);
         return 0;
     }
 
