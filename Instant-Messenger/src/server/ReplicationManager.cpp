@@ -1,6 +1,7 @@
 #include "../../include/server/ReplicationManager.hpp"
 
 #include <unistd.h>
+#include <unistd.h>
 
 ReplicationManager::ReplicationManager(ServerGroupManager *groupManager) {
     sockets_connections_semaphore = new Semaphore(1);
@@ -161,16 +162,19 @@ void *ReplicationManager::handleRMCommunication(void *args)
             break;
         }
 
-        /*if (receivedPacket->isMessage()) {
+        //create field on socket to store customer socket id
+        if (receivedPacket->isMessage()) {
             _this->groupManager->processReceivedPacket(receivedPacket);
         } else if (receivedPacket->isJoinMessage()) {
-            _this->registerUserToServer(receivedPacket, _this->socket_fd); // considers the front end connection
+            //todo: how to implement it here?
+            //_this->registerUserToServer(receivedPacket, receivedPacket->clientSocket); // considers the front end connection
         } else if (receivedPacket->isDisconnect()) {
             pair<int, int> connectionId = pair<int, int>();
             connectionId.first = receivedPacket->clientDispositiveIdentifier;
-            connectionId.second = _this->socket_fd;
-            _this->closeClientConnection(connectionId); // considers the front end connection
-        }*/
+            connectionId.second = receivedPacket->clientSocket;
+            //todo: how to implement it here?
+            //_this->closeClientConnection(connectionId); // considers the front end connection
+        }
     }
 
     auto socket_it = _this->rm_connect_sockets_fd.find(rm_socket_fd);

@@ -10,7 +10,6 @@
 #include "../server/server_group_manager.hpp"
 #include <sys/socket.h>
 #define MAXBACKLOG SOMAXCONN
-//#include "../../include/server/server.hpp"
 
 using namespace std;
 using namespace servergroupmanager;
@@ -18,7 +17,6 @@ using namespace servergroupmanager;
 class ReplicationManager : public Socket{
     public:
         ReplicationManager(ServerGroupManager *groupManager);
-        //ReplicationManager(ServerGroupManager *groupManager);
         void connectToRmServers();
         std::map<int, sockaddr_in> rm_connect_sockets_fd;
         void createRMListenerSocket();

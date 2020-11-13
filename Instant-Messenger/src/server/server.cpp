@@ -244,10 +244,10 @@ namespace server {
                 connectionId.first = receivedPacket->clientDispositiveIdentifier;
                 connectionId.second = _this->socket_fd;
                 _this->closeClientConnection(connectionId); // considers the front end connection
-            } else if (receivedPacket->isReplicationMessage()) {
+            } /*else if (receivedPacket->isReplicationMessage()) {
                 cout << "[DEBUG] recebi replicacao" << receivedPacket->message << endl;
                 _this->groupManager->processReceivedPacket(receivedPacket);
-            }
+            }*/
 
             // verify if should send replication socket or not
             if(_this->getIsPrimaryServer() && (receivedPacket->isMessage() || receivedPacket->isJoinMessage() || receivedPacket->isDisconnect())) {
