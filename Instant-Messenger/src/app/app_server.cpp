@@ -33,7 +33,7 @@ void read_args(int argc, char *argv[], int *port, int *maxNumberOfMessagesInHist
 	*port = RANDOM_PORT_NUMBER; //Set any available port as default
 	*maxNumberOfMessagesInHistory = DEFAULT_NUMBER_OF_RECORDED_MESSAGES;
 
-	if(argc == 4)
+	if(argc == 5)
     {
 			try {
 				*port = stoi(argv[1]); // In case it's received a specific port as argv

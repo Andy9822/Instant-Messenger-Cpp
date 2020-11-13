@@ -489,9 +489,10 @@ namespace server {
                     receivedPacket->type = REPLICATION_PACKET;
                     _this->groupManager->processReceivedPacket(receivedPacket);
                 } else if (receivedPacket->isJoinMessage()) {
+                    cout << " Registering user to group " << endl;
                     receivedPacket->type = REPLICATION_PACKET;
                     _this->registerUserToServer(receivedPacket, receivedPacket->frontEndSocket); // considers the front end connection
-                } else if (receivedPacket->isDisconnect()) {
+                }*/ /*else if (receivedPacket->isDisconnect()) {
                     receivedPacket->type = REPLICATION_PACKET;
                     pair<int, int> connectionId = pair<int, int>();
                     connectionId.first = receivedPacket->clientDispositiveIdentifier;
