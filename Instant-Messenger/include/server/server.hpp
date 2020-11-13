@@ -69,6 +69,18 @@ namespace server {
         bool getIsPrimaryServer();
         void setIsPrimaryServer(bool value);
         void prepareReplicationManager(int rmNumber);
+
+        void connectToRmServers();
+        void createRMListenerSocket();
+        static void *handleRMCommunication(void *args);
+        static void *acceptRMConnection(void *args);
+        int rmNumber;
+        int rm_listening_socket_fd;
+        struct sockaddr_in rm_listening_serv_addr;
+        void printRMConnections() const;
+        void setRmNumber(int rmNumber);
+        int getRmNumber();
+        void sendMockDataToRMServers();
     };
 }
 #endif
