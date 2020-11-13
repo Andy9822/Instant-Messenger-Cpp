@@ -20,6 +20,7 @@ namespace server {
         // Init semaphore for openSockets
         sockets_connections_semaphore = new Semaphore(1);
         feConnectionInitializationSemaphore = new Semaphore(1);
+        feSocketsSemaphore = new Semaphore(1);
         groupManager = new ServerGroupManager();
         connectionMonitor = new ConnectionMonitor();
 
@@ -36,7 +37,9 @@ namespace server {
 
     void Server::closeFrontEndConnections() {
         cout << "Number of front end connections: " << socketFeList.size() << endl;
+        this->feSocketsSemaphore->wait();
         std::for_each(socketFeList.begin(), socketFeList.end(), close);
+        this->feSocketsSemaphore->post();
         cout << "Number of front end connections: " << socketFeList.size() << endl;
     }
 
@@ -125,6 +128,7 @@ namespace server {
         args->second = this;
 
         int i = 0;
+        feSocketsSemaphore->wait();
         for ( int feSocket : this->socketFeList ) {
             this->feConnectionInitializationSemaphore->wait(); // the POST is done inside the new threads created only when the args is no longer necessary
             args->first = feSocket;
@@ -134,6 +138,7 @@ namespace server {
             pthread_create(&(this->tid[i++]), NULL, monitorConnection, (void *) args);
             connectionKeepers.push_back(new ConnectionKeeper(feSocket)); // starts the thread that keeps sending keep alives
         }
+        feSocketsSemaphore->post();
 
         this->feConnectionInitializationSemaphore->wait();
         free(args);
@@ -149,10 +154,8 @@ namespace server {
 
         _this->feConnectionInitializationSemaphore->post();
 
-        cout << "monitorConnection FE" << endl;
         _this->connectionMonitor->monitor(&fe_socketfd);
         _this->closeFrontEndConnection(fe_socketfd);
-        cout << "monitorConnection died for FE" << fe_socketfd << endl;
         return NULL;
     }
 
@@ -208,6 +211,11 @@ namespace server {
         // Close all properties related to client connection
         _this->closeFrontEndConnection(fe_socketfd);
 
+
+        cout << "Stopped listening on FE socket " << fe_socketfd << endl;
+
+        //exit(0);
+
         return 0;
     }
 
@@ -218,14 +226,16 @@ namespace server {
     void Server::closeFrontEndConnection(int socketId) {
 
         bool connectionFound = false;
+        feSocketsSemaphore->wait();
         for (int feConnection : this->socketFeList) {
             if (feConnection == socketId) {
                 connectionFound = true;
                 break;
             }
         }
+        feSocketsSemaphore->post();
 
-        if (connectionFound) return; // cai fora pq a gente já fechou esse socket
+        if (!connectionFound) return; // cai fora pq a gente já fechou esse socket
 
         cout << "[DEBUG] closeFrontEndConnection closing FE " << socketId << endl;
         pair <char *, int> connectionId = pair<char*, int>();
@@ -233,7 +243,25 @@ namespace server {
         strcpy(connectionId.first, FE_DISCONNECT);
         connectionId.second = socketId;
         closeClientConnection(connectionId);
-//        close(socketId); TODO: fechar a conexão do FE em si
+        if ((close(socketId)) == 0) {
+            std::cout << "\nClosed socket: " << socketId << std::endl;
+        } else {
+            std::cout << "!!! Fatal error closing socket!!!!" << std::endl;
+        }
+        eraseSocketFromFeSocketList(socketId);
+    }
+
+    void Server::eraseSocketFromFeSocketList(int socketId) {
+        feSocketsSemaphore->wait();
+        int deletion_index = 0;
+        auto begin = socketFeList.begin();
+        for (auto socket : socketFeList) {
+            if ( socket == socketId ) {
+                socketFeList.erase(begin + deletion_index); // will delete the deletion_index's item
+            }
+            deletion_index += 1;
+        }
+        feSocketsSemaphore->post();
     }
 
     void Server::closeClientConnection(pair<char *, int> clientConnectionId) {

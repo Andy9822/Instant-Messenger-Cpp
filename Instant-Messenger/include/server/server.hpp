@@ -45,6 +45,7 @@ namespace server {
         static std::vector<int> openSockets;
         Semaphore* sockets_connections_semaphore;
         Semaphore* feConnectionInitializationSemaphore;
+        Semaphore* feSocketsSemaphore;
         static void closeClientConnection(int socket_fd);
         static void *listenFrontEndCommunication(void *newsocket);
         void setPort(int port);
@@ -63,6 +64,8 @@ namespace server {
         void configureFilesystemManager(int maxNumberOfMessagesInHistory);
         int getNumberOfConnectionsByUser(string user);
         int incrementNumberOfConnectionsFromUser(string user);
+
+        void eraseSocketFromFeSocketList(int socketId);
     };
 }
 #endif
