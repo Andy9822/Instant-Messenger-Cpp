@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 
 
 	//serverApp.ConnectToFE();
-	serverApp.setIsPrimaryServer(isPrimaryServer);
+	Server::isPrimaryServer = isPrimaryServer;
 	serverApp.prepareReplicationManager(rmNumber);
     serverApp.handleFrontEndConnection(&tid[i++], &tid[i++]);
 

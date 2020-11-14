@@ -13,6 +13,7 @@
 
 namespace server {
     vector<int> Server::openSockets;
+    bool Server::isPrimaryServer = 0;
 
     Server::Server() {
         // Init semaphore for openSockets
@@ -238,7 +239,7 @@ namespace server {
             }
 
             // verify if should send replication socket or not
-            if(_this->getIsPrimaryServer() && (receivedPacket->isMessage() || receivedPacket->isJoinMessage() || receivedPacket->isDisconnect())) {
+            if(isPrimaryServer && (receivedPacket->isMessage() || receivedPacket->isJoinMessage() || receivedPacket->isDisconnect())) {
                 cout << "Sending " << _this->rm_connect_sockets_fd.size() << " replication packets" << endl;
 
                 for(auto socket : _this->rm_connect_sockets_fd) {
@@ -324,16 +325,6 @@ namespace server {
             connectionsCount[user] = 1;
             return 0;
         }
-    }
-
-
-    bool Server::getIsPrimaryServer()
-    {
-        return this->isPrimaryServer;
-    }
-    void Server::setIsPrimaryServer(bool value)
-    {
-        this->isPrimaryServer = value;
     }
 
 
@@ -468,7 +459,7 @@ namespace server {
         // Free pair created for sending arguments
         free(args_pair);
 
-        if(!_this->getIsPrimaryServer()) {
+        if(!isPrimaryServer) {
             bool connectedClient = true;
             while (connectedClient) {
                 _this->sockets_connections_semaphore->wait();
@@ -485,14 +476,14 @@ namespace server {
                 }
 
                 //create field on socket to store customer socket id
-                /*if (receivedPacket->isMessage()) {
+                if (receivedPacket->isMessage()) {
                     receivedPacket->type = REPLICATION_PACKET;
                     _this->groupManager->processReceivedPacket(receivedPacket);
                 } else if (receivedPacket->isJoinMessage()) {
                     cout << " Registering user to group " << endl;
                     receivedPacket->type = REPLICATION_PACKET;
                     _this->registerUserToServer(receivedPacket, receivedPacket->frontEndSocket); // considers the front end connection
-                }*/ /*else if (receivedPacket->isDisconnect()) {
+                } /*else if (receivedPacket->isDisconnect()) {
                     receivedPacket->type = REPLICATION_PACKET;
                     pair<int, int> connectionId = pair<int, int>();
                     connectionId.first = receivedPacket->clientDispositiveIdentifier;
@@ -522,12 +513,19 @@ namespace server {
         cout << "Sending " << rm_connect_sockets_fd.size() << " replication packets" << endl;
         for ( const pair<int, struct sockaddr_in> &connectedMachine : rm_connect_sockets_fd)
         {
-            Packet *mockPacket = new Packet();
-            mockPacket->type = REPLICATION_PACKET;
-            cout << "Sending packet of type " << mockPacket->type << " to socket " << connectedMachine.first << " on port " << ntohs(connectedMachine.second.sin_port) << endl ;
-            sendPacket(connectedMachine.first, mockPacket);
-            Packet *confirmationPacket = readPacket(connectedMachine.first, &connectedFrontEnd); // wait for socket answer
-            cout << "Reading packet of type " << confirmationPacket->type << " on socket " << connectedMachine.first << " on port " << ntohs(connectedMachine.second.sin_port) << endl;
+            Packet *joinPacket = new Packet("cassiano", "testgroup", "Mensagem do servidor primario de registro de usuario", NULL);
+            joinPacket->type = JOIN_PACKET;
+            cout << "Sending JOIN packet of type " << joinPacket->type << " to socket " << connectedMachine.first << " on port " << ntohs(connectedMachine.second.sin_port) << endl ;
+            sendPacket(connectedMachine.first, joinPacket);
+            Packet *joinConfirmationPacket = readPacket(connectedMachine.first, &connectedFrontEnd); // wait for socket answer
+            cout << "Reading JOIN packet of type " << joinConfirmationPacket->type << " on socket " << connectedMachine.first << " on port " << ntohs(connectedMachine.second.sin_port) << endl;
+
+            Packet *messagePacket = new Packet("cassiano", "testgroup", "Fala galera to na area", NULL);
+            joinPacket->type = JOIN_PACKET;
+            cout << "Sending MESSAGE packet of type " << messagePacket->type << " to socket " << connectedMachine.first << " on port " << ntohs(connectedMachine.second.sin_port) << endl ;
+            sendPacket(connectedMachine.first, messagePacket);
+            Packet *messageConfirmationPacket = readPacket(connectedMachine.first, &connectedFrontEnd); // wait for socket answer
+            cout << "Reading MESSAGE packet of type " << messageConfirmationPacket->type << " on socket " << connectedMachine.first << " on port " << ntohs(connectedMachine.second.sin_port) << endl;
         }
         cout << "All packets were replicate successfully" << endl;
         sockets_connections_semaphore->post();

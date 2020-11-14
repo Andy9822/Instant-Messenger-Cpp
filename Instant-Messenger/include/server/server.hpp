@@ -28,7 +28,7 @@ using namespace servergroupmanager;
 namespace server {
     class Server : public Socket {
     private:
-        bool isPrimaryServer;
+
         std::map<int, sockaddr_in> rm_connect_sockets_fd;
         ServerGroupManager *groupManager;
         ConnectionMonitor *connectionMonitor;
@@ -66,8 +66,8 @@ namespace server {
         int getNumberOfConnectionsByUser(string user);
         int incrementNumberOfConnectionsFromUser(string user);
 
-        bool getIsPrimaryServer();
-        void setIsPrimaryServer(bool value);
+        static bool isPrimaryServer;
+        static bool getIsPrimaryServer;
         void prepareReplicationManager(int rmNumber);
 
         void connectToRmServers();

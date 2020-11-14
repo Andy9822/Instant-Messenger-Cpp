@@ -1,7 +1,9 @@
 #include "../../include/server/Group.hpp"
 #include <algorithm>
+#include "../../include/server/server.hpp"
 
 using namespace std;
+using namespace server;
 
 Group::Group(string name)
 {
@@ -100,7 +102,8 @@ int Group::registerNewSession(pair<int, int> clientIdentifier, string userName, 
         user = new User(userName);
         this->users.push_back(user);
         result = user->registerSession(clientIdentifier);
-        sendActivityMessage(userName, JOINED_MESSAGE); // Se a pessoa já está no grupo, não deve-se enviar uma nova mensagem dizendo que ela ingressou no grupo. (copiei do moodle esse statement)
+        if(Server::isPrimaryServer)
+            sendActivityMessage(userName, JOINED_MESSAGE); // Se a pessoa já está no grupo, não deve-se enviar uma nova mensagem dizendo que ela ingressou no grupo. (copiei do moodle esse statement)
     } else {
         result = user->registerSession(clientIdentifier);
     }
