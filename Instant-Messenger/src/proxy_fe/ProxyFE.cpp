@@ -155,16 +155,6 @@ void ProxyFE::processServerPacket(Packet* receivedPacket, int socket)
         keepAliveMonitor->refresh(socket);
         break;
     
-    case JOIN_PACKET:
-        // TODO remover isso, é so pra fingir que teve OK pro client_rm mockado e ta apto a conectar
-        {
-            char messageBuffer[USERNAME_MAX_SIZE] = "welcome to FE land";
-            char usernameBuffer[MESSAGE_MAX_SIZE] = "FE bro";
-            char groupBuffer[GROUP_MAX_SIZE] = "algum group";
-            sendPacket(serverRM_socket, new Packet(ACCEPT_PACKET));
-        }
-        break;
-    
     case ACCEPT_PACKET:
     {
         std::cout << "🛂Recebi ACCEPT do server🛂🎟🎫: " << receivedPacket->username << " pode dar join na sala" << std::endl;
@@ -477,13 +467,6 @@ void ProxyFE::registerUserSocket(Packet* receivedPacket, int socket)
     std::cout << "💻socket: " << socket << " user:" << socketsMap[socket] << std::endl;
     std::cout << "💾sockets map size:" << socketsMap.size() << std::endl;
 
-    // TODO remover isso, é so pra fingir que teve OK do server e cliente pode se conectar
-    // {
-    //     char messageBuffer[USERNAME_MAX_SIZE] = "welcome to FE land";
-    //     char usernameBuffer[MESSAGE_MAX_SIZE] = "FE bro";
-    //     char groupBuffer[GROUP_MAX_SIZE] = "algum group";
-    //     sendPacket(socket, new Packet(ACCEPT_PACKET));
-    // }
     receivedPacket->clientSocket = socket;
     sendPacket(serverRM_socket, receivedPacket);
 }

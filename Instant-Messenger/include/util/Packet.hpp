@@ -78,13 +78,13 @@ struct Packet
         return this->type == ELECTION_PACKET;
     }
     bool isDisconnect() {
-        return false; //this->type == DISCONNECT_PACKET;
+        return this->type == DISCONNECT_PACKET;
     }
     bool isAckPacket() {
-        return false; //this->type == ACK_PACKET;
+        return this->type == ACK_PACKET;
     }
     bool isJoinMessage() {
-        return false; //this->type == JOIN_PACKET;
+        return this->type == JOIN_PACKET;
     }
 };
 
