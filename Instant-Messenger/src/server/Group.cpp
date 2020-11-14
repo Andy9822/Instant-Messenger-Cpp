@@ -128,10 +128,15 @@ void Group::handleDisconnectEvent(char *clientID, int feSocket, map<string, int>
     if ( strcmp(clientID, FE_DISCONNECT) == 0 ) { // DELETE ALL CONNECTIONS FROM THE CLIENTS THAT WERE CONNECTED TO THE FE
         for (auto groupConnection : allActiveSockets) {
             if (groupConnection.second == feSocket) { // if there is a match in the FE socket ID
-                cout << "Killing clientConnection [" << groupConnection.first << "," << groupConnection.second << "]" << endl;
+                cout << "[FE disconnect] Killing clientConnection [" << groupConnection.first << "," << groupConnection.second << "]"
+                     << endl;
                 this->disconnectSession(groupConnection.first, feSocket, numberOfConnectionsByUser);
             }
         }
+    } else {
+        cout << "[Client disconnect] Killing clientConnection [" << clientID << "," << feSocket << "]"
+             << endl;
+        this->disconnectSession(clientID, feSocket, numberOfConnectionsByUser);
     }
     usersSemaphore->post();
 }
