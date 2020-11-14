@@ -416,23 +416,47 @@ void* ProxyFE::listenClientCommunication(void *args)
     // Free pair created for receiving arguments
     free(args_pair);
 
+    char userID[UUID_SIZE];
+    bool known_user_ID = false;
 
     // Listen for incoming Packets from client untill it disconnects
     bool is_client_connected = true;
     while (is_client_connected) {
         Packet* receivedPacket = _this->readPacket(client_socketfd, &is_client_connected);
         if (!is_client_connected) {
-            // Free allocated memory for reading Packet
-            free(receivedPacket);
             break;
         }
+
+        if (!known_user_ID)
+        {
+            strcpy(userID, receivedPacket->user_id);
+            known_user_ID = true;
+        }
+        
         _this->processClientPacket(receivedPacket, client_socketfd);
+
     }
-    
-    std::cout << "Client socket " << client_socketfd <<  " has disconnected" << std::endl;
+
+    if (known_user_ID)
+    {
+        _this->disconnectUser(userID);
+    }
+    std::cout << "Client " << userID << " socket " << client_socketfd <<  " has disconnected" << std::endl;
     _this->handleSocketDisconnection(client_socketfd);
     
     return NULL;
+}
+
+void ProxyFE::disconnectUser(char* userID)
+{
+    // TODO cuidar de como proceder se o RM cai enquanto estou enviando essa joça
+    // TODO talvez o próprio DISCONNECT_MESSAGE ter um ACK específico, ai RM ficar de olho e ter lista de usarios a desconectar
+
+    Packet* disconnect_packet = new Packet(DISCONNECT_PACKET, userID);
+
+    std::cout << "Vou mandar server DISCONNECT_PACKET do userID: " << userID << std::endl;
+    // TODO talvez cada vez que acessar serverRM_socket precisaria de semaforo, mas é meio que ligado a lidar com server cair qnd vai mandar
+    this->sendPacket(serverRM_socket, disconnect_packet);
 }
 
 void ProxyFE::registerUserSocket(Packet* receivedPacket, int socket)

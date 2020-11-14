@@ -70,6 +70,8 @@ class ProxyFE : public Socket
         void handleServerReconnect(pthread_t *tid);        
         int handleClientConnection(pthread_t *tid);
 
+        void disconnectUser(char* userID);
+
         void registerUserSocket(Packet* receivedPacket, int socket);
         static void* listenClientCommunication(void *args);
         static void* listenServerCommunication(void *args);
