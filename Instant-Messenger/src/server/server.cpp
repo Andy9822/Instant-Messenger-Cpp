@@ -514,14 +514,14 @@ namespace server {
         cout << "Sending " << rm_connect_sockets_fd.size() << " replication packets" << endl;
         for ( const pair<int, struct sockaddr_in> &connectedMachine : rm_connect_sockets_fd)
         {
-            Packet *joinPacket = new Packet("cassiano", "testgroup", "Mensagem do servidor primario de registro de usuario", NULL);
+            Packet *joinPacket = new Packet("Joao", "TESTE2", "Mensagem do servidor primario de registro de usuario", NULL);
             joinPacket->type = JOIN_PACKET;
             cout << "Sending JOIN packet of type " << joinPacket->type << " to socket " << connectedMachine.first << " on port " << ntohs(connectedMachine.second.sin_port) << endl ;
             sendPacket(connectedMachine.first, joinPacket);
             Packet *joinConfirmationPacket = readPacket(connectedMachine.first, &connectedFrontEnd); // wait for socket answer
             cout << "Reading JOIN packet of type " << joinConfirmationPacket->type << " on socket " << connectedMachine.first << " on port " << ntohs(connectedMachine.second.sin_port) << endl;
 
-            Packet *messagePacket = new Packet("cassiano", "testgroup", "Fala galera to na area", NULL);
+            Packet *messagePacket = new Packet("Joao", "TESTE2", "replicacao VOANDO GARAI", NULL);
             joinPacket->type = MESSAGE_PACKET;
             cout << "Sending MESSAGE packet of type " << messagePacket->type << " to socket " << connectedMachine.first << " on port " << ntohs(connectedMachine.second.sin_port) << endl ;
             sendPacket(connectedMachine.first, messagePacket);
