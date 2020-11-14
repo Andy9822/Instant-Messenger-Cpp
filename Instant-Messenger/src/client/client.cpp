@@ -89,7 +89,6 @@ int Client::registerToServer()
 	}
 	
     std::cout << "\n" << "Bem-vindo ao grupo: " << group << std::endl;
-	showMessage(receivedPacket);
 
 	return 0;
 }
@@ -175,7 +174,10 @@ void * Client::receiveFromServer(void* args)
 			break;
 		}
 
-		_this->showMessage(receivedPacket);
+		if (receivedPacket->type == MESSAGE_PACKET)
+		{
+			_this->showMessage(receivedPacket);
+		}
 	}
 	return NULL;
 }

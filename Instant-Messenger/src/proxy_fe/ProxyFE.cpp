@@ -135,9 +135,8 @@ void ProxyFE::processServerPacket(Packet* receivedPacket, int socket)
     case MESSAGE_PACKET:
     {
         std::cout << "📮Recebi Message do server📨📩: " << receivedPacket->message << std::endl;
-        break;
         std::cout << "user_id: " << receivedPacket->user_id << std::endl;
-        string userID(receivedPacket->user_id); //TODO talvez proteger aqui c semaforo se cai na hora ne
+        string userID(receivedPacket->user_id); 
         users_map_semaphore->wait();
         int clientSocket = usersMap[userID];
         users_map_semaphore->post();       
