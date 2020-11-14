@@ -47,7 +47,8 @@ namespace server {
         if(this->getRmNumber() > 0) {
             this->createRMListenerSocket();
         }
-        else {
+
+        if(isPrimaryServer) {
             this->sendMockDataToRMServers();
         }
     }
@@ -521,7 +522,7 @@ namespace server {
             cout << "Reading JOIN packet of type " << joinConfirmationPacket->type << " on socket " << connectedMachine.first << " on port " << ntohs(connectedMachine.second.sin_port) << endl;
 
             Packet *messagePacket = new Packet("cassiano", "testgroup", "Fala galera to na area", NULL);
-            joinPacket->type = JOIN_PACKET;
+            joinPacket->type = MESSAGE_PACKET;
             cout << "Sending MESSAGE packet of type " << messagePacket->type << " to socket " << connectedMachine.first << " on port " << ntohs(connectedMachine.second.sin_port) << endl ;
             sendPacket(connectedMachine.first, messagePacket);
             Packet *messageConfirmationPacket = readPacket(connectedMachine.first, &connectedFrontEnd); // wait for socket answer

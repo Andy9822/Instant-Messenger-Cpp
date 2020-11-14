@@ -29,7 +29,7 @@ class Group
         string groupName;
         static void *consumeMessageQueue(void * args);
         int registerNewSession(pair<int, int> clientIdentifier, string userName, char* userID);
-        void processReceivedMessage(string userName, string message, int type);
+        void processReceivedMessage(string userName, string message);
         void handleDisconnectEvent(pair<int, int> connectionId, map<string, int> &numberOfConnectionsByUser);
         void configureFileSystemManager(int maxNumberOfMessagesOnHistory);
 
