@@ -90,7 +90,8 @@ int Group::registerNewSession(pair<int, int> clientIdentifier, string userName, 
     User* user = NULL;
     int result = 0;
     sendAcceptToUser(clientIdentifier.second, userID);
-    sendHistoryToUser(clientIdentifier);
+    if(Server::isPrimaryServer)
+        sendHistoryToUser(clientIdentifier);
     usersSemaphore->wait();
     for (auto userItr : this->users) {
         if ( userName.compare(userItr->getUsername()) == 0 ) {
