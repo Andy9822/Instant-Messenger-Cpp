@@ -22,6 +22,10 @@
 #define MESSAGE_MAX_SIZE 255
 #endif
 
+#ifndef UUID_SIZE
+#define UUID_SIZE 37
+#endif
+
 #ifndef JOIN_QUIT_STATUS_MESSAGE
 #define JOIN_QUIT_STATUS_MESSAGE 3
 #endif
@@ -29,12 +33,6 @@
 #ifndef DEBUG_MODE
 #define DEBUG_MODE false
 #endif
-
-
-#ifndef DEBUG_MODE
-#define DEBUG_MODE false
-#endif
-
 
 #ifndef JOINED_MESSAGE
 #define JOINED_MESSAGE "<Joined the group>"

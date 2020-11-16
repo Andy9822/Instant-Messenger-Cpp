@@ -10,6 +10,7 @@
 
 
 ConnectionKeeper::ConnectionKeeper(int socket) {
+    cout << "Starts sending keep alive to " << socket << endl;
     pthread_t senderThread;
     this->communicationSocket = socket;
     pthread_create(&senderThread, NULL, sendKeepAliveForever, (void*) this);
@@ -22,7 +23,10 @@ void * ConnectionKeeper::sendKeepAliveForever(void *args) {
     while (true)
     {
         sleep(_this->sleepTime);
-        _this->sendPacket(_this->communicationSocket, keepAlivePacket);
+        if (_this->sendPacket(_this->communicationSocket, keepAlivePacket) == 0) {
+            cout << "Stop sending keep alives to socket " << _this->communicationSocket << " because we lost it :(" <<  endl;
+            break;
+        };
     }
 
     return NULL;

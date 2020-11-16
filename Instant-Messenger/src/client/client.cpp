@@ -8,7 +8,7 @@
 Client::Client(char *ip_address, char *port)
 {
 
-	
+
 	strcpy(this->userId, Uuid::generate_uuid_v4().c_str());
 	sockfd = 0;
 
@@ -64,6 +64,8 @@ int Client::registerToServer()
 	bool connectedClient = true;
 	Packet *sendingPacket = new Packet();
 
+	sendingPacket->clientDispositiveIdentifier = 123123; // TODO: remove, this is just a debug
+
 	*sendingPacket = buildPacket("<Entered the group>", JOIN_PACKET);
 	sendPacket(sockfd, sendingPacket);
 
@@ -85,9 +87,9 @@ int Client::registerToServer()
 		if (receivedPacket->type == ACCEPT_PACKET)
 		{
 			waitingAccept = false;
-		}	
+		}
 	}
-	
+
     std::cout << "\n" << "Bem-vindo ao grupo: " << group << std::endl;
 
 	return 0;
@@ -128,7 +130,7 @@ int Client::ConnectToServer(char* username, char* group)
 	ConnectionKeeper(this->sockfd); // starts the thread that keeps sending keep alives
 
 
-	//TODO refazer isso pra esperar register no main loop e com uma variável de offline ou algo assim 
+	//TODO refazer isso pra esperar register no main loop e com uma variável de offline ou algo assim
 	return registerToServer();
 }
 

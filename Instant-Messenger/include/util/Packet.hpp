@@ -5,6 +5,7 @@
 #include "definitions.hpp"
 #include "Uuid.hpp"
 #include <ctime>
+#include <iostream>
 
 using namespace std;
 
@@ -28,7 +29,7 @@ struct Packet
 
     Packet(int type) {
         this->type = type;
-       strcpy(this->message_id, Uuid::generate_uuid_v4().c_str());
+        strcpy(this->message_id, Uuid::generate_uuid_v4().c_str());
     }
 
     Packet(int type, char* userId) {
@@ -59,13 +60,13 @@ struct Packet
       this->type = packetType;
     }
 
-    Packet(char* username, char* group, char* message, int clientDispositiveIdentifier, time_t timestamp) {	
-      this->status = 1440;	
-      strncpy(this->username, username, USERNAME_MAX_SIZE - 1);	
-      strncpy(this->group, group, GROUP_MAX_SIZE - 1);	
-      strncpy(this->message, message, MESSAGE_MAX_SIZE - 1);	
-      this->clientDispositiveIdentifier = clientDispositiveIdentifier;	
-      this->timestamp = timestamp;	
+    Packet(char* username, char* group, char* message, int clientDispositiveIdentifier, time_t timestamp) {
+      this->status = 1440;
+      strncpy(this->username, username, USERNAME_MAX_SIZE - 1);
+      strncpy(this->group, group, GROUP_MAX_SIZE - 1);
+      strncpy(this->message, message, MESSAGE_MAX_SIZE - 1);
+      this->clientDispositiveIdentifier = clientDispositiveIdentifier;
+      this->timestamp = timestamp;
     }
 
     bool isKeepAlive() {
