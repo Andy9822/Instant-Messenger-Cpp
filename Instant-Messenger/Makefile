@@ -44,3 +44,12 @@ deploy_fe2:
 
 deploy_fe3:
 	$(BUILD_DIR)/proxy_fe.app 6971 4041
+
+deploy:
+	docker-compose up
+	
+services-up:
+	docker-compose up -d
+
+services-down:
+	docker-compose down
