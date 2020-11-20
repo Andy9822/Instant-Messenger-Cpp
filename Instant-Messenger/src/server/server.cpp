@@ -155,7 +155,7 @@ namespace server {
             std::cout << "[DEBUG|ERROR] limit sessoes alcanadas pelo user" << std::endl;
 
             //todo: do we need to know if on RM server the connection was refused?
-            if(getIsPrimaryServer) {
+            if(isPrimaryServer) {
                 this->sendPacket(frontEndSocket, connectionRefusedPacket);
             }
 
