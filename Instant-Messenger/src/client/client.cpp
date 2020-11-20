@@ -1,4 +1,4 @@
-#include "../../include/client/ConnectionKeeper.hpp"
+#include "../../include/util/ConnectionKeeper.hpp"
 #include "../../include/client/client.h"
 #include "../../include/util/definitions.hpp"
 #include "../../include/util/Packet.hpp"
@@ -7,6 +7,9 @@
 
 Client::Client(char *ip_address, char *port)
 {
+
+
+	strcpy(this->userId, Uuid::generate_uuid_v4().c_str());
 	sockfd = 0;
 
 	serv_addr.sin_family = AF_INET;     
@@ -22,7 +25,7 @@ Client::Client(char *ip_address, char *port)
 
 
 
-Packet Client::buildPacket(string input)
+Packet Client::buildPacket(string input, int packetType)
 {
 	char messageBuffer[MESSAGE_MAX_SIZE] = {0};
 	char groupBuffer[GROUP_MAX_SIZE] = {0};
@@ -35,7 +38,7 @@ Packet Client::buildPacket(string input)
 	// Adjust last character to end of string in case string was bigger than max size
 	messageBuffer[MESSAGE_MAX_SIZE - 1] = '\0';
 
-	return Packet(usernameBuffer, groupBuffer, messageBuffer, time(0));
+	return Packet(usernameBuffer, groupBuffer, messageBuffer, time(0), this->userId, packetType);
 }
 
 
@@ -61,24 +64,33 @@ int Client::registerToServer()
 	bool connectedClient = true;
 	Packet *sendingPacket = new Packet();
 
-	*sendingPacket = buildPacket("<Entered the group>");
+	sendingPacket->clientDispositiveIdentifier = 123123; // TODO: remove, this is just a debug
 
-	// Asking server if username already exists
+	*sendingPacket = buildPacket("<Entered the group>", JOIN_PACKET);
 	sendPacket(sockfd, sendingPacket);
-	Packet *receivedPacket = readPacket(sockfd, &connectedClient);
 
-	if(receivedPacket->clientSocket == -1)
+	// Asking server if user can join with one more session
+	Packet *receivedPacket;
+	bool waitingAccept = true;
+	while (waitingAccept)
 	{
-		cout << "You are already logged in 2 sessions" << endl;
-		sockfd = -1;
-		delete sendingPacket;
-		close(sockfd);
-		return -1;
+		receivedPacket = readPacket(sockfd, &connectedClient);
+		if(receivedPacket->type == CONNECTION_REFUSED_PACKET)
+		{
+			cout << "You are already logged in 2 sessions" << endl;
+			sockfd = -1;
+			delete sendingPacket;
+			close(sockfd);
+			return -1;
+		}
+
+		if (receivedPacket->type == ACCEPT_PACKET)
+		{
+			waitingAccept = false;
+		}
 	}
 
-	// print  <entered the group>
-	if(receivedPacket->clientSocket != JOIN_QUIT_STATUS_MESSAGE)
-		showMessage(receivedPacket);
+    std::cout << "\n" << "Bem-vindo ao grupo: " << group << std::endl;
 
 	return 0;
 }
@@ -115,8 +127,10 @@ int Client::ConnectToServer(char* username, char* group)
 	}
 
 	
-    std::cout << "\n" << "Bem-vindo ao grupo: " << group << std::endl;
+	ConnectionKeeper(this->sockfd); // starts the thread that keeps sending keep alives
 
+
+	//TODO refazer isso pra esperar register no main loop e com uma variável de offline ou algo assim
 	return registerToServer();
 }
 
@@ -162,7 +176,10 @@ void * Client::receiveFromServer(void* args)
 			break;
 		}
 
-		_this->showMessage(receivedPacket);
+		if (receivedPacket->type == MESSAGE_PACKET)
+		{
+			_this->showMessage(receivedPacket);
+		}
 	}
 	return NULL;
 }
@@ -179,7 +196,7 @@ void * Client::sendToServer(void* args)
 		string input = _this->readInput();
 
 		// Prepare Packet struct to be sent
-		*sendingPacket = _this->buildPacket(input);
+		*sendingPacket = _this->buildPacket(input, MESSAGE_PACKET);
 
 		//Send Packet struct via TCP socket
 		_this->sendPacket(_this->sockfd, sendingPacket);
@@ -198,7 +215,6 @@ int Client::clientCommunication()
 
 	pthread_create(&receiverTid, NULL, receiveFromServer, (void*) this);
 	pthread_create(&senderTid, NULL, sendToServer, (void*) this);
-	ConnectionKeeper(this->sockfd); // starts the thread that keeps sending keep alives
 	pthread_join(receiverTid, NULL);
 
 	std::cout << "A conexão com o servidor foi perdida" << std::endl;

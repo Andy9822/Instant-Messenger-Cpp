@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <string>
+#include <vector>
 
 //#define PORT 4040
 
@@ -51,22 +53,54 @@ int main(int argc, char *argv[])
 {
     int i = 0;
     int port, maxNumberOfMessagesInHistory;
+
+    // TODO: change this to a parameter o configuration file
+    vector<int> fePortList{ 6969, 6970, 6971 };
+    vector<std::string> feAddressList {"127.0.0.1", "127.0.0.1", "127.0.0.1"};
+
+
     // Capture and process SO signals
 	capture_signals();
 
 	pthread_t tid[MAXBACKLOG];
 
 	read_args(argc, argv, &port, &maxNumberOfMessagesInHistory);
-    serverApp.setPort(port);
-    serverApp.configureFilesystemManager(maxNumberOfMessagesInHistory);
-    serverApp.prepareConnection();
-    serverApp.printPortNumber();
+    // serverApp.setPort(port);
+    // serverApp.configureFilesystemManager(maxNumberOfMessagesInHistory);
+    // serverApp.prepareConnection();
+    // serverApp.printPortNumber();
 
-	while(1)
-	{
-		if(serverApp.handleClientConnection(&tid[i++]) < 0)
-			return -1;
+	// while(1)
+	// {
+	// 	if(serverApp.handleFrontEndsConnections(&tid[i++]) < 0)
+	// 		return -1;
+	// }
+
+	//TODO sorry for the mess, WIP
+
+	if ( fePortList.size() != feAddressList.size() ) {
+	    cout << "[ERROR] FE address and socket list need to have the same size";
+	    return -1;
 	}
+
+	for (int i = 0; i < fePortList.size(); i++) {
+
+        cout << "[DEBUG] I'll connect to FE address:port " << feAddressList.at(i) << "/" << fePortList.at(i) << endl;
+        serverApp.connectToFE(feAddressList.at(i), fePortList.at(i));
+
+	}
+
+    cout << "[DEBUG] number of sockets waiting for connection " << serverApp.socketFeList.size() << endl;
+
+
+    serverApp.handleFrontEndsConnections();
+	
+	//I'm not proud of this, I swear
+	while (true)
+	{
+		sleep(60);
+	}
+	
 
 	return 0;
 }

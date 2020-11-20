@@ -18,7 +18,7 @@
 #include "server_message_manager.hpp"
 #include "../util/Socket.hpp"
 #include "../util/Semaphore.hpp"
-#include "ConnectionMonitor.hpp"
+#include "../util/ConnectionMonitor.hpp"
 
 #define MAXBACKLOG SOMAXCONN
 
@@ -29,28 +29,34 @@ namespace server {
     private:
         ServerGroupManager *groupManager;
         ConnectionMonitor *connectionMonitor;
-        int socket_fd;
+
         struct sockaddr_in serv_addr;
-        void closeListenClientCommunication(int client_socket);
+        void closeClientConnection(pair<char *, int> clientConnectionId);
         std::map<string, int> connectionsCount;
         int limitOfConnectios;
         static void * monitorConnection(void *args);
+        void closeFrontEndConnection(int socketId);
+        pthread_t tid[MAXBACKLOG];
 
 
     public:
         Server();
+        vector<int> socketFeList;
         static std::vector<int> openSockets;
         Semaphore* sockets_connections_semaphore;
-        static void *listenClientCommunication(void *newsocket);
+        Semaphore* feConnectionInitializationSemaphore;
+        Semaphore* feSocketsSemaphore;
         static void closeClientConnection(int socket_fd);
+        static void *listenFrontEndCommunication(void *newsocket);
         void setPort(int port);
         void prepareConnection();
         void printPortNumber();
-        int registerUserToServer(void *socket);
-        int registerUser(int socket, char *username, char *group);
-        int handleClientConnection(pthread_t *tid);
-        void closeConnections();
-        void closeSocket();
+        int registerUserToServer(Packet *registrationPacket, int frontEndSocket);
+        int registerUser(pair<char *, int> clientIdentifier, char *username, char *group);
+        int connectToFE(string feAddress, int fePort);
+        int handleFrontEndsConnections();
+        void closeFrontEndConnections();
+        void closeSocket(int socketId);
         void closeServer();
         void init_semaphore();
         void wait_semaphore();
@@ -58,6 +64,8 @@ namespace server {
         void configureFilesystemManager(int maxNumberOfMessagesInHistory);
         int getNumberOfConnectionsByUser(string user);
         int incrementNumberOfConnectionsFromUser(string user);
+
+        void eraseSocketFromFeSocketList(int socketId);
     };
 }
 #endif
