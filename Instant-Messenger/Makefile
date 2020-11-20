@@ -35,3 +35,12 @@ run-rm:
 clean:
 	rm -rf $(SRC_DIR)/*~ $(INC_DIR)/*~ client server *~
 	rm $(BUILD_DIR)/*.app
+
+deploy_fe1:
+	$(BUILD_DIR)/proxy_fe.app 6969 4039
+
+deploy_fe2:
+	$(BUILD_DIR)/proxy_fe.app 6970 4040
+
+deploy_fe3:
+	$(BUILD_DIR)/proxy_fe.app 6971 4041
