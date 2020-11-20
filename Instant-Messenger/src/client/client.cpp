@@ -4,14 +4,38 @@
 #include "../../include/util/Packet.hpp"
 
 
-
-Client::Client(char *ip_address, char *port)
+Client::Client()
 {
-
-
 	strcpy(this->userId, Uuid::generate_uuid_v4().c_str());
 	sockfd = 0;
 
+    readFEAddressesFile();
+	setupConnection();
+}
+
+void Client::setupConnection()
+{
+	int chosenFE = chooseFE();
+
+	int sizeAddressStr = addresses[chosenFE].size();
+	int sizePortStr = ports[chosenFE].size();
+
+	char address[sizeAddressStr];
+	char port[sizePortStr];
+
+	strncpy(address, addresses[chosenFE].c_str(), sizeAddressStr-1);
+	strncpy(port, ports[chosenFE].c_str(), sizePortStr-1);
+
+	address[sizeAddressStr - 1] = '\0';
+	port[sizePortStr - 1] = '\0';
+
+	std::cout << "chosen: " << chosenFE << std::endl;
+	std::cout << "port: " << port << std::endl;
+	setupSocket(address, port);
+}
+
+void Client::setupSocket(char *ip_address, char *port)
+{
 	serv_addr.sin_family = AF_INET;     
 	serv_addr.sin_port = htons(atoi(port));    
 	
@@ -19,11 +43,39 @@ Client::Client(char *ip_address, char *port)
 	{ 
 		std::cout << "\nInvalid address/ Address not supported \n" << std::endl; 
 	} 
-
 	bzero(&(serv_addr.sin_zero), 8);  
 }
+int Client::chooseFE()
+{
+	srand((unsigned) time(0));
+    int randomNumber;
+	randomNumber = rand() % addresses.size();
+	return randomNumber;
+}
 
-
+void Client::readFEAddressesFile()
+{
+    string line;
+    ifstream myfile ("src/client/addresses.txt");
+    int i = 0;
+    if (myfile.is_open())
+    {
+        while ( getline (myfile,line))
+        {
+            if (i == 0)
+            {
+                addresses.push_back(line);
+            }
+            else
+            {
+                ports.push_back(line);
+            }
+            i+=1;
+            i%=2;
+        }
+        myfile.close();
+    }
+}
 
 Packet Client::buildPacket(string input, int packetType)
 {

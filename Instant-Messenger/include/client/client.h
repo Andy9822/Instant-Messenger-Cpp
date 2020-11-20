@@ -3,6 +3,9 @@
 #include <iostream>
 #include <unistd.h>
 #include <string.h>
+#include <vector>
+#include <fstream>
+#include <ctime>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -25,6 +28,8 @@ class Client : public Socket
 		string username;
 		string group;
 		int sockfd;
+		vector<string> addresses;
+		vector<string> ports;
 		struct sockaddr_in serv_addr;
 		ClientCommunicationManager clientCommunicationManager;
 		ClientMessageManager clientMessageManager;
@@ -34,9 +39,13 @@ class Client : public Socket
 		Packet buildPacket(string input, int packetType);
 		void showMessage(Packet* receivedPacket);
 	public:
+	
 		char userId[UUID_SIZE];
-
-		Client(char *ip_address, char *port);
+		int chooseFE();
+		void readFEAddressesFile();
+		void setupConnection();
+		void setupSocket(char *ip_address, char *port);
+		Client();
         static void * receiveFromServer(void* args);
         static void * sendToServer(void* args);
 		void setUsername(char* username);
