@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="Instant_Messenger"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Instant_Messenger">
+				<Option output="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Instant_Messenger" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include"/>
+					<Add directory="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/client"/>
+					<Add directory="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/server"/>
+					<Add directory="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/util"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/bin/../include/c++/v1"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/lib/clang/11.0.3/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 Instant_Messenger"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="Instant_Messenger/fast">
+				<Option output="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Instant_Messenger" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include"/>
+					<Add directory="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/client"/>
+					<Add directory="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/server"/>
+					<Add directory="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/util"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/bin/../include/c++/v1"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/lib/clang/11.0.3/include"/>
+					<Add directory="/Library/Developer/CommandLineTools/usr/include"/>
+					<Add directory="/System/Library/Frameworks"/>
+					<Add directory="/Library/Frameworks"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 Instant_Messenger/fast"/>
+					<CompileFile command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j8 -f &quot;/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/client/ConnectionKeeper.hpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/client/client.h">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/client/client_communication_manager.h">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/client/client_message_manager.h">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/client/user_interface.h">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/server/ConnectionMonitor.hpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/server/Group.hpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/server/ReplicationManager.hpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/server/server.hpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/server/server_communication_manager.h">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/server/server_group_manager.hpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/server/server_message_manager.hpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/util/Packet.hpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/util/Semaphore.hpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/util/Socket.hpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/util/definitions.hpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/util/exceptions.hpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/util/file_system_manager.hpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/util/message.hpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/include/util/user.hpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/src/app/app_server.cpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/src/client/ConnectionKeeper.cpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/src/client/client.cpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/src/client/client_communication.cpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/src/client/client_message_manager.cpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/src/client/user_interface.cpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/src/server/ConnectionMonitor.cpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/src/server/Group.cpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/src/server/ReplicationManager.cpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/src/server/server.cpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/src/server/server_group_manager.cpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/src/server/server_message_manager.cpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/src/util/Semaphore.cpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/src/util/Socket.cpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/src/util/file_system_manager.cpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/src/util/message.cpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/src/util/user.cpp">
+			<Option target="Instant_Messenger"/>
+		</Unit>
+		<Unit filename="/Users/sap/CLionProjects/Instant-Messenger-Cpp/Instant-Messenger/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

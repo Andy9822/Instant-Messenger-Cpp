@@ -48,6 +48,7 @@ namespace server {
             this->createRMListenerSocket();
         }
 
+        // FOR TESTING REPLICATION
         if(isPrimaryServer) {
             this->sendMockDataToRMServers();
         }
@@ -154,7 +155,7 @@ namespace server {
             std::cout << "[DEBUG|ERROR] limit sessoes alcanadas pelo user" << std::endl;
 
             //todo: do we need to know if on RM server the connection was refused?
-            if(!registrationPacket->isReplicationPacket()) {
+            if(getIsPrimaryServer) {
                 this->sendPacket(frontEndSocket, connectionRefusedPacket);
             }
 
@@ -372,8 +373,6 @@ namespace server {
         int opt = 1;
         int rmListeningPort = RM_BASE_PORT_NUMBER + rmNumber;
         rm_listening_serv_addr.sin_port = htons(rmListeningPort);
-
-        //cout << "Listening on port " << rmListeningPort << endl;
 
         // Create socket file descriptor
         if ((rm_listening_socket_fd = socket(AF_INET, SOCK_STREAM, 0)) <= 0) {

@@ -19,7 +19,6 @@
 #include "../util/Socket.hpp"
 #include "../util/Semaphore.hpp"
 #include "ConnectionMonitor.hpp"
-#include "ReplicationManager.hpp"
 
 #define MAXBACKLOG SOMAXCONN
 
@@ -32,7 +31,6 @@ namespace server {
         std::map<int, sockaddr_in> rm_connect_sockets_fd;
         ServerGroupManager *groupManager;
         ConnectionMonitor *connectionMonitor;
-        ReplicationManager *replicationManager;
 
         int socket_fd;
         struct sockaddr_in serv_addr;

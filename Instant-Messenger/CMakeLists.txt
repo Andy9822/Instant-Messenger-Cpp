@@ -48,7 +48,6 @@ add_executable(Instant_Messenger
         include/client/ConnectionKeeper.hpp
         src/server/ConnectionMonitor.cpp
         include/server/ConnectionMonitor.hpp
-        src/server/ReplicationManager.cpp
-        include/server/ReplicationManager.hpp)
+        )
 
 target_link_libraries( Instant_Messenger ${CMAKE_THREAD_LIBS_INIT})
