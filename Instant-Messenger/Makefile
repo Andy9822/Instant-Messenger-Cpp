@@ -7,7 +7,7 @@ SERVER_PORT=8888
 FE_SERVER_PORT=6969
 FE_CLIENTS_PORT=4040
 
-all: build-server build-client
+all: build-server build-client build-proxy_fe
 
 build-client:
 	${CC} -pthread -std=c++11 -g -o $(BUILD_DIR)/client.app $(SRC_DIR)/util/Socket.cpp $(SRC_DIR)/util/Uuid.cpp $(SRC_DIR)/util/ConnectionKeeper.cpp $(SRC_DIR)/app/app_client.cpp $(SRC_DIR)/client/*.cpp
