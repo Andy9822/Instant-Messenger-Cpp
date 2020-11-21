@@ -33,13 +33,14 @@ namespace server {
         ConnectionMonitor *connectionMonitor;
 
         struct sockaddr_in serv_addr;
-        void closeClientConnection(pair<char *, int> clientConnectionId);
+        void closeClientConnection(pair<string, string> clientConnectionId);
         std::map<string, int> connectionsCount;
         int limitOfConnectios;
         static void * monitorConnection(void *args);
-        void closeFrontEndConnection(int socketId);
+        void closeFrontEndConnection(string feAddress);
         pthread_t tid[MAXBACKLOG];
         FeAddressBook feAddressBook;
+        vector<string> feAddresses;
 
     public:
         Server();
@@ -47,14 +48,14 @@ namespace server {
         static std::vector<int> openSockets;
         Semaphore* sockets_connections_semaphore;
         Semaphore* feConnectionInitializationSemaphore;
-        Semaphore* feSocketsSemaphore;
+        Semaphore* feAddressesSemaphore;
         static void closeClientConnection(int socket_fd);
         static void *listenFrontEndCommunication(void *newsocket);
         void setPort(int port);
         void prepareConnection();
         void printPortNumber();
-        int registerUserToServer(Packet *registrationPacket, int frontEndSocket);
-        int registerUser(pair<char *, int> clientIdentifier, char *username, char *group);
+        int registerUserToServer(Packet *registrationPacket, string feAddress);
+        int registerUser(pair<string, string> clientIdentifier, char *username, char *group);
         int connectToFE(string feAddress, int fePort);
         int handleFrontEndsConnections();
         void closeFrontEndConnections();
@@ -67,7 +68,9 @@ namespace server {
         int getNumberOfConnectionsByUser(string user);
         int incrementNumberOfConnectionsFromUser(string user);
 
-        void eraseSocketFromFeSocketList(int socketId);
+        void purgeFeConnection(string feAddress);
+
+        int getSocketFromAddress(const string feAddress);
     };
 }
 #endif
