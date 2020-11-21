@@ -11,6 +11,20 @@ Client::Client()
 
     readFEAddressesFile();
 	setupConnection();
+	
+	 // Init semaphore
+    messageQueueSemaphore = new Semaphore(1);
+
+	// Init consumer mutex
+    pthread_mutex_init(&mutex_consumer, NULL);
+    pthread_mutex_lock(&mutex_consumer); // Consumer mutex inits locked, due to absence of messages in the queue to be consumed
+
+	//  Init ack mutex
+    pthread_mutex_init(&mutex_ack, NULL);
+    pthread_mutex_lock(&mutex_ack); // ack mutex inits locked, due to absence of acks 
+
+    // Create thread 24/7 alive for consume queue when available
+    pthread_create(&consumer_queue_tid, NULL, consumeMessagesToSendQueue, (void *) this);
 }
 
 void Client::setupConnection()
@@ -45,6 +59,41 @@ void Client::setupSocket(char *ip_address, char *port)
 	} 
 	bzero(&(serv_addr.sin_zero), 8);  
 }
+
+void * Client::consumeMessagesToSendQueue(void * args)
+{
+    Client* _this = (Client *) args;
+    while (true)
+    {
+        pthread_mutex_lock(&(_this->mutex_consumer));
+		
+		bool hasMessagesInQueue = true;
+        while (hasMessagesInQueue)
+        {
+			_this->messageQueueSemaphore->wait();
+
+			if (_this->messages_queue.empty())
+            {
+                hasMessagesInQueue = false;
+                _this->messageQueueSemaphore->post();
+            }
+
+			else
+			{
+				Packet message = _this->messages_queue.front();
+				_this->messages_queue.pop();
+				_this->messageQueueSemaphore->post();
+
+				//Send consumed packet struct via TCP socket
+				_this->sendPacket(_this->sockfd, message);  
+
+				// Locks ack mutex to ensure the next message will be consumed only after receiving an ack for the actual sent packed
+				pthread_mutex_lock(&(_this->mutex_ack));
+			}
+		}
+    }
+}
+
 int Client::chooseFE()
 {
 	srand((unsigned) time(0));
@@ -232,6 +281,12 @@ void * Client::receiveFromServer(void* args)
 		{
 			_this->showMessage(receivedPacket);
 		}
+
+		if (receivedPacket->type == ACK_PACKET)
+		{
+			// Unlocks ack mutex so the consumer can consume the next message
+			pthread_mutex_unlock(&(_this->mutex_ack));
+		}
 	}
 	return NULL;
 }
@@ -241,17 +296,22 @@ void * Client::receiveFromServer(void* args)
 void * Client::sendToServer(void* args)
 {
 	Client* _this = (Client *) args;
-	Packet *sendingPacket = new Packet();
+	Packet sendingPacket;
 	while (true)
 	{
 		// Read input
 		string input = _this->readInput();
 
 		// Prepare Packet struct to be sent
-		*sendingPacket = _this->buildPacket(input, MESSAGE_PACKET);
+		sendingPacket = _this->buildPacket(input, MESSAGE_PACKET);
 
-		//Send Packet struct via TCP socket
-		_this->sendPacket(_this->sockfd, sendingPacket);
+		// Append sending packet to queue 
+		_this->messageQueueSemaphore->wait();
+		_this->messages_queue.push(sendingPacket);
+		_this->messageQueueSemaphore->post();
+
+		// Unlocks consumer mutex so it knows there's something in the queue
+		pthread_mutex_unlock(&(_this->mutex_consumer));
 	}
 }
 

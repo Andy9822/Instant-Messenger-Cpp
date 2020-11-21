@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <vector>
+#include <queue>
 #include <fstream>
 #include <ctime>
 #include <sys/types.h>
@@ -35,11 +36,19 @@ class Client : public Socket
 		ClientMessageManager clientMessageManager;
 		UserInteface userInteface;
 		
+		pthread_t consumer_queue_tid;
 		string readInput();
 		Packet buildPacket(string input, int packetType);
 		void showMessage(Packet* receivedPacket);
 	public:
 	
+
+		pthread_mutex_t mutex_consumer;
+		pthread_mutex_t mutex_ack;
+        Semaphore* messageQueueSemaphore;
+		std::queue<Packet> messages_queue;
+		static void * consumeMessagesToSendQueue(void * args);
+
 		char userId[UUID_SIZE];
 		int chooseFE();
 		void readFEAddressesFile();
