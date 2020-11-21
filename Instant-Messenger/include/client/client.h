@@ -1,27 +1,13 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <iostream>
-#include <unistd.h>
-#include <string.h>
 #include <vector>
 #include <queue>
 #include <fstream>
 #include <ctime>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h> 
 #include <arpa/inet.h>
-#include "client_communication_manager.h"
-#include "client_message_manager.h"
-#include "user_interface.h"
 #include "../util/Socket.hpp"
-#include "../util/Uuid.hpp"
-#include "../util/definitions.hpp"
+#include "../util/Packet.hpp"
+#include "../util/Semaphore.hpp"
+#include "../util/ConnectionKeeper.hpp"
 
-using clientcommunicationmanager::ClientCommunicationManager;
-using clientmessagemanager::ClientMessageManager;
-using userinterface::UserInteface;
 
 class Client : public Socket
 {
@@ -32,10 +18,6 @@ class Client : public Socket
 		vector<string> addresses;
 		vector<string> ports;
 		struct sockaddr_in serv_addr;
-		ClientCommunicationManager clientCommunicationManager;
-		ClientMessageManager clientMessageManager;
-		UserInteface userInteface;
-		
 		pthread_t consumer_queue_tid;
 		string readInput();
 		Packet buildPacket(string input, int packetType);

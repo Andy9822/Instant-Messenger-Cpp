@@ -1,7 +1,4 @@
-#include "../../include/util/ConnectionKeeper.hpp"
 #include "../../include/client/client.h"
-#include "../../include/util/definitions.hpp"
-#include "../../include/util/Packet.hpp"
 
 
 Client::Client()
