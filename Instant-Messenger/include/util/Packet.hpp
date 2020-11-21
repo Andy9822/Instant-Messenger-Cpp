@@ -29,14 +29,14 @@ struct Packet
 
     Packet(int type) {
         this->type = type;
-        strncpy(this->message_id, Uuid::generate_uuid_v4().c_str(), UUID_SIZE);
+        strcpy(this->message_id, Uuid::generate_uuid_v4().c_str());
     }
 
     Packet(int type, char* userId) {
         this->type = type;
-        strncpy(this->message_id, Uuid::generate_uuid_v4().c_str(), UUID_SIZE);
-        strncpy(this->user_id, userId, UUID_SIZE);
-        clientDispositiveIdentifier = 17389;
+        strcpy(this->message_id, Uuid::generate_uuid_v4().c_str());
+        strcpy(this->user_id, userId);
+        this->clientDispositiveIdentifier = 17389;
     }
 
     Packet(char* username, char* group, char* message, time_t timestamp) {
@@ -45,7 +45,7 @@ struct Packet
       strncpy(this->group, group, GROUP_MAX_SIZE - 1);
       strncpy(this->message, message, MESSAGE_MAX_SIZE - 1);
       this->timestamp = timestamp;
-      strncpy(this->message_id, Uuid::generate_uuid_v4().c_str(), UUID_SIZE);
+      strcpy(this->message_id, Uuid::generate_uuid_v4().c_str());
     }
 
     Packet(char* username, char* group, char* message, time_t timestamp, char* userId, int packetType) {
@@ -54,9 +54,9 @@ struct Packet
       strncpy(this->group, group, GROUP_MAX_SIZE - 1);
       strncpy(this->message, message, MESSAGE_MAX_SIZE - 1);
       this->timestamp = timestamp;
-      strncpy(this->message_id, Uuid::generate_uuid_v4().c_str(), UUID_SIZE);
-      strncpy(this->user_id, userId, UUID_SIZE);
-      clientDispositiveIdentifier = 17389;
+      strcpy(this->message_id, Uuid::generate_uuid_v4().c_str());
+      strcpy(this->user_id, userId);
+      this->clientDispositiveIdentifier = 17389;
       this->type = packetType;
     }
 

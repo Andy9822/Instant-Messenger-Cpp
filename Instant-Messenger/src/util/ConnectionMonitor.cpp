@@ -1,4 +1,4 @@
-#include "../../include/server/ConnectionMonitor.hpp"
+#include "../../include/util/ConnectionMonitor.hpp"
 #include "../../include/util/definitions.hpp"
 
 #ifdef _WIN32

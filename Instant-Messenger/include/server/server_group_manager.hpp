@@ -33,9 +33,9 @@ namespace servergroupmanager {
 
         public:
             ServerGroupManager();
-            int registerUserToGroup(pair<int, int> clientIdentifier, string username, string groupName,char* userID);
+            int registerUserToGroup(pair<char *, int> clientIdentifier, string username, string groupName);
             void processReceivedPacket(Packet* packet);
-            void propagateSocketDisconnectionEvent(pair<int, int> connectionId, map<string, int> &numberOfConnectionsByUser);
+            void propagateSocketDisconnectionEvent(pair<char *, int> connectionId, map<string, int> &numberOfConnectionsByUser);
             void configureFileSystemManager(int maxNumberOfMessagesOnHistory);
 
     };

@@ -1,8 +1,11 @@
 #include "../../include/client/client.h"
 #include "../../include/util/definitions.hpp"
 #include <iterator>
+#include <vector>
 #include <string>
 #include <regex>
+#include <signal.h>
+
 
 int validateName(char *name)
 {
@@ -32,24 +35,23 @@ int validateName(char *name)
 }
 
 
+
 int main(int argc, char *argv[])
 {
-	if(argc < 5)
+    signal(SIGPIPE, SIG_IGN);
+	if(argc < 3)
     {
-    	std::cout << "You forgot to include usename / group / IP address / PORT for the server connection!" << std::endl;
+    	std::cout << "You forgot to include usename / group !" << std::endl;
     	return -1;
     }
     
     char *user = argv[1];
     char *group = argv[2];
-    char *ip_address = argv[3]; // "127.0.0.1" for local connection
-    char *port = argv[4];
     
     if(validateName(user) < 0 || validateName(group) < 0)
     	return -1;   
 
-    Client client(ip_address, port);
-  
+    Client client;
 	if(client.ConnectToServer(user, group) < 0)
 		return -1;
     

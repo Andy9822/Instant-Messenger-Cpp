@@ -10,6 +10,10 @@
 #define USERNAME_MAX_SIZE 20
 #endif
 
+#ifndef UUID_SIZE
+#define UUID_SIZE 37
+#endif
+
 #ifndef GROUP_MAX_SIZE
 #define GROUP_MAX_SIZE 20
 #endif
@@ -44,10 +48,6 @@
 
 #ifndef KEEP_ALIVE_INTERVAL
 #define KEEP_ALIVE_INTERVAL 2
-#endif
-
-#ifndef FE_DISCONNECT
-#define FE_DISCONNECT -2
 #endif
 
 #ifndef PACKET_TYPES
