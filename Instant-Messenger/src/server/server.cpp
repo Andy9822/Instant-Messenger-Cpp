@@ -49,11 +49,6 @@ namespace server {
         if(this->getRmNumber() > 0) {
             this->createRMListenerSocket();
         }
-
-        // FOR TESTING REPLICATION
-        if(isPrimaryServer) {
-            this->sendMockDataToRMServers();
-        }
     }
 
     void Server::closeFrontEndConnections() {
@@ -206,9 +201,8 @@ namespace server {
                 break;
             }
 
-//            cout << "[DEBUG] FE listenFrontEndCommunication " << fe_socketfd <<  endl;
-
             // verify if should send replication socket or not
+            _this->sockets_connections_semaphore->wait();
             if(isPrimaryServer && (receivedPacket->isMessage() || receivedPacket->isJoinMessage() || receivedPacket->isDisconnect())) {
                 cout << "Sending " << _this->rm_connect_sockets_fd.size() << " replication packets" << endl;
 
@@ -224,7 +218,10 @@ namespace server {
                         replicationError = true;
                     }
                 }
+
+                cout << "All packets were replicate successfully" << endl;
             }
+            _this->sockets_connections_semaphore->post();
 
             if(replicationError) {
                 cout << "Error on replicating message. What should we do?" << endl;
@@ -474,7 +471,6 @@ namespace server {
                 cout << "[Communication Thread] - Waiting socket " << rm_socket_fd << " messages" << endl;
                 _this->sockets_connections_semaphore->post();
                 // Listen for an incoming Packet from client
-                // todo: we will receive messages here and we need to process them accordingly
                 Packet *receivedPacket = _this->readPacket(rm_socket_fd, &connectedClient);
                 cout << "Received packet from socket " << rm_socket_fd << " of type " << receivedPacket->type << endl;
                 if (!connectedClient) {
