@@ -15,18 +15,14 @@ namespace servermessagemanager {
     class ServerMessageManager : public Socket{
     public:
         ServerMessageManager(FeAddressBook feAddressBook);
-        void broadcastMessageToUsers(Message message, vector< pair <char *, int> > connectionIds);
-        void sendMessageToSocketId(Message message, char *clientID, int feSocket);
-        void sendPacketToSocketId(Packet* packet, int socket);
-
+        void broadcastMessageToUsers(Message message, vector< pair <string, string> > connectionIds);
+        void sendMessageToSession(Message message, string clientID, string feAddress);
+        void sendPacketToSocketId(Packet* packet, string feAddress);
         void sendMessageToAddress(Message message, string clientId, string feAddress);
-
     private:
         FeAddressBook feAddressBook;
-
-        void sendMessageToSocketId(Message message, string clientID, string feAddress);
-
-        void sendMessageToSocketId(Message message, string clientID, int feSocket);
+        void sendMessageToSocketId(Message message, string clientID, int feSocket); //An aux to send the message when we already converted the address to the actual socket id
+        int getSocketFromAddress(const string &feAddress);
     };
 }
 

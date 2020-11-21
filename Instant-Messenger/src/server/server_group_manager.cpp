@@ -4,10 +4,6 @@ using namespace std;
 
 namespace servergroupmanager {
 
-    ServerGroupManager::ServerGroupManager() : semaphore(1) {
-
-    }
-
     ServerGroupManager::ServerGroupManager(FeAddressBook feAddressBook) : semaphore(1) {
         this->feAddressBook = feAddressBook;
     }
@@ -19,7 +15,7 @@ namespace servergroupmanager {
      * @param groupName
      * @return
      */
-    int ServerGroupManager::registerUserToGroup(pair<string, string> clientIdentifier, string username, string groupName) { //TODO: update to string,string
+    int ServerGroupManager::registerUserToGroup(pair<string, string> clientIdentifier, string username, string groupName) {
 
         // if groupName exists, send the registration to it. If it does not belong to the map of groups, we instantiate a new groupName and forward the information to it
         Group* group = NULL;
@@ -29,7 +25,7 @@ namespace servergroupmanager {
         }
         group =  this->groupMap[groupName];
 
-        return group->registerNewSession(clientIdentifier.first, clientIdentifier.second, username); //TODO: update this to use the string, string
+        return group->registerNewSession(clientIdentifier.first, clientIdentifier.second, username);
     }
 
 
@@ -52,12 +48,12 @@ namespace servergroupmanager {
      * Hey bro, this sockets disconected, it may interest you. Of so, process this event as you want.
      * @param connectionId
      */
-    void ServerGroupManager::propagateSocketDisconnectionEvent(pair<char *, int> connectionId, map<string, int> &numberOfConnectionsByUser) { //TODO: update this to string,string
+    void ServerGroupManager::propagateSocketDisconnectionEvent(pair<string, string> connectionId, map<string, int> &numberOfConnectionsByUser) {
         std::map<basic_string<char>, Group*>::iterator it = this->groupMap.begin();
 
         while ( it != this->groupMap.end() ) { // iterates over the map
             Group* group = it->second;
-            group->handleDisconnectEvent(connectionId.first, connectionId.second, numberOfConnectionsByUser); //TODO: update this to string,string
+            group->handleDisconnectEvent(connectionId.first, connectionId.second, numberOfConnectionsByUser);
             it++;
         }
     }

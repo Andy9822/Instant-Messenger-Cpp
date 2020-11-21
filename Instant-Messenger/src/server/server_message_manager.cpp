@@ -12,7 +12,7 @@ namespace servermessagemanager {
      * @param message
      * @param clientID
      */
-    void ServerMessageManager::sendMessageToSocketId(Message message, string clientID, int feSocket) //TODO: update this to string,string
+    void ServerMessageManager::sendMessageToSocketId(Message message, string clientID, int feSocket)
     {
         Packet* sendingPacket = new Packet(
                 (char*)message.getUser().c_str(),
@@ -22,7 +22,7 @@ namespace servermessagemanager {
                 (char*)clientID.c_str(), // this field is the client's identifier in the FE. aka user_id for some
                MESSAGE_PACKET);
 
-        sendPacket(feSocket, sendingPacket); //TODO: update this to string,string
+        sendPacket(feSocket, sendingPacket);
     }
 
     /**
@@ -30,15 +30,10 @@ namespace servermessagemanager {
      * @param message
      * @param clientID
      */
-    void ServerMessageManager::sendMessageToSocketId(Message message, string clientID, string feAddress) //TODO: update this to string,string
+    void ServerMessageManager::sendMessageToSession(Message message, string clientID, string feAddress)
     {
 
-        int socketId = this->feAddressBook.getInternalSocketId(feAddress);
-
-        if (socketId == 0) {
-            cout << "[ERROR] the address provided for the FE does not have any socket" << endl;
-        }
-
+        int socketId = getSocketFromAddress(feAddress);
 
         Packet* sendingPacket = new Packet(
                 (char*)message.getUser().c_str(),
@@ -48,7 +43,7 @@ namespace servermessagemanager {
                 (char*)clientID.c_str(), // this field is the client's identifier in the FE. aka user_id for some
                 MESSAGE_PACKET);
 
-        sendPacket(socketId, sendingPacket); //TODO: update this to string,string
+        sendPacket(socketId, sendingPacket);
     }
 
     /**
@@ -59,13 +54,17 @@ namespace servermessagemanager {
      */
     void ServerMessageManager::sendMessageToAddress(Message message, string clientId, string feAddress) {
 
-        int socketId = this->feAddressBook.getInternalSocketId(feAddress);
+        int socketId = getSocketFromAddress(feAddress);
+        sendMessageToSocketId(message, clientId, socketId);
+    }
+
+    int ServerMessageManager::getSocketFromAddress(const string &feAddress) {
+        int socketId = feAddressBook.getInternalSocketId(feAddress);
 
         if (socketId == 0) {
             cout << "[ERROR] the address provided for the FE does not have any socket" << endl;
         }
-
-        sendMessageToSocketId(message, clientId, socketId)
+        return socketId;
     }
 
 
@@ -74,9 +73,10 @@ namespace servermessagemanager {
      * @param packet
      * @param clientIdentifier
      */
-    void ServerMessageManager::sendPacketToSocketId(Packet* packet, int socket)
+    void ServerMessageManager::sendPacketToSocketId(Packet* packet, string feAddress)
     {
-        sendPacket(socket, packet); //TODO: update this to string,string
+        int socketID = getSocketFromAddress(feAddress);
+        sendPacket(socketID, packet);
     }
 
     /**
@@ -88,10 +88,10 @@ namespace servermessagemanager {
      * @param message
      * @param connectionIds
      */
-    void ServerMessageManager::broadcastMessageToUsers(Message message, vector< pair<char *, int> > connectionIds) //TODO: update this to string,string
+    void ServerMessageManager::broadcastMessageToUsers(Message message, vector< pair<string, string> > connectionIds)
     {
         for ( auto clientConnection : connectionIds) {
-            sendMessageToSocketId(message, clientConnection.first, clientConnection.second); //TODO: update this to string,string
+            sendMessageToSession(message, clientConnection.first, clientConnection.second);
         }
     }
 }

@@ -73,13 +73,13 @@ void * Group::consumeMessageQueue(void * args)
  * @param clientID
  * @param feSocket
  */
-void Group::sendAcceptToUser(string clientID, string feAddress)//TODO: update
+void Group::sendAcceptToUser(string clientID, string feAddress)
 {
     Packet *pack = new Packet();
     pack->type = ACCEPT_PACKET;
     strcpy(pack->user_id, clientID.c_str());
     std::cout << "[DEBUG] mandei ACCEPT para socket: " << feAddress << std::endl;
-    messageManager->sendPacketToSocketId(pack, feAddress); // TODO: update this in the message manager
+    messageManager->sendPacketToSocketId(pack, feAddress);
 }
 
 /**
@@ -124,7 +124,7 @@ int Group::registerNewSession(string clientID, string feAddress, string userName
  *
  * @param feSocket
  */
-void Group::handleDisconnectEvent(string clientID, string feAddress, map<string, int> &numberOfConnectionsByUser) { //TODO: update this to string,string
+void Group::handleDisconnectEvent(string clientID, string feAddress, map<string, int> &numberOfConnectionsByUser) {
     usersSemaphore->wait();
     vector<pair <string, string> > allActiveSockets = this->getAllActiveConnectionIds();
 
@@ -133,13 +133,13 @@ void Group::handleDisconnectEvent(string clientID, string feAddress, map<string,
             if (groupConnection.second.compare(feAddress) == 0) { // if there is a match in the FE socket ID
                 cout << "[FE disconnect] Killing clientConnection [" << groupConnection.first << "," << groupConnection.second << "]"
                      << endl;
-                this->disconnectSession(groupConnection.first, feAddress, numberOfConnectionsByUser); //TODO: update this to string,string
+                this->disconnectSession(groupConnection.first, feAddress, numberOfConnectionsByUser);
             }
         }
     } else {
         cout << "[Client disconnect] Killing clientConnection [" << clientID << "," << feAddress << "]"
              << endl;
-        this->disconnectSession(clientID, feAddress, numberOfConnectionsByUser); //TODO: update this to string,string
+        this->disconnectSession(clientID, feAddress, numberOfConnectionsByUser);
     }
     usersSemaphore->post();
 }
@@ -154,7 +154,7 @@ void Group::handleDisconnectEvent(string clientID, string feAddress, map<string,
  *  it is already thread safe by the call (handleDisconnectEvent)
  * @param feSocket
  */
-void Group::disconnectSession(string clientID, string feAddress, map<string, int> &numberOfConnectionsByUser) { //TODO: update this to string,string
+void Group::disconnectSession(string clientID, string feAddress, map<string, int> &numberOfConnectionsByUser) {
     user::User* user = getUserFromConnectionId(clientID, feAddress);
     cout << "disconnectSession  [" << clientID << "," << feAddress << "]" << endl;
     if ( user != NULL) {
@@ -211,10 +211,10 @@ void Group::processReceivedMessage(string userName, string message) {
  * @param feSocket
  * @return
  */
-User *Group::getUserFromConnectionId(char *clientID, int feSocket) const {
+User *Group::getUserFromConnectionId(string clientID, string feAddress) const {
     for (auto user : users) {
         for (auto userConnection : user->getActiveConnections()) {
-            if ( ( strcmp(clientID, userConnection.first) == 0) && ( feSocket == userConnection.second ) )  {
+            if ( ( clientID.compare(userConnection.first) == 0) && ( feAddress.compare(userConnection.second) == 0 ) )  {
                 return user;
             }
         }
@@ -238,11 +238,11 @@ void Group::addMessageToMessageQueue(Message message) {
  * Can you guess what this method does?
  * @return list of sockets
  */
-vector<pair<char *, int>> Group::getAllActiveConnectionIds() {
-    vector< pair <char *, int> > connectionIds = vector< pair<char *, int> >();
+vector<pair<string, string>> Group::getAllActiveConnectionIds() {
+    vector< pair <string, string> > connectionIds = vector< pair<string, string> >();
     for (auto user : this->users) {
-        for (auto userActiveSocket : user->getActiveConnections()) {
-            connectionIds.push_back(userActiveSocket);
+        for (auto userActiveSession : user->getActiveConnections()) {
+            connectionIds.push_back(userActiveSession);
         }
     }
     return connectionIds;

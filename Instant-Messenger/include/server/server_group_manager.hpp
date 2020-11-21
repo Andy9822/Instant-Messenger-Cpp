@@ -34,11 +34,10 @@ namespace servergroupmanager {
             FeAddressBook feAddressBook;
 
         public:
-            ServerGroupManager();
             ServerGroupManager(FeAddressBook feAddressBook);
-            int registerUserToGroup(pair<char *, int> clientIdentifier, string username, string groupName);
+            int registerUserToGroup(pair<string, string> clientIdentifier, string username, string groupName);
             void processReceivedPacket(Packet* packet);
-            void propagateSocketDisconnectionEvent(pair<char *, int> connectionId, map<string, int> &numberOfConnectionsByUser);
+            void propagateSocketDisconnectionEvent(pair<string, string> connectionId, map<string, int> &numberOfConnectionsByUser);
             void configureFileSystemManager(int maxNumberOfMessagesOnHistory);
 
     };
