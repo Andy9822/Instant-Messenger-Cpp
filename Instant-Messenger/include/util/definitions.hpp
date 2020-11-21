@@ -50,6 +50,10 @@
 #define KEEP_ALIVE_INTERVAL 2
 #endif
 
+#ifndef ERROR_SENDING
+#define ERROR_SENDING 0
+#endif
+
 #ifndef PACKET_TYPES
 #define PACKET_TYPES
 /////// Types of Packet

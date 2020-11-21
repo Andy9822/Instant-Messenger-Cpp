@@ -142,12 +142,9 @@ void ProxyFE::processServerPacket(Packet* receivedPacket, int socket)
         users_map_semaphore->post();       
         if(clientSocket != 0)
         {
-            sendPacket(clientSocket, receivedPacket);
+            sendPacket(clientSocket, receivedPacket); // TODO Socket agora dá shutdown quando dá erro, comprovar todos os pontos que tem sendPacket 
             break;
         }
-
-        //TODO acho que nao precisa, se usuario cair o FE ja vai avisar de qlqr forma
-        std::cout << "O usuário não está mais conectado" << std::endl;
     }
         break;
     case KEEP_ALIVE_PACKET:
@@ -159,14 +156,14 @@ void ProxyFE::processServerPacket(Packet* receivedPacket, int socket)
     {
         std::cout << "🛂Recebi ACCEPT do server🛂🎟🎫: " << receivedPacket->username << " pode dar join na sala" << std::endl;
         std::cout << "user_id: " << receivedPacket->user_id << std::endl;
-        string userID(receivedPacket->user_id); //TODO talvez proteger aqui c semaforo se cai na hora ne
+        string userID(receivedPacket->user_id);
         users_map_semaphore->wait();
         int clientSocket = usersMap[userID];
         users_map_semaphore->post();
         if(clientSocket != 0)
         {
             std::cout << "vou mandar ACCEPT_PACKET pro usuario " << clientSocket << std::endl;
-            sendPacket(clientSocket, new Packet(ACCEPT_PACKET));
+            sendPacket(clientSocket, new Packet(ACCEPT_PACKET)); 
             break;
         }
 
@@ -178,7 +175,7 @@ void ProxyFE::processServerPacket(Packet* receivedPacket, int socket)
     {
         std::cout << "⛔Recebi PROBIÇÃO do server🚫:  NÃO pode dar join na sala" << std::endl;
         std::cout << "user_id: " << receivedPacket->user_id << std::endl;
-        string userID(receivedPacket->user_id); //TODO talvez proteger aqui c semaforo se cai na hora ne
+        string userID(receivedPacket->user_id);
         users_map_semaphore->wait();
         int clientSocket = usersMap[userID];
         users_map_semaphore->post();
@@ -197,7 +194,7 @@ void ProxyFE::processServerPacket(Packet* receivedPacket, int socket)
     {
         std::cout << "📫Recebi ACK do server📫: " << std::endl;
         std::cout << "user_id: " << receivedPacket->user_id << std::endl;
-        string userID(receivedPacket->user_id); //TODO talvez proteger aqui c semaforo se cai na hora ne
+        string userID(receivedPacket->user_id);
         users_map_semaphore->wait();
         int clientSocket = usersMap[userID];
         users_map_semaphore->post();
@@ -227,7 +224,7 @@ void* ProxyFE::listenServerCommunication(void *args)
     ProxyFE *_this = (ProxyFE *) args_pair->second;
 
     // Get socket from the new connected client
-    _this->serverRM_socket = args_pair->first; //TODO talvez proteger isso sob semaphore
+    _this->serverRM_socket = args_pair->first;
 
     // Free pair created for receiving arguments
     free(args_pair);
@@ -386,7 +383,7 @@ void* ProxyFE::monitorConnectionKeepAlive(void *args)
 
     // After client socket disconnection we need to process this disconnection in application level
     std::cout << "Timed out socket " << client_socketfd << std::endl;
-    // TODO avisa server
+
     shutdown(client_socketfd, 2);
 
     return NULL;
@@ -439,14 +436,11 @@ void* ProxyFE::listenClientCommunication(void *args)
 
 void ProxyFE::disconnectUser(char* userID)
 {
-    // TODO cuidar de como proceder se o RM cai enquanto estou enviando essa joça
-    // TODO talvez o próprio DISCONNECT_MESSAGE ter um ACK específico, ai RM ficar de olho e ter lista de usarios a desconectar
-
     Packet* disconnect_packet = new Packet(DISCONNECT_PACKET, userID);
 
     std::cout << "Vou mandar server DISCONNECT_PACKET do userID: " << userID << std::endl;
-    // TODO talvez cada vez que acessar serverRM_socket precisaria de semaforo, mas é meio que ligado a lidar com server cair qnd vai mandar
-    this->sendPacket(serverRM_socket, disconnect_packet);
+
+    sendToServer(disconnect_packet);
 }
 
 void ProxyFE::registerUserSocket(Packet* receivedPacket, int socket)
@@ -468,7 +462,7 @@ void ProxyFE::registerUserSocket(Packet* receivedPacket, int socket)
     std::cout << "💾sockets map size:" << socketsMap.size() << std::endl;
 
     receivedPacket->clientSocket = socket;
-    sendPacket(serverRM_socket, receivedPacket);
+    sendToServer(receivedPacket);
 }
 
 void ProxyFE::processClientPacket(Packet* receivedPacket, int socket)
@@ -527,7 +521,6 @@ void ProxyFE::activateMessageConsumer(pthread_t* tid)
     pthread_create(tid, NULL, handleProcessingMessage, (void *) this);
 }
 
-// TODO tem cara que esse metodo thread vai virar um método apenas normal e o lidar com volta do RM ser outra thread
 void* ProxyFE::handleProcessingMessage(void* args) 
 {
     // Get a reference of the object instance in this thread
@@ -537,13 +530,32 @@ void* ProxyFE::handleProcessingMessage(void* args)
     {
         pthread_mutex_lock(&(_this->mutex_consumer_message));
         std::cout << "recebi mssagem cliente e to handleProcessingMessage" << std::endl;
-        // TODO Socket agora dá shutdown quando dá erro, comprovar todos os pontos que tem sendPacket 
-        _this->sendPacket(_this->serverRM_socket, _this->processing_message);
-
+        
+        _this->sendToServer(_this->processing_message);
+        
         _this->processing_message_semaphore->post();
     }  
 }
 
+
+void ProxyFE::sendToServer(Packet* packet)
+{
+    bool hasFailed = false;
+retry:
+    int status = sendPacket(this->serverRM_socket, packet);
+
+    if (status == ERROR_SENDING)
+    {
+        std::cout << "❌ Erro enviando, sevidorRM está off ❌" << std::endl;
+        hasFailed = true;
+        sleep(1);
+        goto retry;
+    }
+    if (hasFailed)
+    {
+        std::cout << "✅ Novo servidor RM conectou e recebeu a mensagem ✅" << std::endl;
+    }
+}
 
 void ProxyFE::processIncomingClientMessage(Packet* message)
 {

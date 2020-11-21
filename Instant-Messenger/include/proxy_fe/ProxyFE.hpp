@@ -50,6 +50,8 @@ class ProxyFE : public Socket
         pthread_mutex_t mutex_consumer_message;
         ConnectionMonitor* keepAliveMonitor;
 
+        void sendToServer(Packet* message);
+
         void prepareSocketConnection(int* socket_fd, sockaddr_in* serv_addr);
         void prepareServerConnection();
         void prepareClientsConnection();
