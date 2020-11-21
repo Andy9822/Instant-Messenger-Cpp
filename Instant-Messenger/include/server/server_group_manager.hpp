@@ -7,6 +7,7 @@
 #include "../server/server_message_manager.hpp"
 #include "../util/Packet.hpp"
 #include "./Group.hpp"
+#include "FeAddressBook.hpp"
 
 #include <string>
 #include <iostream>
@@ -30,12 +31,13 @@ namespace servergroupmanager {
             std::map<string,Group*> groupMap; // will maintain a map of groupName -> group. This will be used to route the calls to the proper group
             bool groupExists(string groupName);
             int maxNumberOfMessagesOnHistory;
+            FeAddressBook* feAddressBook;
 
         public:
-            ServerGroupManager();
-            int registerUserToGroup(pair<char *, int> clientIdentifier, string username, string groupName);
+            ServerGroupManager(FeAddressBook* feAddressBook);
+            int registerUserToGroup(pair<string, string> clientIdentifier, string username, string groupName);
             void processReceivedPacket(Packet* packet);
-            void propagateSocketDisconnectionEvent(pair<char *, int> connectionId, map<string, int> &numberOfConnectionsByUser);
+            void propagateSocketDisconnectionEvent(pair<string, string> connectionId, map<string, int> &numberOfConnectionsByUser);
             void configureFileSystemManager(int maxNumberOfMessagesOnHistory);
 
     };

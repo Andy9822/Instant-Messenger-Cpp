@@ -10,6 +10,7 @@
 #include "../util/Semaphore.hpp"
 #include "../util/file_system_manager.hpp"
 #include "../server/server_message_manager.hpp"
+#include "FeAddressBook.hpp"
 
 using namespace std;
 class Group
@@ -17,7 +18,7 @@ class Group
 
 	public:
 		Group();
-        Group(string groupName);
+        Group(string groupName, FeAddressBook* feAddressBook);
         filesystemmanager::FileSystemManager* fsManager;
         servermessagemanager::ServerMessageManager *messageManager;
         pthread_t tid;
@@ -28,20 +29,20 @@ class Group
         std::queue<message::Message> messages_queue;  
         string groupName;
         static void *consumeMessageQueue(void * args);
-        int registerNewSession(char *clientID, int feSocket, string userName);
+        int registerNewSession(string clientID, string feAddress, string userName);
         void processReceivedMessage(string userName, string message);
-        void handleDisconnectEvent(char *clientID, int feSocket, map<string, int> &numberOfConnectionsByUser);
+        void handleDisconnectEvent(string clientID, string feAddress, map<string, int> &numberOfConnectionsByUser);
         void configureFileSystemManager(int maxNumberOfMessagesOnHistory);
 
     private:
-        vector<pair<char *, int>> getAllActiveConnectionIds();
-        void sendAcceptToUser(char *clientID, int feSocket);
-        void sendHistoryToUser(char *clientID, int feSocket);
+        vector<pair<string, string>> getAllActiveConnectionIds();
+        void sendAcceptToUser(string clientID, string feAddress);
+        void sendHistoryToUser(string clientID, string feAddress);
         void addMessageToMessageQueue(Message message);
         void sendActivityMessage(const string &userName, const string &actionText);
-        void disconnectSession(char *clientID, int feSocket, map<string, int> &numberOfConnectionsByUser);
-        User *getUserFromConnectionId(char *clientID, int feSocket) const;
-
+        void disconnectSession(string clientID, string feAddress, map<string, int> &numberOfConnectionsByUser);
+        User *getUserFromConnectionId(string clientID, string feAddress) const;
+        FeAddressBook* feAddressBook;
 };
 
 #endif
