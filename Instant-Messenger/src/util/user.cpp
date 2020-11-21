@@ -34,7 +34,7 @@ namespace user {
      * @param clientID
      * @return negative if error
      */
-    int User::registerSession(string clientID, string feAddress) { // TODO: update to use string,string
+    int User::registerSession(string clientID, string feAddress) {
 
         pair<string, string> clientID_feSocket = pair<string, string>();
         clientID_feSocket.first.assign(clientID); //TODO: debug to confirm
@@ -42,7 +42,7 @@ namespace user {
 
         this->semaphore.wait();
         if (this->clientIdentifiers.size() < MAX_NUMBER_OF_SIMULTANEOUS_CONNECTIONS ) {
-            this->clientIdentifiers.push_back(clientID_feSocket); // TODO: update this shit
+            this->clientIdentifiers.push_back(clientID_feSocket);
             this->semaphore.post();
             return 0;
         } else {

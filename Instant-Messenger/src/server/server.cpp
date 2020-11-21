@@ -21,18 +21,12 @@ namespace server {
         sockets_connections_semaphore = new Semaphore(1);
         feConnectionInitializationSemaphore = new Semaphore(1);
         feSocketsSemaphore = new Semaphore(1);
-        groupManager = new ServerGroupManager();
+
         connectionMonitor = new ConnectionMonitor();
 
-        // TODO assim como proxyFE, o server vai ter que ter 2 sockets, um pra conectar nos FE e outro nos RM
-        {
-            // Configure server address properties
-            // serv_addr.sin_family = AF_INET;
-            // serv_addr.sin_addr.s_addr = INADDR_ANY;
-            // bzero(&(serv_addr.sin_zero), 8);
-        }
         socketFeList = vector<int>();
         this->feAddressBook = FeAddressBook();
+        groupManager = new ServerGroupManager(this->feAddressBook);
 
     }
 
