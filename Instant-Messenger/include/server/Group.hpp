@@ -18,7 +18,7 @@ class Group
 
 	public:
 		Group();
-        Group(string groupName, FeAddressBook feAddressBook);
+        Group(string groupName, FeAddressBook* feAddressBook);
         filesystemmanager::FileSystemManager* fsManager;
         servermessagemanager::ServerMessageManager *messageManager;
         pthread_t tid;
@@ -42,7 +42,7 @@ class Group
         void sendActivityMessage(const string &userName, const string &actionText);
         void disconnectSession(string clientID, string feAddress, map<string, int> &numberOfConnectionsByUser);
         User *getUserFromConnectionId(string clientID, string feAddress) const;
-        FeAddressBook feAddressBook;
+        FeAddressBook* feAddressBook;
 };
 
 #endif

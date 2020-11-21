@@ -39,7 +39,7 @@ namespace server {
         static void * monitorConnection(void *args);
         void closeFrontEndConnection(string feAddress);
         pthread_t tid[MAXBACKLOG];
-        FeAddressBook feAddressBook;
+        FeAddressBook* feAddressBook;
         vector<string> feAddresses;
 
     public:

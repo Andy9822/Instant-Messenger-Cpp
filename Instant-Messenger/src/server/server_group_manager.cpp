@@ -4,7 +4,7 @@ using namespace std;
 
 namespace servergroupmanager {
 
-    ServerGroupManager::ServerGroupManager(FeAddressBook feAddressBook) : semaphore(1) {
+    ServerGroupManager::ServerGroupManager(FeAddressBook* feAddressBook) : semaphore(1) {
         this->feAddressBook = feAddressBook;
     }
 

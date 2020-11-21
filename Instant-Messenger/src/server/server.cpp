@@ -27,7 +27,7 @@ namespace server {
 
         socketFeList = vector<int>(); // TODO: remove
         feAddresses = vector<string>();
-        this->feAddressBook = FeAddressBook();
+        this->feAddressBook = new FeAddressBook();
         groupManager = new ServerGroupManager(this->feAddressBook);
 
     }
@@ -122,7 +122,7 @@ namespace server {
 
         std::cout << "conectado ao FE (" << feIpPort << ") com socket:" << newSocketFE << std::endl;
 
-        this->feAddressBook.registryAddressSocket(feIpPort, newSocketFE);
+        this->feAddressBook->registryAddressSocket(feIpPort, newSocketFE);
         this->feAddresses.push_back(feIpPort);
 
         return 0;
@@ -269,7 +269,7 @@ namespace server {
         for (auto address : feAddresses) {
             if (address.compare(feAddress) == 0 ) {
                 feAddresses.erase(begin + deletion_index); // will delete the deletion_index's item
-                feAddressBook.removeServerSocket(feAddress);
+                feAddressBook->removeServerSocket(feAddress);
             }
             deletion_index += 1;
         }
@@ -304,7 +304,7 @@ namespace server {
     }
 
     int Server::getSocketFromAddress(const string feAddress) {
-        int socketId = feAddressBook.getInternalSocketId(feAddress);
+        int socketId = feAddressBook->getInternalSocketId(feAddress);
 
         if (socketId == 0) {
             cout << "[ERROR] the address provided for the FE does not have any socket" << endl;

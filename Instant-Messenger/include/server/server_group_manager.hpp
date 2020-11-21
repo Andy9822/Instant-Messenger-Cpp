@@ -31,10 +31,10 @@ namespace servergroupmanager {
             std::map<string,Group*> groupMap; // will maintain a map of groupName -> group. This will be used to route the calls to the proper group
             bool groupExists(string groupName);
             int maxNumberOfMessagesOnHistory;
-            FeAddressBook feAddressBook;
+            FeAddressBook* feAddressBook;
 
         public:
-            ServerGroupManager(FeAddressBook feAddressBook);
+            ServerGroupManager(FeAddressBook* feAddressBook);
             int registerUserToGroup(pair<string, string> clientIdentifier, string username, string groupName);
             void processReceivedPacket(Packet* packet);
             void propagateSocketDisconnectionEvent(pair<string, string> connectionId, map<string, int> &numberOfConnectionsByUser);

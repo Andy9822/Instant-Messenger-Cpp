@@ -3,7 +3,7 @@
 
 namespace servermessagemanager {
 
-    ServerMessageManager::ServerMessageManager(FeAddressBook feAddressBook) {
+    ServerMessageManager::ServerMessageManager(FeAddressBook* feAddressBook) {
         this->feAddressBook = feAddressBook;
     }
 
@@ -59,7 +59,7 @@ namespace servermessagemanager {
     }
 
     int ServerMessageManager::getSocketFromAddress(const string &feAddress) {
-        int socketId = feAddressBook.getInternalSocketId(feAddress);
+        int socketId = feAddressBook->getInternalSocketId(feAddress);
 
         if (socketId == 0) {
             cout << "[ERROR] the address provided for the FE does not have any socket" << endl;

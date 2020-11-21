@@ -5,7 +5,7 @@
 
 using namespace std;
 
-Group::Group(string name, FeAddressBook feAddressBook)
+Group::Group(string name, FeAddressBook* feAddressBook)
 {
     this->groupName = name;
     fsManager = new filesystemmanager::FileSystemManager();
@@ -95,7 +95,7 @@ void Group::sendAcceptToUser(string clientID, string feAddress)
  * @param groupName
  * @return returns a negative number in case of a failure
  */
-int Group::registerNewSession(string clientID, string feAddress, string userName) { //TODO: update to string,string
+int Group::registerNewSession(string clientID, string feAddress, string userName) {
     User* user = NULL;
     int result = 0;
     sendAcceptToUser(clientID, feAddress);
@@ -110,11 +110,10 @@ int Group::registerNewSession(string clientID, string feAddress, string userName
     if ( user == NULL) { // if user does not exists in the list, we create the entry in the list
         user = new User(userName);
         this->users.push_back(user);
-        result = user->registerSession(clientID, feAddress);
-        sendActivityMessage(userName, JOINED_MESSAGE); // Se a pessoa já está no grupo, não deve-se enviar uma nova mensagem dizendo que ela ingressou no grupo. (copiei do moodle esse statement)
-    } else {
-        result = user->registerSession(clientID, feAddress);
+        sendActivityMessage(userName, JOINED_MESSAGE); // se a pessoa é nova no grupo, a gente manda uma mensagem de join para todos
     }
+
+    result = user->registerSession(clientID, feAddress);
     usersSemaphore->post();
     return result;
 }
