@@ -62,3 +62,15 @@ int Socket::sendPacket(int socket_fd, Packet* mypacket)
 
     return n >= 0;
 }
+
+int Socket::sendPacket(int socket_fd, Packet mypacket)
+{
+    int n = write(socket_fd, &mypacket, sizeof(Packet));
+    if (n < 0)
+    {
+        cout << "ERROR writing to socket: " << socket_fd << endl ;
+		shutdown(socket_fd, 2);
+    }
+
+    return n >= 0;
+}
