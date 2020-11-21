@@ -13,5 +13,7 @@
 
 ➖ FE só consome e encaminha mensagem, não está lidando com possível server OFF
 
+➖ Cliente só consome e encaminha mensagem, não está lidando com possível FE OFF
+
 ➖ Cada proxy_fe tem que ouvir em porta diferente pra não ter overlap por rodar tudo na mesma máquina
 
