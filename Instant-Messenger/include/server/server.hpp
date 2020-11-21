@@ -19,6 +19,8 @@
 #include "../util/Socket.hpp"
 #include "../util/Semaphore.hpp"
 #include "../util/ConnectionMonitor.hpp"
+#include "FeAddressBook.hpp"
+
 
 #define MAXBACKLOG SOMAXCONN
 
@@ -37,7 +39,7 @@ namespace server {
         static void * monitorConnection(void *args);
         void closeFrontEndConnection(int socketId);
         pthread_t tid[MAXBACKLOG];
-
+        FeAddressBook feAddressBook;
 
     public:
         Server();

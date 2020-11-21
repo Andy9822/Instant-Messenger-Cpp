@@ -32,6 +32,7 @@ namespace server {
             // bzero(&(serv_addr.sin_zero), 8);
         }
         socketFeList = vector<int>();
+        this->feAddressBook = FeAddressBook();
 
     }
 
@@ -77,10 +78,9 @@ namespace server {
         }
         this->sockets_connections_semaphore->post();
 
-        std::pair<char *, int> clientFrontEndIdentifier = std::pair<char *, int>(); // this is the identifier for the client and we need to store this in the groups
-        clientFrontEndIdentifier.first = (char*)malloc(UUID_SIZE*sizeof(char));
-        strcpy(clientFrontEndIdentifier.first, registrationPacket->user_id);
-        clientFrontEndIdentifier.second = frontEndSocket;
+        std::pair<string, string> clientFrontEndIdentifier = std::pair<string, string>(); // this is the identifier for the client and we need to store this in the groups
+        clientFrontEndIdentifier.first.assign(registrationPacket->user_id);
+        clientFrontEndIdentifier.second.assign(registrationPacket->feAddress);
 
         return this->registerUser(clientFrontEndIdentifier, registrationPacket->username,
                                             registrationPacket->group);
@@ -117,13 +117,18 @@ namespace server {
         }
 
         socketFeList.push_back(newSocketFE);
-        std::cout << "conectado ao FE com socket:" << newSocketFE << std::endl;
+
+        string feIpPort = feAddress + ":" + to_string(fePort);
+
+        std::cout << "conectado ao FE (" << feIpPort << ") com socket:" << newSocketFE << std::endl;
+
+        this->feAddressBook.registryAddressSocket(feIpPort, newSocketFE);
 
         return 0;
     }
 
     int Server::handleFrontEndsConnections() { //TODO same as in other places, tids mess
-        std::pair<int, Server *> *args = (std::pair<int, Server *> *) calloc(1, sizeof(std::pair<int, Server *>));
+        std::pair<string, Server *> *args = (std::pair<string, Server *> *) calloc(1, sizeof(std::pair<string, Server *>));
         vector<ConnectionKeeper*> connectionKeepers = vector<ConnectionKeeper*>();
         args->second = this;
 
