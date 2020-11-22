@@ -30,18 +30,16 @@ void capture_signals()
 	sigaction(SIGINT, &sigIntHandler, NULL);
 }
 
-void read_args(int argc, char *argv[], int *port, int *maxNumberOfMessagesInHistory, int *rmNumber, bool *isPrimaryServer)
-{	
-	*port = RANDOM_PORT_NUMBER; //Set any available port as default
+void read_args(int argc, char *argv[], int *maxNumberOfMessagesInHistory, int *rmNumber, bool *isPrimaryServer)
+{
 	*maxNumberOfMessagesInHistory = DEFAULT_NUMBER_OF_RECORDED_MESSAGES;
 
-	if(argc == 5)
+	if(argc == 4)
     {
 			try {
-				*port = stoi(argv[1]); // In case it's received a specific port as argv
-                *maxNumberOfMessagesInHistory = stoi(argv[2]);
-                *rmNumber = stoi(argv[3]);
-                *isPrimaryServer = stoi(argv[4]);
+                *maxNumberOfMessagesInHistory = stoi(argv[1]);
+                *rmNumber = stoi(argv[2]);
+                *isPrimaryServer = stoi(argv[3]);
 			}
 			catch(std::invalid_argument e) {
                 cout << "[ERROR] Invalid arguments" << endl;
@@ -53,7 +51,7 @@ void read_args(int argc, char *argv[], int *port, int *maxNumberOfMessagesInHist
 
 int main(int argc, char *argv[])
 {
-    int port, maxNumberOfMessagesInHistory;
+    int maxNumberOfMessagesInHistory;
     int rmNumber;
     bool isPrimaryServer;
 
@@ -64,7 +62,7 @@ int main(int argc, char *argv[])
     // Capture and process SO signals
 	capture_signals();
 
-	read_args(argc, argv, &port, &maxNumberOfMessagesInHistory, &rmNumber, &isPrimaryServer);
+	read_args(argc, argv, &maxNumberOfMessagesInHistory, &rmNumber, &isPrimaryServer);
 
 	if ( fePortList.size() != feAddressList.size() ) {
 	    cout << "[ERROR] FE address and socket list need to have the same size";
