@@ -1,4 +1,5 @@
 #include "../../include/util/message.hpp"
+#include "../../include/util/definitions.hpp"
 #include <sstream>
 #include <iostream>
 

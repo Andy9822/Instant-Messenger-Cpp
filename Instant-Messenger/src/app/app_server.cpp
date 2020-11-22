@@ -33,16 +33,16 @@ void capture_signals()
 	sigaction(SIGINT, &sigIntHandler, NULL);
 }
 
-void read_args(int argc, char *argv[], int *port, int *maxNumberOfMessagesInHistory)
-{	
-	*port = RANDOM_PORT_NUMBER; //Set any available port as default
+void read_args(int argc, char *argv[], int *maxNumberOfMessagesInHistory, int *rmNumber, bool *isPrimaryServer)
+{
 	*maxNumberOfMessagesInHistory = DEFAULT_NUMBER_OF_RECORDED_MESSAGES;
 
-	if(argc == 3)
+	if(argc == 4)
     {
 			try {
-				*port = stoi(argv[1]); // In case it's received a specific port as argv
-                *maxNumberOfMessagesInHistory = stoi(argv[2]);
+                *maxNumberOfMessagesInHistory = stoi(argv[1]);
+                *rmNumber = stoi(argv[2]);
+                *isPrimaryServer = stoi(argv[3]);
 			}
 			catch(std::invalid_argument e) {
                 cout << "[ERROR] Invalid arguments" << endl;
@@ -54,51 +54,45 @@ void read_args(int argc, char *argv[], int *port, int *maxNumberOfMessagesInHist
 
 int main(int argc, char *argv[])
 {
-    int i = 0;
-    int port, maxNumberOfMessagesInHistory;
+    int maxNumberOfMessagesInHistory;
+    int rmNumber;
+    bool isPrimaryServer;
 
     // TODO: change this to a parameter o configuration file
     vector<int> fePortList{ 6969, 6970, 6971 };
     vector<std::string> feAddressList {"127.0.0.1", "127.0.0.1", "127.0.0.1"};
 
-
     // Capture and process SO signals
 	capture_signals();
-
-	pthread_t tid[MAXBACKLOG];
-
-	read_args(argc, argv, &port, &maxNumberOfMessagesInHistory);
-
-    serverApp.configureFilesystemManager(maxNumberOfMessagesInHistory);
 
     serverRing = ServersRing();
     serverRing.connectServersRing(serverApp);
 
-	//TODO sorry for the mess, WIP
+	read_args(argc, argv, &maxNumberOfMessagesInHistory, &rmNumber, &isPrimaryServer);
 
 	if ( fePortList.size() != feAddressList.size() ) {
 	    cout << "[ERROR] FE address and socket list need to have the same size";
 	    return -1;
 	}
 
-	for (int i = 0; i < fePortList.size(); i++) {
-
-        cout << "[DEBUG] I'll connect to FE address:port " << feAddressList.at(i) << "/" << fePortList.at(i) << endl;
-        serverApp.connectToFE(feAddressList.at(i), fePortList.at(i));
-
+	if(isPrimaryServer) {
+        for (int i = 0; i < fePortList.size(); i++) {
+            cout << "[DEBUG] I'll connect to FE address:port " << feAddressList.at(i) << "/" << fePortList.at(i) << endl;
+            serverApp.connectToFE(feAddressList.at(i), fePortList.at(i));
+        }
 	}
 
     cout << "[DEBUG] number of sockets waiting for connection " << serverApp.socketFeList.size() << endl;
-
-
     serverApp.handleFrontEndsConnections();
+
+    Server::isPrimaryServer = isPrimaryServer;
+    serverApp.prepareReplicationManager(rmNumber);
 	
 	//I'm not proud of this, I swear
 	while (true)
 	{
 		sleep(60);
 	}
-	
 
 	return 0;
 }
