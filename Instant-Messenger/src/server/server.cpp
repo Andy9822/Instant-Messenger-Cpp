@@ -199,6 +199,7 @@ namespace server {
 
         bool connectedFrontEnd = true;
         bool replicationError = false;
+        bool connectedRm = true;
 
         while (connectedFrontEnd) {
             // Listen for an incoming Packet from client
@@ -211,6 +212,7 @@ namespace server {
 
             // verify if should send replication socket or not
             _this->sockets_connections_semaphore->wait();
+            replicationError = false;
             if(isPrimaryServer && (receivedPacket->isMessage() || receivedPacket->isJoinMessage() || receivedPacket->isDisconnect())) {
                 cout << "Sending " << _this->rm_connect_sockets_fd.size() << " replication packets" << endl;
 
@@ -218,12 +220,15 @@ namespace server {
                     cout << "Sending packet of type " << receivedPacket->type << " to socket " << socket.first << endl;
                     receivedPacket->frontEndAddress = feAddress;
                     _this->sendPacket(socket.first, receivedPacket); // send message for each socket on RM socket list
-                    Packet *confirmationPacket = _this->readPacket(socket.first, &connectedFrontEnd); // wait for socket answer
+                    Packet *confirmationPacket = _this->readPacket(socket.first, &connectedRm); // wait for socket answer
                     cout << "Reading packet of type " << confirmationPacket->type << " on socket " << socket.first << endl;
 
-                    if (!connectedFrontEnd) {
+                    if (!connectedRm) {
                         // Free allocated memory for reading Packet
-                        free(receivedPacket);
+                        //free(receivedPacket);
+                        auto iterator = _this->rm_connect_sockets_fd.find(socket.first);
+                        _this->rm_connect_sockets_fd.erase(iterator);
+                        connectedRm = true;
                         replicationError = true;
                     }
                 }
@@ -237,7 +242,7 @@ namespace server {
             }
 
             if (receivedPacket->isMessage()) {
-                cout << "[DEBUG] recebi message" << receivedPacket->message << endl;
+                cout << "[DEBUG] recebi message " << receivedPacket->message << endl;
                 Packet *pack = new Packet();
                 pack->type = ACK_PACKET;
                 strcpy(pack->user_id, receivedPacket->user_id);
