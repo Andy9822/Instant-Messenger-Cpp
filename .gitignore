@@ -35,3 +35,11 @@
 .vscode
 
 .idea/
+
+Instant-Messenger/cmake-build-debug/
+
+Instant-Messenger/build/client.app.dSYM/Contents/Info.plist
+
+Instant-Messenger/build/proxy_fe.app.dSYM/Contents/Info.plist
+
+Instant-Messenger/build/server.app.dSYM/Contents/Info.plist
