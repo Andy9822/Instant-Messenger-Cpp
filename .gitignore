@@ -45,3 +45,5 @@ Instant-Messenger/build/proxy_fe.app.dSYM/Contents/Info.plist
 Instant-Messenger/build/server.app.dSYM/Contents/Info.plist
 
 .DS_Store
+
+Instant-Messenger/messages
