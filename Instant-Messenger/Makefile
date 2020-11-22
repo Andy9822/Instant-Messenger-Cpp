@@ -33,7 +33,7 @@ Uuid.o:	$(SRC_DIR)/util/Uuid.cpp
 	${CC} -c $(SRC_DIR)/util/Uuid.cpp
 
 run-client:
-	$(BUILD_DIR)/client.app JohnnyUser1 SampleRoom1 127.0.0.1 $(FE_CLIENTS_PORT)
+	$(BUILD_DIR)/client.app cassianoTest CASSIANOFODATOTAL 127.0.0.1 $(FE_CLIENTS_PORT)
 
 run-server:
 	$(BUILD_DIR)/server.app $(SERVER_PORT) 4
@@ -57,6 +57,9 @@ deploy_fe2:
 
 deploy_fe3:
 	$(BUILD_DIR)/proxy_fe.app 6971 4041
+
+deploy_primary:                            #mxMsg #rmNumber #isPrimary
+	$(BUILD_DIR)/server.app $(SERVER_PORT) 4 0 1
 
 deploy:
 	docker-compose up

@@ -29,6 +29,8 @@ using namespace servergroupmanager;
 namespace server {
     class Server : public Socket {
     private:
+
+        std::map<int, sockaddr_in> rm_connect_sockets_fd;
         ServerGroupManager *groupManager;
         ConnectionMonitor *connectionMonitor;
 
@@ -69,8 +71,24 @@ namespace server {
         int incrementNumberOfConnectionsFromUser(string user);
 
         void purgeFeConnection(string feAddress);
-
         int getSocketFromAddress(const string feAddress);
+        void eraseSocketFromFeSocketList(int socketId);
+
+        static bool isPrimaryServer;
+        static bool getIsPrimaryServer;
+        void prepareReplicationManager(int rmNumber);
+
+        void connectToRmServers();
+        void createRMListenerSocket();
+        static void *handleRMCommunication(void *args);
+        static void *acceptRMConnection(void *args);
+        int rmNumber;
+        int rm_listening_socket_fd;
+        struct sockaddr_in rm_listening_serv_addr;
+        void printRMConnections() const;
+        void setRmNumber(int rmNumber);
+        int getRmNumber();
+        void sendMockDataToRMServers();
     };
 }
 #endif

@@ -1,9 +1,11 @@
 #include "../../include/server/Group.hpp"
 #include "../../include/util/StringConstants.hpp"
 #include <algorithm>
+#include "../../include/server/server.hpp"
 
 
 using namespace std;
+using namespace server;
 
 Group::Group(string name, FeAddressBook* feAddressBook)
 {
@@ -55,7 +57,8 @@ void * Group::consumeMessageQueue(void * args)
 
                 _this->fsManager->appendGroupMessageToHistory(message);
                 _this->usersSemaphore->wait();
-                _this->messageManager->broadcastMessageToUsers(message, _this->getAllActiveConnectionIds());
+                if(Server::isPrimaryServer)
+                    _this->messageManager->broadcastMessageToUsers(message, _this->getAllActiveConnectionIds());
                 _this->usersSemaphore->post();
             }
         }
@@ -98,8 +101,12 @@ void Group::sendAcceptToUser(string clientID, string feAddress)
 int Group::registerNewSession(string clientID, string feAddress, string userName) {
     User* user = NULL;
     int result = 0;
-    sendAcceptToUser(clientID, feAddress);
-    sendHistoryToUser(clientID, feAddress);
+
+    if(Server::isPrimaryServer) {
+        sendAcceptToUser(clientID, feAddress);
+        sendHistoryToUser(clientID, feAddress);
+    }
+
     usersSemaphore->wait();
     for (auto userItr : this->users) {
         if ( userName.compare(userItr->getUsername()) == 0 ) {
@@ -110,7 +117,9 @@ int Group::registerNewSession(string clientID, string feAddress, string userName
     if ( user == NULL) { // if user does not exists in the list, we create the entry in the list
         user = new User(userName);
         this->users.push_back(user);
-        sendActivityMessage(userName, JOINED_MESSAGE); // se a pessoa é nova no grupo, a gente manda uma mensagem de join para todos
+        if(Server::isPrimaryServer) {
+            sendActivityMessage(userName, JOINED_MESSAGE); // se a pessoa é nova no grupo, a gente manda uma mensagem de join para todos
+        }
     }
 
     result = user->registerSession(clientID, feAddress);
@@ -160,7 +169,9 @@ void Group::disconnectSession(string clientID, string feAddress, map<string, int
         numberOfConnectionsByUser[user->getUsername()] -= 1; //TODO: check for the necessity of a semaphore here
         user->releaseSession(clientID, feAddress);
         if (user->getActiveConnections().size() < 1) {
-            sendActivityMessage(user->getUsername(), LEFT_GROUP_MESSAGE);
+            if(Server::isPrimaryServer) {
+                sendActivityMessage(user->getUsername(), LEFT_GROUP_MESSAGE);
+            }
             users.remove(user);
         }
     }
