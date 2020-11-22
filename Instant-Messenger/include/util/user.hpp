@@ -20,22 +20,21 @@ class User {
 
     private:
         string username;
-        std::vector<int> sockets;
+        std::vector<pair <string, string> > clientIdentifiers; // clientID, feSocket
         Semaphore semaphore;
     
     public:
         User(string username);
         string getUsername();
-        std::vector<int> getActiveSockets();
+        std::vector<pair<string, string>> getActiveConnections();
 
         /*
         * Method to register a socket linked to a user
         * throws USER_SESSIONS_LIMIT_REACHED if the addition
         * was not created due to limitation reached
         */
-
-        int registerSession(int socket);
-        void releaseSession(int socketId);
+        int registerSession(string clientID, string feAddress);
+        void releaseSession(string clientID, string feAddress);
         void initSessionList();
 
         bool operator == (const User& s) const { return username == s.username; }

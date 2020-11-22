@@ -1,17 +1,21 @@
 #include "../../include/server/Group.hpp"
+#include "../../include/util/StringConstants.hpp"
 #include <algorithm>
+
 
 using namespace std;
 
-Group::Group(string name)
+Group::Group(string name, FeAddressBook* feAddressBook)
 {
     this->groupName = name;
     fsManager = new filesystemmanager::FileSystemManager();
-    messageManager = new servermessagemanager::ServerMessageManager();
+    messageManager = new servermessagemanager::ServerMessageManager(feAddressBook);
 
     // Init semaphores
     messageQueueSemaphore = new Semaphore(1);
     usersSemaphore = new Semaphore(1);
+
+    this->feAddressBook = feAddressBook;
 
     // Init consumer/producer mutex
     pthread_mutex_init(&mutex_consumer_producer, NULL);
@@ -51,13 +55,31 @@ void * Group::consumeMessageQueue(void * args)
 
                 _this->fsManager->appendGroupMessageToHistory(message);
                 _this->usersSemaphore->wait();
-                _this->messageManager->broadcastMessageToUsers(message, _this->getAllActiveSockets());
+                _this->messageManager->broadcastMessageToUsers(message, _this->getAllActiveConnectionIds());
                 _this->usersSemaphore->post();
             }
         }
         
     }
     
+}
+
+/**
+ * This function sends an ACCEPT packet to the user saying that
+ * he was able to join the group
+ *
+ * TODO: maybe this responsibility should not be in the group. Analyse a better place to place it, maybe on server. This has nothing to do with the group
+ *
+ * @param clientID
+ * @param feSocket
+ */
+void Group::sendAcceptToUser(string clientID, string feAddress)
+{
+    Packet *pack = new Packet();
+    pack->type = ACCEPT_PACKET;
+    strcpy(pack->user_id, clientID.c_str());
+    std::cout << "[DEBUG] mandei ACCEPT para socket: " << feAddress << std::endl;
+    messageManager->sendPacketToSocketId(pack, feAddress);
 }
 
 /**
@@ -68,17 +90,16 @@ void * Group::consumeMessageQueue(void * args)
  *
  * After all, it calls the method responsible for notify all other users in the same group
  *
- * @param socket
+ * @param feSocket
  * @param userName
  * @param groupName
  * @return returns a negative number in case of a failure
  */
-int Group::registerNewSession(int socket, string userName) {
+int Group::registerNewSession(string clientID, string feAddress, string userName) {
     User* user = NULL;
     int result = 0;
-
-
-    sendHistoryToUser(socket);
+    sendAcceptToUser(clientID, feAddress);
+    sendHistoryToUser(clientID, feAddress);
     usersSemaphore->wait();
     for (auto userItr : this->users) {
         if ( userName.compare(userItr->getUsername()) == 0 ) {
@@ -89,24 +110,35 @@ int Group::registerNewSession(int socket, string userName) {
     if ( user == NULL) { // if user does not exists in the list, we create the entry in the list
         user = new User(userName);
         this->users.push_back(user);
-        result = user->registerSession(socket);
-        sendActivityMessage(userName, JOINED_MESSAGE); // Se a pessoa já está no grupo, não deve-se enviar uma nova mensagem dizendo que ela ingressou no grupo. (copiei do moodle esse statement)
-    } else {
-        result = user->registerSession(socket);
+        sendActivityMessage(userName, JOINED_MESSAGE); // se a pessoa é nova no grupo, a gente manda uma mensagem de join para todos
     }
+
+    result = user->registerSession(clientID, feAddress);
     usersSemaphore->post();
     return result;
 }
 
 /**
- * This function handles the disconnect events from the upper layer
- * @param socket
+ * This method handles the disconnect events from the upper layer
+ *
+ * @param feSocket
  */
-void Group::handleDisconnectEvent(int socket, map<string, int> &numberOfConnectionsByUser) {
+void Group::handleDisconnectEvent(string clientID, string feAddress, map<string, int> &numberOfConnectionsByUser) {
     usersSemaphore->wait();
-    vector<int> allActiveSockets = this->getAllActiveSockets();
-    if (std::count(allActiveSockets.begin(), allActiveSockets.end(), socket)) { // element found
-        this->disconnectSession(socket, numberOfConnectionsByUser);
+    vector<pair <string, string> > allActiveSockets = this->getAllActiveConnectionIds();
+
+    if ( clientID.compare(FE_DISCONNECT) == 0 ) { // DELETE ALL CONNECTIONS FROM THE CLIENTS THAT WERE CONNECTED TO THE FE
+        for (auto groupConnection : allActiveSockets) {
+            if (groupConnection.second.compare(feAddress) == 0) { // if there is a match in the FE socket ID
+                cout << "[FE disconnect] Killing clientConnection [" << groupConnection.first << "," << groupConnection.second << "]"
+                     << endl;
+                this->disconnectSession(groupConnection.first, feAddress, numberOfConnectionsByUser);
+            }
+        }
+    } else {
+        cout << "[Client disconnect] Killing clientConnection [" << clientID << "," << feAddress << "]"
+             << endl;
+        this->disconnectSession(clientID, feAddress, numberOfConnectionsByUser);
     }
     usersSemaphore->post();
 }
@@ -119,14 +151,15 @@ void Group::handleDisconnectEvent(int socket, map<string, int> &numberOfConnecti
  *      if yes - we just kill the connection
  *      if not - we remove the user from the user's list and send a notification
  *  it is already thread safe by the call (handleDisconnectEvent)
- * @param socketId
+ * @param feSocket
  */
-void Group::disconnectSession(int socketId, map<string, int> &numberOfConnectionsByUser) {
-    user::User* user = getUserFromSocket(socketId);
+void Group::disconnectSession(string clientID, string feAddress, map<string, int> &numberOfConnectionsByUser) {
+    user::User* user = getUserFromConnectionId(clientID, feAddress);
+    cout << "disconnectSession  [" << clientID << "," << feAddress << "]" << endl;
     if ( user != NULL) {
-        numberOfConnectionsByUser[user->getUsername()] -= 1;
-        user->releaseSession(socketId);
-        if (user->getActiveSockets().size() < 1) {
+        numberOfConnectionsByUser[user->getUsername()] -= 1; //TODO: check for the necessity of a semaphore here
+        user->releaseSession(clientID, feAddress);
+        if (user->getActiveConnections().size() < 1) {
             sendActivityMessage(user->getUsername(), LEFT_GROUP_MESSAGE);
             users.remove(user);
         }
@@ -148,14 +181,15 @@ void Group::sendActivityMessage(const string &userName, const string &actionText
 /**
  * This little friend can send the history to a socket
  * It can help you to welcome new users and introduce them to the discussed topics
- * @param socketId
+ * @param feSocket
  */
-void Group::sendHistoryToUser(int socketId) {
+void Group::sendHistoryToUser(string clientID, string feAddress) {
     std::vector<Message> messages = fsManager->readGroupHistoryMessages(this->groupName);
+    cout << "Vou printar as mensagens do user " << endl;
     messageQueueSemaphore->wait();
     for(auto  message : messages) {
         message.setIsNotification(true);
-        messageManager->sendMessageToSocketId(message, socketId);
+        messageManager->sendMessageToAddress(message, clientID, feAddress);
     }
     messageQueueSemaphore->post();
 }
@@ -172,19 +206,19 @@ void Group::processReceivedMessage(string userName, string message) {
 }
 
 /**
- * Auxiliar method to get the user by the socket
- * @param socketId
+ * Auxiliary method to get the user by the connection
+ * @param feSocket
  * @return
  */
-User *Group::getUserFromSocket(int socketId) const {
+User *Group::getUserFromConnectionId(string clientID, string feAddress) const {
     for (auto user : users) {
-        for (auto socket : user->getActiveSockets()) {
-            if (socket == socketId) {
+        for (auto userConnection : user->getActiveConnections()) {
+            if ( ( clientID.compare(userConnection.first) == 0) && ( feAddress.compare(userConnection.second) == 0 ) )  {
                 return user;
             }
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 /**
@@ -203,14 +237,14 @@ void Group::addMessageToMessageQueue(Message message) {
  * Can you guess what this method does?
  * @return list of sockets
  */
-vector<int> Group::getAllActiveSockets() {
-    vector<int> sockets = vector<int>();
+vector<pair<string, string>> Group::getAllActiveConnectionIds() {
+    vector< pair <string, string> > connectionIds = vector< pair<string, string> >();
     for (auto user : this->users) {
-        for (auto userActiveSocket : user->getActiveSockets()) {
-            sockets.push_back(userActiveSocket);
+        for (auto userActiveSession : user->getActiveConnections()) {
+            connectionIds.push_back(userActiveSession);
         }
     }
-    return sockets;
+    return connectionIds;
 }
 
 void Group::configureFileSystemManager(int maxNumberOfMessagesOnHistory) {

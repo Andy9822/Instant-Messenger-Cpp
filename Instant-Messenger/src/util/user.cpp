@@ -1,4 +1,5 @@
 #include "../../include/util/user.hpp"
+#include "../../include/util/definitions.hpp"
 #include <iostream>
 #include <algorithm>
 
@@ -10,30 +11,38 @@ namespace user {
 
     void User::initSessionList() {
         this->semaphore.wait();
-        this->sockets = std::vector<int>();
+        this->clientIdentifiers = std::vector< pair <string, string> >(); // pair (clientID, feSocket)
         this->semaphore.post();
     }
-
 
     string User::getUsername() {
         return this->username;
     }
 
-    std::vector<int> User::getActiveSockets() {
-        return sockets;
+    /**
+     * Returns the identifiers for all sessions that this user has vector of pairs (clientID, feSocket)
+     * @return
+     */
+    std::vector<pair<string, string>> User::getActiveConnections() {
+        return this->clientIdentifiers;
     }
 
     /**
      * The validation for the number of sockets is not the hard verification that we needed,
-     * It is a week on because it is only checking in the group level. Server has a function to verify it in the upper layer
+     * It is a week one because it is only checking in the group level. Server has a function to verify it in the upper layer
      * But it is good to hava some kind of validation here, as well
-     * @param socket
+     * @param clientID
      * @return negative if error
      */
-    int User::registerSession(int socket) {
+    int User::registerSession(string clientID, string feAddress) {
+
+        pair<string, string> clientID_feSocket = pair<string, string>();
+        clientID_feSocket.first.assign(clientID); //TODO: debug to confirm
+        clientID_feSocket.second.assign(feAddress);
+
         this->semaphore.wait();
-        if (sockets.size() < MAX_NUMBER_OF_SIMULTANEOUS_CONNECTIONS ) {
-            this->sockets.push_back(socket);
+        if (this->clientIdentifiers.size() < MAX_NUMBER_OF_SIMULTANEOUS_CONNECTIONS ) {
+            this->clientIdentifiers.push_back(clientID_feSocket);
             this->semaphore.post();
             return 0;
         } else {
@@ -42,20 +51,34 @@ namespace user {
         }
     }
 
-    void User::printSockets() {
-        for (auto socket : this->sockets) {
-            cout << "printsockt::Socket: " << socket << endl;
+    /**
+     * Releases a connection for a user
+     * Since a user can be connected in different FEs and with different dispositives in the same FE, the
+     * client's identifier is maintained by a pair (clientID, feSocket). We need to use this pair
+     * to delete the existing session accordingly
+     *
+     * @param clientID
+     * @param feAddress
+     */
+    void User::releaseSession(string clientID, string feAddress) {
+        this->semaphore.wait();
+        int deletion_index = 0;
+        auto begin = this->clientIdentifiers.begin();
+        for (auto userSession : this->clientIdentifiers) {
+            if ( userSession.first.compare(clientID) == 0 && userSession.first.compare(feAddress) ) {
+                this->clientIdentifiers.erase(begin + deletion_index); // will delete the deletion_index's item
+            }
+            deletion_index += 1;
         }
+
+        this->printSockets();
+
+        this->semaphore.post();
     }
 
-    void User::releaseSession(int socketId) {
-        std::vector<int>::iterator position;
-        this->semaphore.wait();
-        position = std::find(sockets.begin(), sockets.end(), socketId);
-
-        if (position != sockets.end()) {
-            sockets.erase(position);
+    void User::printSockets() {
+        for (auto identification : this->clientIdentifiers) {
+            cout << "printsockt::Client Dispositive Identifier: " << identification.first << " FE socket: " << identification.second << endl;
         }
-        this->semaphore.post();
     }
 } // namespace user;

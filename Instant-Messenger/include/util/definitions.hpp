@@ -10,12 +10,20 @@
 #define USERNAME_MAX_SIZE 20
 #endif
 
+#ifndef UUID_SIZE
+#define UUID_SIZE 37
+#endif
+
 #ifndef GROUP_MAX_SIZE
 #define GROUP_MAX_SIZE 20
 #endif
 
 #ifndef MESSAGE_MAX_SIZE
 #define MESSAGE_MAX_SIZE 255
+#endif
+
+#ifndef UUID_SIZE
+#define UUID_SIZE 37
 #endif
 
 #ifndef JOIN_QUIT_STATUS_MESSAGE
@@ -25,12 +33,6 @@
 #ifndef DEBUG_MODE
 #define DEBUG_MODE false
 #endif
-
-
-#ifndef DEBUG_MODE
-#define DEBUG_MODE false
-#endif
-
 
 #ifndef JOINED_MESSAGE
 #define JOINED_MESSAGE "<Joined the group>"
@@ -48,14 +50,23 @@
 #define KEEP_ALIVE_INTERVAL 2
 #endif
 
-#ifndef MESSAGE_PACKET
-#define MESSAGE_PACKET 0
+#ifndef ERROR_SENDING
+#define ERROR_SENDING 0
 #endif
 
-#ifndef KEEP_ALIVE_PACKET
-#define KEEP_ALIVE_PACKET 1
-#endif
-
-#ifndef ELECTION_PACKET
-#define ELECTION_PACKET 2
+#ifndef PACKET_TYPES
+#define PACKET_TYPES
+/////// Types of Packet
+enum
+{
+    MESSAGE_PACKET = 0,
+    ACK_PACKET,
+    JOIN_PACKET,
+    ACCEPT_PACKET,
+    KEEP_ALIVE_PACKET,
+    CONNECTION_REFUSED_PACKET,
+    DISCONNECT_PACKET,
+    ELECTION_PACKET,
+};
+////////
 #endif

@@ -104,7 +104,7 @@ namespace servers_ring
         }
 
         if(isPrimary)
-        	cout << "I AM THE PRIMARY SERVER" << endl;
+        	cout << "[DEBUG] I AM THE PRIMARY SERVER" << endl;
 
         // set server id for election purpose
         server_ID = ntohs(serv_addr.sin_port);
@@ -116,7 +116,7 @@ namespace servers_ring
             exit(1);
         }
 
-        cout << "\nSERVER_RING RUNNING ON PORT: " << server_ID << endl;
+        cout << "\n[DEBUG] SERVER_RING RUNNING ON PORT: " << server_ID << endl;
 	}
 
 
@@ -193,7 +193,7 @@ namespace servers_ring
 	        	if(_this->primary == _this->server_ID)
 	        	{
 	        		_this->isPrimary = true;
-	        		cout << "I AM THE NEW PRIMARY SERVER!!!" << endl;
+	        		cout << "[DEBUG] I AM THE NEW PRIMARY SERVER!!!" << endl;
 	        	}
 
 	        }
@@ -245,7 +245,7 @@ namespace servers_ring
 					_this->primary = _this->server_ID;
 			        _this->isPrimary = true;
 			        _this->disconnected = false;
-			        cout << "I AM THE NEW PRIMARY SERVER!!!" << endl;
+			        cout << "[DEBUG] I AM THE NEW PRIMARY SERVER!!!" << endl;
 
 			        port = _this->getNewPortFromFile();
 					_this->client_addr.sin_port = htons(port);
@@ -253,7 +253,7 @@ namespace servers_ring
 				
 			}
 		}
-		cout << "SERVER_RING CONNECTED WITH PORT: " << ntohs(_this->client_addr.sin_port) << endl;
+		cout << "[DEBUG] SERVER_RING CONNECTED WITH PORT: " << ntohs(_this->client_addr.sin_port) << endl;
 
 		if(_this->disconnected == true)
 		{

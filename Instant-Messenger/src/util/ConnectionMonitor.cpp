@@ -1,4 +1,4 @@
-#include "../../include/server/ConnectionMonitor.hpp"
+#include "../../include/util/ConnectionMonitor.hpp"
 #include "../../include/util/definitions.hpp"
 
 #ifdef _WIN32
@@ -21,6 +21,8 @@ void ConnectionMonitor::monitor(int *socket) {
     args->second = this;
 
     keepsMonitoringConnection(args);
+
+    cout << "Timeout has been reached " << "\U0001F41D" << endl;
 
     this->socketLastKeepAliveSemaphore->wait();
     this->socketLastKeepAlive.erase(*socket);
@@ -47,6 +49,8 @@ void * ConnectionMonitor::keepsMonitoringConnection(void *args) {
         _this->socketLastKeepAliveSemaphore->post();
         connectionIsValid = secondsSinceLastKeepAlive < KEEP_ALIVE_TIMEOUT;
     } while (connectionIsValid);
+
+    return NULL;
 }
 
 void ConnectionMonitor::refresh(int socket) {

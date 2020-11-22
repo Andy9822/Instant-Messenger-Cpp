@@ -3,9 +3,11 @@
 
 #include "../util/message.hpp"
 #include "../util/user.hpp"
+#include "../util/Socket.hpp"
 #include "../server/server_message_manager.hpp"
 #include "../util/Packet.hpp"
 #include "./Group.hpp"
+#include "FeAddressBook.hpp"
 
 #include <string>
 #include <iostream>
@@ -23,18 +25,19 @@ using namespace servermessagemanager;
 
 namespace servergroupmanager {
 
-    class ServerGroupManager {
+    class ServerGroupManager : Socket {
         private:
             Semaphore semaphore;
             std::map<string,Group*> groupMap; // will maintain a map of groupName -> group. This will be used to route the calls to the proper group
             bool groupExists(string groupName);
             int maxNumberOfMessagesOnHistory;
+            FeAddressBook* feAddressBook;
 
         public:
-            ServerGroupManager();
-            int registerUserToGroup(int socket, string username, string groupName);
+            ServerGroupManager(FeAddressBook* feAddressBook);
+            int registerUserToGroup(pair<string, string> clientIdentifier, string username, string groupName);
             void processReceivedPacket(Packet* packet);
-            void propagateSocketDisconnectionEvent(int socketId, map<string, int> &numberOfConnectionsByUser);
+            void propagateSocketDisconnectionEvent(pair<string, string> connectionId, map<string, int> &numberOfConnectionsByUser);
             void configureFileSystemManager(int maxNumberOfMessagesOnHistory);
 
     };

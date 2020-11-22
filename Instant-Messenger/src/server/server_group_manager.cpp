@@ -4,28 +4,28 @@ using namespace std;
 
 namespace servergroupmanager {
 
-    ServerGroupManager::ServerGroupManager() : semaphore(1) {
-
+    ServerGroupManager::ServerGroupManager(FeAddressBook* feAddressBook) : semaphore(1) {
+        this->feAddressBook = feAddressBook;
     }
 
     /**
      * This function will be used to active the registration for the right groupName
-     * @param socket
+     * @param clientIdentifier
      * @param username
      * @param groupName
      * @return
      */
-    int ServerGroupManager::registerUserToGroup(int socket, string username, string groupName) {
+    int ServerGroupManager::registerUserToGroup(pair<string, string> clientIdentifier, string username, string groupName) {
 
         // if groupName exists, send the registration to it. If it does not belong to the map of groups, we instantiate a new groupName and forward the information to it
         Group* group = NULL;
         if ( !groupExists(groupName) ) {
-            this->groupMap[groupName] = new Group(groupName);
+            this->groupMap[groupName] = new Group(groupName, this->feAddressBook);
             this->groupMap[groupName]->configureFileSystemManager(this->maxNumberOfMessagesOnHistory);
         }
         group =  this->groupMap[groupName];
 
-        return group->registerNewSession(socket, username);
+        return group->registerNewSession(clientIdentifier.first, clientIdentifier.second, username);
     }
 
 
@@ -46,14 +46,14 @@ namespace servergroupmanager {
     /**
      * This will the send an event to all groups saying:
      * Hey bro, this sockets disconected, it may interest you. Of so, process this event as you want.
-     * @param socketId
+     * @param connectionId
      */
-    void ServerGroupManager::propagateSocketDisconnectionEvent(int socketId, map<string, int> &numberOfConnectionsByUser) {
+    void ServerGroupManager::propagateSocketDisconnectionEvent(pair<string, string> connectionId, map<string, int> &numberOfConnectionsByUser) {
         std::map<basic_string<char>, Group*>::iterator it = this->groupMap.begin();
 
         while ( it != this->groupMap.end() ) { // iterates over the map
             Group* group = it->second;
-            group->handleDisconnectEvent(socketId, numberOfConnectionsByUser);
+            group->handleDisconnectEvent(connectionId.first, connectionId.second, numberOfConnectionsByUser);
             it++;
         }
     }

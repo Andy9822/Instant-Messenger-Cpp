@@ -1,14 +1,52 @@
-#include "../../include/client/ConnectionKeeper.hpp"
 #include "../../include/client/client.h"
-#include "../../include/util/definitions.hpp"
-#include "../../include/util/Packet.hpp"
 
 
-
-Client::Client(char *ip_address, char *port)
+Client::Client()
 {
+	strcpy(this->userId, Uuid::generate_uuid_v4().c_str());
 	sockfd = 0;
 
+    readFEAddressesFile();
+	setupConnection();
+	
+	 // Init semaphore
+    messageQueueSemaphore = new Semaphore(1);
+
+	// Init consumer mutex
+    pthread_mutex_init(&mutex_consumer, NULL);
+    pthread_mutex_lock(&mutex_consumer); // Consumer mutex inits locked, due to absence of messages in the queue to be consumed
+
+	//  Init ack mutex
+    pthread_mutex_init(&mutex_ack, NULL);
+    pthread_mutex_lock(&mutex_ack); // ack mutex inits locked, due to absence of acks 
+
+    // Create thread 24/7 alive for consume queue when available
+    pthread_create(&consumer_queue_tid, NULL, consumeMessagesToSendQueue, (void *) this);
+}
+
+void Client::setupConnection()
+{
+	int chosenFE = chooseFE();
+
+	int sizeAddressStr = addresses[chosenFE].size();
+	int sizePortStr = ports[chosenFE].size();
+
+	char address[sizeAddressStr];
+	char port[sizePortStr];
+
+	strncpy(address, addresses[chosenFE].c_str(), sizeAddressStr-1);
+	strncpy(port, ports[chosenFE].c_str(), sizePortStr-1);
+
+	address[sizeAddressStr - 1] = '\0';
+	port[sizePortStr - 1] = '\0';
+
+	std::cout << "chosen: " << chosenFE << std::endl;
+	std::cout << "port: " << port << std::endl;
+	setupSocket(address, port);
+}
+
+void Client::setupSocket(char *ip_address, char *port)
+{
 	serv_addr.sin_family = AF_INET;     
 	serv_addr.sin_port = htons(atoi(port));    
 	
@@ -16,13 +54,76 @@ Client::Client(char *ip_address, char *port)
 	{ 
 		std::cout << "\nInvalid address/ Address not supported \n" << std::endl; 
 	} 
-
 	bzero(&(serv_addr.sin_zero), 8);  
 }
 
+void * Client::consumeMessagesToSendQueue(void * args)
+{
+    Client* _this = (Client *) args;
+    while (true)
+    {
+        pthread_mutex_lock(&(_this->mutex_consumer));
+		
+		bool hasMessagesInQueue = true;
+        while (hasMessagesInQueue)
+        {
+			_this->messageQueueSemaphore->wait();
 
+			if (_this->messages_queue.empty())
+            {
+                hasMessagesInQueue = false;
+                _this->messageQueueSemaphore->post();
+            }
 
-Packet Client::buildPacket(string input)
+			else
+			{
+				Packet message = _this->messages_queue.front();
+				_this->messages_queue.pop();
+				_this->messageQueueSemaphore->post();
+
+				//Send consumed packet struct via TCP socket
+				_this->sendPacket(_this->sockfd, message);  
+
+				// Locks ack mutex to ensure the next message will be consumed only after receiving an ack for the actual sent packed
+				pthread_mutex_lock(&(_this->mutex_ack));
+			}
+		}
+    }
+}
+
+int Client::chooseFE()
+{
+	srand((unsigned) time(0));
+    int randomNumber;
+	randomNumber = rand() % addresses.size();
+	return randomNumber;
+}
+
+void Client::readFEAddressesFile()
+{
+    string line;
+    ifstream myfile ("src/client/addresses.txt");
+    int i = 0;
+    if (myfile.is_open())
+    {
+        while ( getline (myfile,line))
+        {
+            if (i == 0)
+            {
+                addresses.push_back(line);
+            }
+            else
+            {
+                ports.push_back(line);
+            }
+            i+=1;
+            i%=2;
+        }
+        myfile.close();
+    }
+}
+
+Packet Client::buildPacket(string input, int packetType)
 {
 	char messageBuffer[MESSAGE_MAX_SIZE] = {0};
 	char groupBuffer[GROUP_MAX_SIZE] = {0};
@@ -35,7 +136,7 @@ Packet Client::buildPacket(string input)
 	// Adjust last character to end of string in case string was bigger than max size
 	messageBuffer[MESSAGE_MAX_SIZE - 1] = '\0';
 
-	return Packet(usernameBuffer, groupBuffer, messageBuffer, time(0));
+	return Packet(usernameBuffer, groupBuffer, messageBuffer, time(0), this->userId, packetType);
 }
 
 
@@ -61,24 +162,33 @@ int Client::registerToServer()
 	bool connectedClient = true;
 	Packet *sendingPacket = new Packet();
 
-	*sendingPacket = buildPacket("<Entered the group>");
+	sendingPacket->clientDispositiveIdentifier = 123123; // TODO: remove, this is just a debug
 
-	// Asking server if username already exists
+	*sendingPacket = buildPacket("<Entered the group>", JOIN_PACKET);
 	sendPacket(sockfd, sendingPacket);
-	Packet *receivedPacket = readPacket(sockfd, &connectedClient);
 
-	if(receivedPacket->clientSocket == -1)
+	// Asking server if user can join with one more session
+	Packet *receivedPacket;
+	bool waitingAccept = true;
+	while (waitingAccept)
 	{
-		cout << "You are already logged in 2 sessions" << endl;
-		sockfd = -1;
-		delete sendingPacket;
-		close(sockfd);
-		return -1;
+		receivedPacket = readPacket(sockfd, &connectedClient);
+		if(receivedPacket->type == CONNECTION_REFUSED_PACKET)
+		{
+			cout << "You are already logged in 2 sessions" << endl;
+			sockfd = -1;
+			delete sendingPacket;
+			close(sockfd);
+			return -1;
+		}
+
+		if (receivedPacket->type == ACCEPT_PACKET)
+		{
+			waitingAccept = false;
+		}
 	}
 
-	// print  <entered the group>
-	if(receivedPacket->clientSocket != JOIN_QUIT_STATUS_MESSAGE)
-		showMessage(receivedPacket);
+    std::cout << "\n" << "Bem-vindo ao grupo: " << group << std::endl;
 
 	return 0;
 }
@@ -115,8 +225,10 @@ int Client::ConnectToServer(char* username, char* group)
 	}
 
 	
-    std::cout << "\n" << "Bem-vindo ao grupo: " << group << std::endl;
+	ConnectionKeeper(this->sockfd); // starts the thread that keeps sending keep alives
 
+
+	//TODO refazer isso pra esperar register no main loop e com uma variável de offline ou algo assim
 	return registerToServer();
 }
 
@@ -162,7 +274,16 @@ void * Client::receiveFromServer(void* args)
 			break;
 		}
 
-		_this->showMessage(receivedPacket);
+		if (receivedPacket->type == MESSAGE_PACKET)
+		{
+			_this->showMessage(receivedPacket);
+		}
+
+		if (receivedPacket->type == ACK_PACKET)
+		{
+			// Unlocks ack mutex so the consumer can consume the next message
+			pthread_mutex_unlock(&(_this->mutex_ack));
+		}
 	}
 	return NULL;
 }
@@ -172,17 +293,22 @@ void * Client::receiveFromServer(void* args)
 void * Client::sendToServer(void* args)
 {
 	Client* _this = (Client *) args;
-	Packet *sendingPacket = new Packet();
+	Packet sendingPacket;
 	while (true)
 	{
 		// Read input
 		string input = _this->readInput();
 
 		// Prepare Packet struct to be sent
-		*sendingPacket = _this->buildPacket(input);
+		sendingPacket = _this->buildPacket(input, MESSAGE_PACKET);
 
-		//Send Packet struct via TCP socket
-		_this->sendPacket(_this->sockfd, sendingPacket);
+		// Append sending packet to queue 
+		_this->messageQueueSemaphore->wait();
+		_this->messages_queue.push(sendingPacket);
+		_this->messageQueueSemaphore->post();
+
+		// Unlocks consumer mutex so it knows there's something in the queue
+		pthread_mutex_unlock(&(_this->mutex_consumer));
 	}
 }
 
@@ -198,7 +324,6 @@ int Client::clientCommunication()
 
 	pthread_create(&receiverTid, NULL, receiveFromServer, (void*) this);
 	pthread_create(&senderTid, NULL, sendToServer, (void*) this);
-	ConnectionKeeper(this->sockfd); // starts the thread that keeps sending keep alives
 	pthread_join(receiverTid, NULL);
 
 	std::cout << "A conexão com o servidor foi perdida" << std::endl;
