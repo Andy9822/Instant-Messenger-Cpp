@@ -208,6 +208,7 @@ namespace server {
 
                 for(auto socket : _this->rm_connect_sockets_fd) {
                     cout << "Sending packet of type " << receivedPacket->type << " to socket " << socket.first << endl;
+                    receivedPacket->frontEndSocket = fe_socketfd;
                     _this->sendPacket(socket.first, receivedPacket); // send message for each socket on RM socket list
                     Packet *confirmationPacket = _this->readPacket(socket.first, &connectedFrontEnd); // wait for socket answer
                     cout << "Reading packet of type " << confirmationPacket->type << " on socket " << socket.first << endl;
@@ -487,13 +488,13 @@ namespace server {
                     cout << " Registering user to group " << endl;
                     receivedPacket->type = REPLICATION_PACKET;
                     _this->registerUserToServer(receivedPacket, receivedPacket->frontEndSocket); // considers the front end connection
-                } /*else if (receivedPacket->isDisconnect()) {
+                } else if (receivedPacket->isDisconnect()) {
                     receivedPacket->type = REPLICATION_PACKET;
                     pair<int, int> connectionId = pair<int, int>();
                     connectionId.first = receivedPacket->clientDispositiveIdentifier;
                     connectionId.second = receivedPacket->clientSocket;
                     _this->closeClientConnection(connectionId); // considers the front end connection
-                }*/
+                }
 
                 cout << "Sending replication packet confirmation to Primary Server from socket " << rm_socket_fd
                      << endl;

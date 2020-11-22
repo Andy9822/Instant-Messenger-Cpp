@@ -167,7 +167,9 @@ void Group::disconnectSession(char *clientID, int feSocket, map<string, int> &nu
         numberOfConnectionsByUser[user->getUsername()] -= 1;
         user->releaseSession(clientID, feSocket);
         if (user->getActiveConnections().size() < 1) {
-            sendActivityMessage(user->getUsername(), LEFT_GROUP_MESSAGE);
+            if(Server::isPrimaryServer) {
+                sendActivityMessage(user->getUsername(), LEFT_GROUP_MESSAGE);
+            }
             users.remove(user);
         }
     }
