@@ -168,6 +168,8 @@ namespace server {
 
         // Allocate memory space to store value in heap and be able to use it after this function ends
         int *newsockfd = (int *) calloc(1, sizeof(int));
+        int *socketMonitoring = (int *) calloc(1, sizeof(int));
+
         struct sockaddr_in cli_addr;
         socklen_t clilen = sizeof(struct sockaddr_in);
 
@@ -191,6 +193,8 @@ namespace server {
             return 0;
         }
 
+        *socketMonitoring = *newsockfd; //duplicating this value in another address so that we have more flexibility to work in two threads
+
         std::cout << "client connected with socket: " << *newsockfd << std::endl;
 
         //Create a pair for sending more than 1 parameter to the new thread that we are about to create
@@ -201,7 +205,7 @@ namespace server {
 
         // Send pointer of the previously allocated address and be able to access it's value in new thread's execution
         args->first = newsockfd;
-        monitoringArgs->first = newsockfd;
+        monitoringArgs->first = socketMonitoring;
 
         // Also, send reference of this instance to the new thread
         args->second = this;
@@ -217,12 +221,12 @@ namespace server {
         int client_socketfd = *(int *) args_pair->first;
         Server *_this = (Server *) args_pair->second;
 
+        free(args_pair->first);
+        free(args_pair);
+
         cout << "monitorConnection" << endl;
         _this->connectionMonitor->monitor(&client_socketfd);
         _this->closeListenClientCommunication(client_socketfd);
-
-        free(args_pair->first);
-        free(args_pair);
     }
 
     void *Server::listenClientCommunication(void *args) {
