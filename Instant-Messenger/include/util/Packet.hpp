@@ -18,7 +18,7 @@ struct Packet
     char message[MESSAGE_MAX_SIZE];
     char message_id[UUID_SIZE];
     int clientSocket;
-    int frontEndSocket;
+    string frontEndAddress;
     int clientDispositiveIdentifier; // TODO aqui na real é o user_id que é um char[UUID_SIZE]
     time_t timestamp;
     int type;
@@ -86,6 +86,9 @@ struct Packet
     }
     bool isJoinMessage() {
         return this->type == JOIN_PACKET;
+    }
+    bool isReplicationPacket() {
+        return this->type == REPLICATION_PACKET;
     }
 };
 

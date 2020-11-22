@@ -6,6 +6,9 @@ BUILD_DIR=./build
 SERVER_PORT=8888
 FE_SERVER_PORT=6969
 FE_CLIENTS_PORT=4040
+RM_NUMBER = 0
+IS_PRIMARY = 1
+NUM_MAX_MESSAGES = 4
 
 all: build-server build-client build-proxy_fe
 
@@ -36,7 +39,7 @@ run-client:
 	$(BUILD_DIR)/client.app JohnnyUser1 SampleRoom1 127.0.0.1 $(FE_CLIENTS_PORT)
 
 run-server:
-	$(BUILD_DIR)/server.app $(SERVER_PORT) 4
+	$(BUILD_DIR)/server.app $(NUM_MAX_MESSAGES) $(RM_NUMBER) $(IS_PRIMARY)
 
 run-proxy_fe:
 	$(BUILD_DIR)/proxy_fe.app $(FE_SERVER_PORT) $(FE_CLIENTS_PORT)
