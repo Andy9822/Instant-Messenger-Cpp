@@ -372,14 +372,17 @@ namespace server {
 
             if (inet_pton(AF_INET, ip_address, &rm_connect_socket_addr.sin_addr) <= 0) {
                 cout << "\n RM Invalid address/ Address not supported \n" << endl;
+                continue;
             }
 
             if ((*connectSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
                 cout << "\n RM Socket creation error \n" << endl;
+                continue;
             }
 
             if (connect(*connectSocket, (struct sockaddr *) &rm_connect_socket_addr, sizeof(rm_connect_socket_addr)) < 0) {
                 cout << "ERROR connecting on RM sockets\n" << endl;
+                continue;
             }
 
             rm_connect_sockets_fd.insert({*connectSocket, rm_connect_socket_addr});
