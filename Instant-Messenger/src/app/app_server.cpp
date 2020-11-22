@@ -53,7 +53,6 @@ void read_args(int argc, char *argv[], int *port, int *maxNumberOfMessagesInHist
 
 int main(int argc, char *argv[])
 {
-    int i = 0;
     int port, maxNumberOfMessagesInHistory;
     int rmNumber;
     bool isPrimaryServer;
@@ -65,21 +64,7 @@ int main(int argc, char *argv[])
     // Capture and process SO signals
 	capture_signals();
 
-	pthread_t tid[MAXBACKLOG];
-
 	read_args(argc, argv, &port, &maxNumberOfMessagesInHistory, &rmNumber, &isPrimaryServer);
-    // serverApp.setPort(port);
-    // serverApp.configureFilesystemManager(maxNumberOfMessagesInHistory);
-    // serverApp.prepareConnection();
-    // serverApp.printPortNumber();
-
-	// while(1)
-	// {
-	// 	if(serverApp.handleFrontEndsConnections(&tid[i++]) < 0)
-	// 		return -1;
-	// }
-
-	//TODO sorry for the mess, WIP
 
 	if ( fePortList.size() != feAddressList.size() ) {
 	    cout << "[ERROR] FE address and socket list need to have the same size";
@@ -88,10 +73,8 @@ int main(int argc, char *argv[])
 
 	if(isPrimaryServer) {
         for (int i = 0; i < fePortList.size(); i++) {
-
             cout << "[DEBUG] I'll connect to FE address:port " << feAddressList.at(i) << "/" << fePortList.at(i) << endl;
             serverApp.connectToFE(feAddressList.at(i), fePortList.at(i));
-
         }
 	}
 

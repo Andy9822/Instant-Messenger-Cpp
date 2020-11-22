@@ -82,13 +82,14 @@ namespace server {
 
     int Server::registerUserToServer(Packet *registrationPacket, string feAddress) {
         // Store new crated socket in the vector of existing connections sockets and increment counter for the user
-        int socketId = getSocketFromAddress(feAddress);
+
         this->sockets_connections_semaphore->wait();
         if (incrementNumberOfConnectionsFromUser(registrationPacket->username) == USER_SESSIONS_LIMIT_REACHED ) { // we can keep this
             Packet *connectionRefusedPacket = new Packet(CONNECTION_REFUSED_PACKET);
             strcpy(connectionRefusedPacket->user_id, registrationPacket->user_id);
             std::cout << "[DEBUG|ERROR] limit sessoes alcanadas pelo user" << std::endl;
             if(isPrimaryServer) {
+                int socketId = getSocketFromAddress(feAddress);
                 this->sendPacket(socketId, connectionRefusedPacket);
             }
             this->sockets_connections_semaphore->post();
