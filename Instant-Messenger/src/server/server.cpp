@@ -219,7 +219,7 @@ namespace server {
 
                 for(auto socket : _this->rm_connect_sockets_fd) {
                     cout << "Sending packet of type " << receivedPacket->type << " to socket " << socket.first << endl;
-                    receivedPacket->frontEndAddress = feAddress;
+                    strcpy(receivedPacket->frontEndAddress, feAddress.c_str());
                     _this->sendPacket(socket.first, receivedPacket); // send message for each socket on RM socket list
                     Packet *confirmationPacket = _this->readPacket(socket.first, &connectedRm); // wait for socket answer
                     cout << "Reading packet of type " << confirmationPacket->type << " on socket " << socket.first << endl;
@@ -508,17 +508,18 @@ namespace server {
                     break;
                 }
 
+                string address(receivedPacket->frontEndAddress);
                 //create field on socket to store customer socket id
                 if (receivedPacket->isMessage()) {
                     receivedPacket->type = REPLICATION_PACKET;
                     _this->groupManager->processReceivedPacket(receivedPacket);
                 } else if (receivedPacket->isJoinMessage()) {
                     std::cout << "[DEBUG] recebi joinMessage" << std::endl;
-                    _this->registerUserToServer(receivedPacket, receivedPacket->frontEndAddress); // considers the front end connection
+                    _this->registerUserToServer(receivedPacket, address); // considers the front end connection
                 } else if (receivedPacket->isDisconnect()) {
                     pair<string, string> connectionId = pair<string, string>();
                     connectionId.first.assign(receivedPacket->user_id);
-                    connectionId.second.assign(receivedPacket->frontEndAddress);
+                    connectionId.second.assign(address);
                     std::cout << "[DEBUG] vou chamar a rotina para o disconnect do fe " <<  connectionId.first << "endereco" << receivedPacket->frontEndAddress << std::endl;
                     _this->closeClientConnection(connectionId); // considers the front end connection
                 }

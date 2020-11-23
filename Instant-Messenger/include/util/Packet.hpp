@@ -18,7 +18,7 @@ struct Packet
     char message[MESSAGE_MAX_SIZE];
     char message_id[UUID_SIZE];
     int clientSocket;
-    string frontEndAddress;
+    char frontEndAddress[100];
     int clientDispositiveIdentifier; // TODO aqui na real é o user_id que é um char[UUID_SIZE]
     time_t timestamp;
     int type;
