@@ -194,6 +194,7 @@ namespace servers_ring
 	        	{
 	        		_this->isPrimary = true;
 	        		cout << "[DEBUG] I AM THE NEW PRIMARY SERVER!!!" << endl;
+	        		Server::isPrimaryServer = true;
 	        	}
 
 	        }
@@ -246,7 +247,7 @@ namespace servers_ring
 			        _this->isPrimary = true;
 			        _this->disconnected = false;
 			        cout << "[DEBUG] I AM THE NEW PRIMARY SERVER!!!" << endl;
-
+                    // TODO: single point for elected server
 			        port = _this->getNewPortFromFile();
 					_this->client_addr.sin_port = htons(port);
 				}
