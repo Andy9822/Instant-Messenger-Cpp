@@ -6,7 +6,7 @@ BUILD_DIR=./build
 SERVER_PORT=8888
 FE_SERVER_PORT=6969
 FE_CLIENTS_PORT=4040
-RM_NUMBER = 0
+RM_NUMBER = 3
 IS_PRIMARY = 1
 NUM_MAX_MESSAGES = 4
 
@@ -66,7 +66,7 @@ deploy_fe2: all
 deploy_fe3: all
 	$(BUILD_DIR)/proxy_fe.app 6971 4041
 
-deploy:
+deploy: clean all
 	docker-compose up
 	
 services-up:
