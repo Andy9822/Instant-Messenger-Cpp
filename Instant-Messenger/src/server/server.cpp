@@ -160,7 +160,8 @@ namespace server {
             args->first.assign(feAddress);
             pthread_create(&(this->tid[i++]), NULL, listenFrontEndCommunication, (void *) args);
             std::cout << "handleFrontEndsConnections ao FE com socket:" << feAddress << ", socket:" << socketId << std::endl;
-            this->feConnectionInitializationSemaphore->wait();
+            //this->feConnectionInitializationSemaphore->wait();
+            this->feConnectionInitializationSemaphore->post();
             pthread_create(&(this->tid[i++]), NULL, monitorConnection, (void *) args);
             connectionKeepers.push_back(new ConnectionKeeper(socketId)); // starts the thread that keeps sending keep alives
         }

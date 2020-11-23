@@ -33,16 +33,15 @@ void capture_signals()
 	sigaction(SIGINT, &sigIntHandler, NULL);
 }
 
-void read_args(int argc, char *argv[], int *maxNumberOfMessagesInHistory, int *rmNumber, bool *isPrimaryServer)
+void read_args(int argc, char *argv[], int *maxNumberOfMessagesInHistory, int *rmNumber)
 {
 	*maxNumberOfMessagesInHistory = DEFAULT_NUMBER_OF_RECORDED_MESSAGES;
 
-	if(argc == 4)
+	if(argc == 3)
     {
 			try {
                 *maxNumberOfMessagesInHistory = stoi(argv[1]);
                 *rmNumber = stoi(argv[2]);
-                *isPrimaryServer = stoi(argv[3]);
 			}
 			catch(std::invalid_argument e) {
                 cout << "[ERROR] Invalid arguments" << endl;
@@ -56,7 +55,7 @@ int main(int argc, char *argv[])
 {
     int maxNumberOfMessagesInHistory;
     int rmNumber;
-    bool isPrimaryServer;
+    //bool isPrimaryServer;
 
     // TODO: change this to a parameter o configuration file
     vector<int> fePortList{ 6969, 6970, 6971 };
@@ -68,26 +67,31 @@ int main(int argc, char *argv[])
     serverRing = ServersRing();
     serverRing.connectServersRing(serverApp);
 
-	read_args(argc, argv, &maxNumberOfMessagesInHistory, &rmNumber, &isPrimaryServer);
+	read_args(argc, argv, &maxNumberOfMessagesInHistory, &rmNumber);
 
 	if ( fePortList.size() != feAddressList.size() ) {
 	    cout << "[ERROR] FE address and socket list need to have the same size";
 	    return -1;
 	}
 
-	if(isPrimaryServer) {
-        for (int i = 0; i < fePortList.size(); i++) {
-            cout << "[DEBUG] I'll connect to FE address:port " << feAddressList.at(i) << "/" << fePortList.at(i) << endl;
-            serverApp.connectToFE(feAddressList.at(i), fePortList.at(i));
-        }
+
+	Server::isPrimaryServer = serverRing.isServerPrimary();
+    serverApp.prepareReplicationManager(rmNumber);
+
+
+	while(!serverRing.isServerPrimary())
+    {
+		sleep(1);
 	}
 
-    cout << "[DEBUG] number of sockets waiting for connection " << serverApp.socketFeList.size() << endl;
-    serverApp.handleFrontEndsConnections();
 
-    Server::isPrimaryServer = isPrimaryServer;
-    serverApp.prepareReplicationManager(rmNumber);
-	
+	for (int i = 0; i < fePortList.size(); i++) {
+	    cout << "[DEBUG] I'll connect to FE address:port " << feAddressList.at(i) << "/" << fePortList.at(i) << endl;
+	    serverApp.connectToFE(feAddressList.at(i), fePortList.at(i));
+	}
+
+    serverApp.handleFrontEndsConnections();
+    
 	//I'm not proud of this, I swear
 	while (true)
 	{
