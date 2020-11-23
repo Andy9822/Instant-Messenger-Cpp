@@ -97,6 +97,7 @@ namespace servers_ring
         while (::bind(socket_server, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) 
         {
         	int port = getNewPortFromFile();
+        	cout << "Tentando porta: " << port << endl;
         	serv_addr.sin_port = htons(port);
 
         	// initialy we set the first port on the list as being the primary server

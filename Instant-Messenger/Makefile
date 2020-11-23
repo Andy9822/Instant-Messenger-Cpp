@@ -41,7 +41,7 @@ run-client:
 	$(BUILD_DIR)/client.app JohnnyUser1 SampleRoom1 127.0.0.1 $(FE_CLIENTS_PORT)
 
 run-server:
-	$(BUILD_DIR)/server.app $(NUM_MAX_MESSAGES) $(RM_NUMBER) $(IS_PRIMARY)
+	$(BUILD_DIR)/server.app $(NUM_MAX_MESSAGES) $(RM_NUMBER)
 
 run-proxy_fe:
 	$(BUILD_DIR)/proxy_fe.app $(FE_SERVER_PORT) $(FE_CLIENTS_PORT)
