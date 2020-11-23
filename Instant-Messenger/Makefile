@@ -17,7 +17,8 @@ build-client:	Socket.o Semaphore.o Uuid.o ConnectionKeeper.o
 
 build-server:	Socket.o Semaphore.o Uuid.o ConnectionKeeper.o
 	${CC} -pthread -std=c++11 -g -o $(BUILD_DIR)/server.app Socket.o Uuid.o $(SRC_DIR)/util/message.cpp $(SRC_DIR)/util/file_system_manager.cpp Semaphore.o $(SRC_DIR)/app/app_server.cpp $(SRC_DIR)/server/server.cpp \
-	$(SRC_DIR)/server/server_group_manager.cpp $(SRC_DIR)/server/server_message_manager.cpp $(SRC_DIR)/util/user.cpp $(SRC_DIR)/server/Group.cpp $(SRC_DIR)/util/ConnectionMonitor.cpp ConnectionKeeper.o $(SRC_DIR)/util/StringConstants.cpp $(SRC_DIR)/server/FeAddressBook.cpp
+	$(SRC_DIR)/server/server_group_manager.cpp $(SRC_DIR)/server/server_message_manager.cpp $(SRC_DIR)/util/user.cpp $(SRC_DIR)/server/Group.cpp $(SRC_DIR)/util/ConnectionMonitor.cpp ConnectionKeeper.o $(SRC_DIR)/util/StringConstants.cpp $(SRC_DIR)/server/FeAddressBook.cpp \
+	$(SRC_DIR)/server/ServersRing.cpp $(SRC_DIR)/server/Election.cpp
 
 build-proxy_fe:	Socket.o Semaphore.o Uuid.o ConnectionKeeper.o
 	${CC} -pthread -std=c++11 -g -o $(BUILD_DIR)/proxy_fe.app Socket.o Uuid.o Semaphore.o $(SRC_DIR)/app/app_proxy_fe.cpp \
@@ -35,13 +36,17 @@ ConnectionKeeper.o:	$(SRC_DIR)/util/ConnectionKeeper.cpp
 Uuid.o:	$(SRC_DIR)/util/Uuid.cpp
 	${CC} -c $(SRC_DIR)/util/Uuid.cpp
 
-run-client:
-	$(BUILD_DIR)/client.app JohnnyUser1 SampleRoom1 127.0.0.1 $(FE_CLIENTS_PORT)
 
-run-server:
-	$(BUILD_DIR)/server.app $(NUM_MAX_MESSAGES) $(RM_NUMBER) $(IS_PRIMARY)
+run-client: all
+	$(BUILD_DIR)/client.app JohnnyUser1 SampleRoom1
 
-run-proxy_fe:
+run-server: all
+	$(BUILD_DIR)/server.app $(NUM_MAX_MESSAGES) 1
+
+run-server-backup: all
+	$(BUILD_DIR)/server.app $(NUM_MAX_MESSAGES) 0
+
+run-proxy_fe: all
 	$(BUILD_DIR)/proxy_fe.app $(FE_SERVER_PORT) $(FE_CLIENTS_PORT)
 
 run-rm:
@@ -52,13 +57,13 @@ clean:
 	rm *.o
 	rm $(BUILD_DIR)/*.app
 
-deploy_fe1:
+deploy_fe1: all
 	$(BUILD_DIR)/proxy_fe.app 6969 4039
 
-deploy_fe2:
+deploy_fe2: all
 	$(BUILD_DIR)/proxy_fe.app 6970 4040
 
-deploy_fe3:
+deploy_fe3: all
 	$(BUILD_DIR)/proxy_fe.app 6971 4041
 
 deploy: clean all

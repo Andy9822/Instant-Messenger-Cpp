@@ -1,4 +1,5 @@
 #include "../../include/server/server.hpp"
+#include "../../include/server/ServersRing.hpp"
 #include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -10,7 +11,9 @@
 
 using namespace std;
 using namespace server;
+using namespace servers_ring;
 
+ServersRing serverRing;
 Server serverApp;
 struct sigaction sigIntHandler;
 
@@ -24,22 +27,22 @@ void my_handler(int signal){
 
 void capture_signals()
 {
+    signal(SIGPIPE, SIG_IGN);
 	sigIntHandler.sa_handler = my_handler;
 	sigemptyset(&sigIntHandler.sa_mask);
 	sigIntHandler.sa_flags = 0;
 	sigaction(SIGINT, &sigIntHandler, NULL);
 }
 
-void read_args(int argc, char *argv[], int *maxNumberOfMessagesInHistory, int *rmNumber, bool *isPrimaryServer)
+void read_args(int argc, char *argv[], int *maxNumberOfMessagesInHistory, int *rmNumber)
 {
 	*maxNumberOfMessagesInHistory = DEFAULT_NUMBER_OF_RECORDED_MESSAGES;
 
-	if(argc == 4)
+	if(argc == 3)
     {
 			try {
                 *maxNumberOfMessagesInHistory = stoi(argv[1]);
                 *rmNumber = stoi(argv[2]);
-                *isPrimaryServer = stoi(argv[3]);
 			}
 			catch(std::invalid_argument e) {
                 cout << "[ERROR] Invalid arguments" << endl;
@@ -53,7 +56,7 @@ int main(int argc, char *argv[])
 {
     int maxNumberOfMessagesInHistory;
     int rmNumber;
-    bool isPrimaryServer;
+    //bool isPrimaryServer;
 
     // TODO: change this to a parameter o configuration file
     vector<int> fePortList{ 6969, 6970, 6971 };
@@ -62,26 +65,36 @@ int main(int argc, char *argv[])
     // Capture and process SO signals
 	capture_signals();
 
-	read_args(argc, argv, &maxNumberOfMessagesInHistory, &rmNumber, &isPrimaryServer);
+    serverRing = ServersRing();
+    cout << "connect on server ring" << endl;
+    serverRing.connectServersRing(serverApp);
+
+	read_args(argc, argv, &maxNumberOfMessagesInHistory, &rmNumber);
 
 	if ( fePortList.size() != feAddressList.size() ) {
 	    cout << "[ERROR] FE address and socket list need to have the same size";
 	    return -1;
 	}
 
-	if(isPrimaryServer) {
-        for (int i = 0; i < fePortList.size(); i++) {
-            cout << "[DEBUG] I'll connect to FE address:port " << feAddressList.at(i) << "/" << fePortList.at(i) << endl;
-            serverApp.connectToFE(feAddressList.at(i), fePortList.at(i));
-        }
+
+	Server::isPrimaryServer = serverRing.isServerPrimary();
+    cout << "prepare server replication" << endl;
+    serverApp.prepareReplicationManager(rmNumber);
+
+
+	while(!serverRing.isServerPrimary())
+    {
+		sleep(1);
 	}
 
-    cout << "[DEBUG] number of sockets waiting for connection " << serverApp.socketFeList.size() << endl;
-    serverApp.handleFrontEndsConnections();
+    cout << "connect on FE servers"<< endl;
+	for (int i = 0; i < fePortList.size(); i++) {
+	    cout << "[DEBUG] I'll connect to FE address:port " << feAddressList.at(i) << "/" << fePortList.at(i) << endl;
+	    serverApp.connectToFE(feAddressList.at(i), fePortList.at(i));
+	}
 
-    Server::isPrimaryServer = isPrimaryServer;
-    serverApp.prepareReplicationManager(rmNumber);
-	
+    serverApp.handleFrontEndsConnections();
+    
 	//I'm not proud of this, I swear
 	while (true)
 	{

@@ -1,4 +1,4 @@
-version: "3.8"
+version: "2.2"
 services: 
   
   fe1: 
@@ -15,6 +15,8 @@ services:
   fe2: 
     image: gcc:9.3.0
     network_mode: host
+    depends_on:
+      - fe1
     ports:
       - 6970:6970
       - 4040:4040
@@ -26,6 +28,8 @@ services:
   fe3: 
     image: gcc:9.3.0
     network_mode: host
+    depends_on:
+      - fe2
     ports:
       - 6971:6971
       - 4041:4041
@@ -34,12 +38,10 @@ services:
     working_dir: /app/
     command: make deploy_fe3
 
-  server: 
+  rm_1:
     image: gcc:9.3.0
     network_mode: host
     depends_on:
-      - fe1
-      - fe2
       - fe3
     ports:
       - 8888:8888
@@ -47,3 +49,17 @@ services:
       - ./:/app
     working_dir: /app/
     command: make run-server
+
+  rm_0:
+    image: gcc:9.3.0
+    network_mode: host
+    depends_on:
+      - rm_1
+    ports:
+      - 8889:8889
+    volumes:
+      - ./:/app
+    working_dir: /app/
+    command: make run-server-backup
+
+
