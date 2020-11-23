@@ -37,13 +37,16 @@ Uuid.o:	$(SRC_DIR)/util/Uuid.cpp
 	${CC} -c $(SRC_DIR)/util/Uuid.cpp
 
 
-run-client:
-	$(BUILD_DIR)/client.app JohnnyUser1 SampleRoom1 127.0.0.1 $(FE_CLIENTS_PORT)
+run-client: all
+	$(BUILD_DIR)/client.app JohnnyUser1 SampleRoom1
 
-run-server:
-	$(BUILD_DIR)/server.app $(NUM_MAX_MESSAGES) $(RM_NUMBER) $(IS_PRIMARY)
+run-server: all
+	$(BUILD_DIR)/server.app $(NUM_MAX_MESSAGES) 1
 
-run-proxy_fe:
+run-server-backup: all
+	$(BUILD_DIR)/server.app $(NUM_MAX_MESSAGES) 0
+
+run-proxy_fe: all
 	$(BUILD_DIR)/proxy_fe.app $(FE_SERVER_PORT) $(FE_CLIENTS_PORT)
 
 run-rm:
@@ -54,13 +57,13 @@ clean:
 	rm *.o
 	rm $(BUILD_DIR)/*.app
 
-deploy_fe1:
+deploy_fe1: all
 	$(BUILD_DIR)/proxy_fe.app 6969 4039
 
-deploy_fe2:
+deploy_fe2: all
 	$(BUILD_DIR)/proxy_fe.app 6970 4040
 
-deploy_fe3:
+deploy_fe3: all
 	$(BUILD_DIR)/proxy_fe.app 6971 4041
 
 deploy:

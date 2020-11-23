@@ -27,6 +27,7 @@ void my_handler(int signal){
 
 void capture_signals()
 {
+    signal(SIGPIPE, SIG_IGN);
 	sigIntHandler.sa_handler = my_handler;
 	sigemptyset(&sigIntHandler.sa_mask);
 	sigIntHandler.sa_flags = 0;
@@ -65,6 +66,7 @@ int main(int argc, char *argv[])
 	capture_signals();
 
     serverRing = ServersRing();
+    cout << "connect on server ring" << endl;
     serverRing.connectServersRing(serverApp);
 
 	read_args(argc, argv, &maxNumberOfMessagesInHistory, &rmNumber);
@@ -76,6 +78,7 @@ int main(int argc, char *argv[])
 
 
 	Server::isPrimaryServer = serverRing.isServerPrimary();
+    cout << "prepare server replication" << endl;
     serverApp.prepareReplicationManager(rmNumber);
 
 
@@ -84,7 +87,7 @@ int main(int argc, char *argv[])
 		sleep(1);
 	}
 
-
+    cout << "connect on FE servers"<< endl;
 	for (int i = 0; i < fePortList.size(); i++) {
 	    cout << "[DEBUG] I'll connect to FE address:port " << feAddressList.at(i) << "/" << fePortList.at(i) << endl;
 	    serverApp.connectToFE(feAddressList.at(i), fePortList.at(i));
