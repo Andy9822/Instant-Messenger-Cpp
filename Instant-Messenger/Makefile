@@ -37,36 +37,58 @@ Uuid.o:	$(SRC_DIR)/util/Uuid.cpp
 	${CC} -c $(SRC_DIR)/util/Uuid.cpp
 
 
-run-client: all
+# Targets for automated execution
+run-client:
 	$(BUILD_DIR)/client.app JohnnyUser1 SampleRoom1
 
-run-server: all
-	$(BUILD_DIR)/server.app $(NUM_MAX_MESSAGES) 1
+run-server: clean build-server
+	$(BUILD_DIR)/server.app $(NUM_MAX_MESSAGES) 3
 
-run-server-backup: all
-	$(BUILD_DIR)/server.app $(NUM_MAX_MESSAGES) 0
-
-run-proxy_fe: all
+run-proxy_fe:
 	$(BUILD_DIR)/proxy_fe.app $(FE_SERVER_PORT) $(FE_CLIENTS_PORT)
 
-run-rm:
-	$(BUILD_DIR)/client.app JohnnyUser1 SampleRoom1 127.0.0.1 $(FE_SERVER_PORT)
+# Targets for automated deploy
+deploy-server-principal: 
+	make -s clean 
+	make -s build-server
+	$(BUILD_DIR)/server.app $(NUM_MAX_MESSAGES) 3
+	
+deploy-server-backup3: 
+	make -s clean 
+	make -s build-server
+	$(BUILD_DIR)/server.app $(NUM_MAX_MESSAGES) 2
 
-clean:
-	rm -rf $(SRC_DIR)/*~ $(INC_DIR)/*~ client server *~
-	rm *.o
-	rm $(BUILD_DIR)/*.app
+deploy-server-backup2: 
+	make -s clean 
+	make -s build-server
+	$(BUILD_DIR)/server.app $(NUM_MAX_MESSAGES) 1
 
-deploy_fe1: all
+deploy-server-backup1: 
+	make -s clean 
+	make -s build-server
+	$(BUILD_DIR)/server.app $(NUM_MAX_MESSAGES) 0
+
+deploy_fe1: 
+	make -s clean 
+	make -s build-proxy_fe
 	$(BUILD_DIR)/proxy_fe.app 6969 4039
 
-deploy_fe2: all
+deploy_fe2: 
+	make -s clean 
+	make -s build-proxy_fe
 	$(BUILD_DIR)/proxy_fe.app 6970 4040
 
-deploy_fe3: all
+deploy_fe3: 
+	make -s clean 
+	make -s build-proxy_fe
 	$(BUILD_DIR)/proxy_fe.app 6971 4041
 
-deploy: clean all
+
+# Targets for managing docker deploy and logs
+deploy: services-down
+	docker-compose up -d 
+	
+deploy_logs: services-down
 	docker-compose up
 	
 services-up:
@@ -74,3 +96,14 @@ services-up:
 
 services-down:
 	docker-compose down
+
+logs_fe:
+	docker-compose logs -f fe1 fe2 fe3
+
+logs_rm:
+	docker-compose logs -f rm_primary rm_3 rm_2 rm_1
+
+clean:
+	- rm -rf $(SRC_DIR)/*~ $(INC_DIR)/*~ client server *~
+	- rm -f *.o
+	- rm -f $(BUILD_DIR)/*.app

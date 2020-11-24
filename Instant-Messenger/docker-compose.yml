@@ -8,9 +8,11 @@ services:
       - 6969:6969
       - 4039:4039
     volumes: 
-      - ./:/app
-    working_dir: /app/
-    command: make deploy_fe1
+      - ./:/repo
+    command: >
+      sh -c "cp -r repo/ app &&
+              cd app&&
+              make deploy_fe1"
 
   fe2: 
     image: gcc:9.3.0
@@ -21,9 +23,11 @@ services:
       - 6970:6970
       - 4040:4040
     volumes: 
-      - ./:/app
-    working_dir: /app/
-    command: make deploy_fe2
+      - ./:/repo
+    command: >
+      sh -c "cp -r repo/ app &&
+              cd app&&
+              make deploy_fe2"
 
   fe3: 
     image: gcc:9.3.0
@@ -34,11 +38,13 @@ services:
       - 6971:6971
       - 4041:4041
     volumes: 
-      - ./:/app
-    working_dir: /app/
-    command: make deploy_fe3
+      - ./:/repo
+    command: >
+      sh -c "cp -r repo/ app &&
+              cd app&&
+              make deploy_fe3"
 
-  rm_1:
+  rm_primary:
     image: gcc:9.3.0
     network_mode: host
     depends_on:
@@ -46,20 +52,52 @@ services:
     ports:
       - 8888:8888
     volumes: 
-      - ./:/app
-    working_dir: /app/
-    command: make run-server
+      - ./:/repo
+    command: >
+      sh -c "cp -r repo/ app &&
+              cd app &&
+              make deploy-server-principal"
 
-  rm_0:
+  rm_3:
     image: gcc:9.3.0
     network_mode: host
     depends_on:
-      - rm_1
+      - rm_primary
     ports:
       - 8889:8889
     volumes:
-      - ./:/app
-    working_dir: /app/
-    command: make run-server-backup
+      - ./:/repo
+    command: >
+      sh -c "cp -r repo/ app &&
+              cd app&&
+              make deploy-server-backup3"
+
+  rm_2:
+    image: gcc:9.3.0
+    network_mode: host
+    depends_on:
+      - rm_3
+    ports:
+      - 8889:8889
+    volumes:
+      - ./:/repo
+    command: >
+      sh -c "cp -r repo/ app &&
+              cd app&&
+              make deploy-server-backup2"
+
+  rm_1:
+    image: gcc:9.3.0
+    network_mode: host
+    depends_on:
+      - rm_2
+    ports:
+      - 8889:8889
+    volumes:
+      - ./:/repo
+    command: >
+      sh -c "cp -r repo/ app &&
+              cd app&&
+              make deploy-server-backup1"
 
 
