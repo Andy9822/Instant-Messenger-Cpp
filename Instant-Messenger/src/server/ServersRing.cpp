@@ -98,13 +98,16 @@ namespace servers_ring
         {
         	int port = getNewPortFromFile();
         	serv_addr.sin_port = htons(port);
-
-        	// initialy we set the first port on the list as being the primary server
-        	isPrimary = false;
         }
 
-        if(isPrimary)
+        // initialy we set the first port on the list as being the primary server
+        if(ntohs(serv_addr.sin_port) == primary)
+        {
+        	isPrimary = true;
         	cout << "[DEBUG] I AM THE PRIMARY SERVER" << endl;
+        }
+        else
+        	isPrimary = false;
 
         // set server id for election purpose
         server_ID = ntohs(serv_addr.sin_port);
