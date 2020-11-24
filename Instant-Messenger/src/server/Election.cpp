@@ -72,7 +72,7 @@ namespace election
     	{
     		if(status == "ELECTION")
     		{
-				cout << "❌PRIMARY SERVER DOWN ❌" << endl;
+				cout << "❌PRIMARY SERVER DOWN 💣" << endl;
 				cout << "💍STARTING NEW ELECTION 🗳" << endl;
     			if(client_ID != server_ID)
     				sendMessageToNextServer(client_ID, sockfd);

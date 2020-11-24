@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 	capture_signals();
 
     serverRing = ServersRing();
-    cout << "connect on server ring" << endl;
+    cout << "[DEBUG]💍 Connecting to ring servers 💍" << endl;
     serverRing.connectServersRing(serverApp);
 
 	read_args(argc, argv, &maxNumberOfMessagesInHistory, &rmNumber);
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 
 
 	Server::isPrimaryServer = serverRing.isServerPrimary();
-    cout << "prepare server replication" << endl;
+    cout << "[DEBUG] 🗃 Connecting to replication servers...🗃" << endl;
     serverApp.prepareReplicationManager(rmNumber);
 
 
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 		sleep(1);
 	}
 
-    cout << "connect on FE servers"<< endl;
+    cout << "🔌 Connecting to FE servers... 🔌"<< endl;
 	for (int i = 0; i < fePortList.size(); i++) {
 	    // cout << "[DEBUG] I'll connect to FE address:port " << feAddressList.at(i) << "/" << fePortList.at(i) << endl;
 	    serverApp.connectToFE(feAddressList.at(i), fePortList.at(i));

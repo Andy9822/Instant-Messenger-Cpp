@@ -119,7 +119,7 @@ namespace servers_ring
             exit(1);
         }
 
-        cout << "\n[DEBUG] SERVER_RING RUNNING ON PORT: " << server_ID << endl;
+        // cout << "\n[DEBUG] SERVER_RING RUNNING ON PORT: " << server_ID << endl;
 	}
 
 
@@ -155,6 +155,8 @@ namespace servers_ring
         args->second = _this;
 
         pthread_create(&listenClientcomm, NULL, listenClientCommunication, (void *) args);
+
+		return NULL;
 	}
 
 
@@ -249,7 +251,9 @@ namespace servers_ring
 					_this->primary = _this->server_ID;
 			        _this->isPrimary = true;
 			        _this->disconnected = false;
-			        cout << "[DEBUG] I AM THE NEW PRIMARY SERVER!!!" << endl;
+					cout << "❌PRIMARY SERVER DOWN 💣" << endl;
+					cout << "[DEBUG] There are no others servers in ring to start election" << endl;
+			        cout << "👑I AM THE PRIMARY SERVER 👑" << endl;
                     // TODO: single point for elected server
                     Server::isPrimaryServer = true;
 			        port = _this->getNewPortFromFile();
@@ -271,6 +275,8 @@ namespace servers_ring
 		_this->disconnected = false;
 
 		_this->checkIfConnectionFailed();	
+		
+		return NULL;
 	}
 
 
