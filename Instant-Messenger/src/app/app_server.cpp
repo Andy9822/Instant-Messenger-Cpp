@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 
     cout << "connect on FE servers"<< endl;
 	for (int i = 0; i < fePortList.size(); i++) {
-	    cout << "[DEBUG] I'll connect to FE address:port " << feAddressList.at(i) << "/" << fePortList.at(i) << endl;
+	    // cout << "[DEBUG] I'll connect to FE address:port " << feAddressList.at(i) << "/" << fePortList.at(i) << endl;
 	    serverApp.connectToFE(feAddressList.at(i), fePortList.at(i));
 	}
 

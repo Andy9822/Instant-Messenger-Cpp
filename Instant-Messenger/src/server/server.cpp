@@ -138,7 +138,7 @@ namespace server {
 
         string feIpPort = feAddress + ":" + to_string(fePort);
 
-        std::cout << "conectado ao FE (" << feIpPort << ") com socket:" << newSocketFE << std::endl;
+        std::cout << "[DEBUG] conectado ao FE (" << feIpPort << ") com socket:" << newSocketFE << std::endl;
 
         this->feAddressBook->registryAddressSocket(feIpPort, newSocketFE);
         this->feAddresses.push_back(feIpPort);
@@ -159,7 +159,7 @@ namespace server {
             this->feConnectionInitializationSemaphore->wait(); // the POST is done inside the new threads created only when the args is no longer necessary
             args->first.assign(feAddress);
             pthread_create(&(this->tid[i++]), NULL, listenFrontEndCommunication, (void *) args);
-            std::cout << "handleFrontEndsConnections ao FE com socket:" << feAddress << ", socket:" << socketId << std::endl;
+            // std::cout << "handleFrontEndsConnections ao FE com socket:" << feAddress << ", socket:" << socketId << std::endl;
             this->feConnectionInitializationSemaphore->wait();
             pthread_create(&(this->tid[i++]), NULL, monitorConnection, (void *) args);
             connectionKeepers.push_back(new ConnectionKeeper(socketId)); // starts the thread that keeps sending keep alives
