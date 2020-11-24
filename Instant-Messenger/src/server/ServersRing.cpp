@@ -98,13 +98,16 @@ namespace servers_ring
         {
         	int port = getNewPortFromFile();
         	serv_addr.sin_port = htons(port);
-
-        	// initialy we set the first port on the list as being the primary server
-        	isPrimary = false;
         }
 
-        if(isPrimary)
-        	cout << "[DEBUG] I AM THE PRIMARY SERVER" << endl;
+        // initialy we set the first port on the list as being the primary server
+        if(ntohs(serv_addr.sin_port) == primary)
+        {
+        	isPrimary = true;
+        	cout << "👑I AM THE PRIMARY SERVER 👑" << endl;
+        }
+        else
+        	isPrimary = false;
 
         // set server id for election purpose
         server_ID = ntohs(serv_addr.sin_port);
@@ -116,7 +119,7 @@ namespace servers_ring
             exit(1);
         }
 
-        cout << "\n[DEBUG] SERVER_RING RUNNING ON PORT: " << server_ID << endl;
+        // cout << "\n[DEBUG] SERVER_RING RUNNING ON PORT: " << server_ID << endl;
 	}
 
 
@@ -152,6 +155,8 @@ namespace servers_ring
         args->second = _this;
 
         pthread_create(&listenClientcomm, NULL, listenClientCommunication, (void *) args);
+
+		return NULL;
 	}
 
 
@@ -193,7 +198,7 @@ namespace servers_ring
 	        	if(_this->primary == _this->server_ID)
 	        	{
 	        		_this->isPrimary = true;
-	        		cout << "[DEBUG] I AM THE NEW PRIMARY SERVER!!!" << endl;
+	        		cout << "👑I AM THE PRIMARY SERVER 👑" << endl;
 	        		Server::isPrimaryServer = true;
 	        	}
 
@@ -246,7 +251,9 @@ namespace servers_ring
 					_this->primary = _this->server_ID;
 			        _this->isPrimary = true;
 			        _this->disconnected = false;
-			        cout << "[DEBUG] I AM THE NEW PRIMARY SERVER!!!" << endl;
+					cout << "❌PRIMARY SERVER DOWN 💣" << endl;
+					cout << "[DEBUG] There are no others servers in ring to start election" << endl;
+			        cout << "👑I AM THE PRIMARY SERVER 👑" << endl;
                     // TODO: single point for elected server
                     Server::isPrimaryServer = true;
 			        port = _this->getNewPortFromFile();
@@ -255,7 +262,7 @@ namespace servers_ring
 				
 			}
 		}
-		cout << "[DEBUG] SERVER_RING CONNECTED WITH PORT: " << ntohs(_this->client_addr.sin_port) << endl;
+		// cout << "[DEBUG] SERVER_RING CONNECTED WITH PORT: " << ntohs(_this->client_addr.sin_port) << endl;
 
 		if(_this->disconnected == true)
 		{
@@ -268,6 +275,8 @@ namespace servers_ring
 		_this->disconnected = false;
 
 		_this->checkIfConnectionFailed();	
+		
+		return NULL;
 	}
 
 

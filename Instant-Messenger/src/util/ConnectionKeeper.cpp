@@ -10,7 +10,7 @@
 
 
 ConnectionKeeper::ConnectionKeeper(int socket) {
-    cout << "Starts sending keep alive to " << socket << endl;
+    cout << "Starts sending keep alive to socket" << socket << endl;
     pthread_t senderThread;
     this->communicationSocket = socket;
     pthread_create(&senderThread, NULL, sendKeepAliveForever, (void*) this);

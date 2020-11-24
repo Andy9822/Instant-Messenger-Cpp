@@ -138,7 +138,7 @@ namespace server {
 
         string feIpPort = feAddress + ":" + to_string(fePort);
 
-        std::cout << "conectado ao FE (" << feIpPort << ") com socket:" << newSocketFE << std::endl;
+        std::cout << "[DEBUG] conectado ao FE (" << feIpPort << ") com socket:" << newSocketFE << std::endl;
 
         this->feAddressBook->registryAddressSocket(feIpPort, newSocketFE);
         this->feAddresses.push_back(feIpPort);
@@ -159,7 +159,7 @@ namespace server {
             this->feConnectionInitializationSemaphore->wait(); // the POST is done inside the new threads created only when the args is no longer necessary
             args->first.assign(feAddress);
             pthread_create(&(this->tid[i++]), NULL, listenFrontEndCommunication, (void *) args);
-            std::cout << "handleFrontEndsConnections ao FE com socket:" << feAddress << ", socket:" << socketId << std::endl;
+            // std::cout << "handleFrontEndsConnections ao FE com socket:" << feAddress << ", socket:" << socketId << std::endl;
             this->feConnectionInitializationSemaphore->wait();
             pthread_create(&(this->tid[i++]), NULL, monitorConnection, (void *) args);
             connectionKeepers.push_back(new ConnectionKeeper(socketId)); // starts the thread that keeps sending keep alives
@@ -386,8 +386,7 @@ namespace server {
             }
 
             rm_connect_sockets_fd.insert({*connectSocket, rm_connect_socket_addr});
-            cout << "Connected to socket " << *connectSocket << " and port " << ntohs(rm_connect_socket_addr.sin_port) << endl;
-
+            // cout << "🗃 Server replication: connected to server port " << ntohs(rm_connect_socket_addr.sin_port) << " with soocket " << *connectSocket <<  endl;
             std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
 
             // Send pointer of the previously allocated address and be able to access it's value in new thread's execution
@@ -414,7 +413,7 @@ namespace server {
         }
 
         // Forcefully attaching socket to the port
-        if (setsockopt(rm_listening_socket_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)))
+        if (setsockopt(rm_listening_socket_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) 
         {
             perror("setsockopt");
             exit(EXIT_FAILURE);
@@ -432,10 +431,6 @@ namespace server {
             cout << "ERROR on listening\n" << endl;
             exit(1);
         }
-
-        cout << "\nSetting listener socket for RM machine of number " << rmNumber << endl;
-        cout << "Listening for RM connections on socket: " << rm_listening_socket_fd << " and port " << ntohs(
-                rm_listening_serv_addr.sin_port) << endl;
 
         pthread_t acceptRMConnectionThread;
         pthread_create(&acceptRMConnectionThread, NULL, acceptRMConnection, (void *) this);
@@ -456,14 +451,14 @@ namespace server {
                 cout << "Could not connect to port " << _this->rm_listening_serv_addr.sin_port << endl;
             }
             else {
-                std::cout << "Máquina conectada pelo socket " << *newsockfd << " de porta " << ntohs(_this->rm_listening_serv_addr.sin_port) << std::endl;
+                // std::cout << "Máquina conectada pelo socket " << *newsockfd << " de porta " << ntohs(_this->rm_listening_serv_addr.sin_port) << std::endl;
 
                 std::pair<int *, Server *> *args = (std::pair<int *, Server *> *) calloc(1, sizeof(std::pair<int *, Server *>));
                 _this->rm_connect_sockets_fd.insert({*newsockfd, _this->rm_listening_serv_addr});
 
-                cout << "### Vetor de sockets de Replicacao ###" << endl;
-                _this->printRMConnections();
-                cout << "######################################" << endl;
+                // cout << "### Vetor de sockets de Replicacao ###" << endl;
+                // _this->printRMConnections();
+                // cout << "######################################" << endl;
 
                 // Send pointer of the previously allocated address and be able to access it's value in new thread's execution
                 args->first = newsockfd;
@@ -496,7 +491,7 @@ namespace server {
             bool connectedClient = true;
             while (connectedClient) {
                 _this->sockets_connections_semaphore->wait();
-                cout << "[Communication Thread] - Waiting socket " << rm_socket_fd << " messages" << endl;
+                // cout << "[Communication Thread] - Waiting socket " << rm_socket_fd << " messages" << endl;
                 _this->sockets_connections_semaphore->post();
                 // Listen for an incoming Packet from client
                 Packet *receivedPacket = _this->readPacket(rm_socket_fd, &connectedClient);
@@ -540,10 +535,10 @@ namespace server {
 
     void Server::printRMConnections() const {
         sockets_connections_semaphore->wait();
-        cout << " rm sockets map size " << rm_connect_sockets_fd.size() << endl;
+        // cout << " rm sockets map size " << rm_connect_sockets_fd.size() << endl;
         for ( const pair<int, struct sockaddr_in> &connectedMachine : rm_connect_sockets_fd)
         {
-            cout << "Conectado ao servidor RM de porta " << ntohs(connectedMachine.second.sin_port) << " e socket "
+            cout << "🗃 Server replication: conectado ao servidor de porta " << ntohs(connectedMachine.second.sin_port) << " via socket "
                  << connectedMachine.first << endl;
         }
         sockets_connections_semaphore->post();
