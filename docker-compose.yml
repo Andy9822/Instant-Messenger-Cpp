@@ -1,0 +1,103 @@
+version: "2.2"
+services: 
+  
+  fe1: 
+    image: gcc:9.3.0
+    network_mode: host
+    ports:
+      - 6969:6969
+      - 4039:4039
+    volumes: 
+      - ./:/repo
+    command: >
+      sh -c "cp -r repo/ app &&
+              cd app&&
+              make deploy_fe1"
+
+  fe2: 
+    image: gcc:9.3.0
+    network_mode: host
+    depends_on:
+      - fe1
+    ports:
+      - 6970:6970
+      - 4040:4040
+    volumes: 
+      - ./:/repo
+    command: >
+      sh -c "cp -r repo/ app &&
+              cd app&&
+              make deploy_fe2"
+
+  fe3: 
+    image: gcc:9.3.0
+    network_mode: host
+    depends_on:
+      - fe2
+    ports:
+      - 6971:6971
+      - 4041:4041
+    volumes: 
+      - ./:/repo
+    command: >
+      sh -c "cp -r repo/ app &&
+              cd app&&
+              make deploy_fe3"
+
+  rm_primary:
+    image: gcc:9.3.0
+    network_mode: host
+    depends_on:
+      - fe3
+    ports:
+      - 8888:8888
+    volumes: 
+      - ./:/repo
+    command: >
+      sh -c "cp -r repo/ app &&
+              cd app &&
+              make deploy-server-principal"
+
+  rm_3:
+    image: gcc:9.3.0
+    network_mode: host
+    depends_on:
+      - rm_primary
+    ports:
+      - 8889:8889
+    volumes:
+      - ./:/repo
+    command: >
+      sh -c "cp -r repo/ app &&
+              cd app&&
+              make deploy-server-backup3"
+
+  rm_2:
+    image: gcc:9.3.0
+    network_mode: host
+    depends_on:
+      - rm_3
+    ports:
+      - 8889:8889
+    volumes:
+      - ./:/repo
+    command: >
+      sh -c "cp -r repo/ app &&
+              cd app&&
+              make deploy-server-backup2"
+
+  rm_1:
+    image: gcc:9.3.0
+    network_mode: host
+    depends_on:
+      - rm_2
+    ports:
+      - 8889:8889
+    volumes:
+      - ./:/repo
+    command: >
+      sh -c "cp -r repo/ app &&
+              cd app&&
+              make deploy-server-backup1"
+
+

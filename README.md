@@ -2,6 +2,11 @@
 The purpose of this project is to implement a messenger application between users in a low-level implementation using TCP API from UNIX sockets.<br />
 The system is completely distributed therefore it has fault tolerance and data replication.
 
+# Messenger Application 👨‍👩‍👦‍👦
+The system consists in a simple messenger application with users and groups.<br />
+A client specifies its username and the room that wants to connect. If the same username is previously connected in 2 other devices, in the same room or different it does'nt matter, his new connection wil be denied. <br />
+The rooms have a message history so if a user connects to an existent room he will be able to see the last 10 sent messages.
+
 ## Fault Tolerance 🔌
 All servers are connected with each other and listen for keep alives. If they detect that the primary server, or the leader, is down they'll start a new election using the ring alorithm and elect the next server that will assume the lead.<br />
 During this time, the users remain connected to the room and can send messages but they will be put in a buffer and delivered once the application gets online again.<br />
