@@ -2,7 +2,7 @@
 The purpose of this project is to implement a messenger application between users in a low-level implementation using TCP API from UNIX sockets.<br />
 The system is completely distributed therefore it has fault tolerance and data replication.
 
-# Messenger Application 👨‍👩‍👦‍👦
+## Messenger Application 👨‍👩‍👦‍👦
 The system consists in a simple messenger application with users and groups.<br />
 A client specifies its username and the room that wants to connect. If the same username is previously connected in 2 other devices, in the same room or different it does'nt matter, his new connection wil be denied. <br />
 The rooms have a message history so if a user connects to an existent room he will be able to see the last 10 sent messages.
@@ -33,3 +33,9 @@ This will start all the containers and also show the docker-composer logs of all
    run `make build-client`<br />
    run `./build/client.app <username> <room>`<br />
 This will run the client and connect to the specified room with the username you have passed.
+
+## Author 🧙‍♂️
+- Andy Ruiz Garramones - [Andy9822](https://github.com/Andy9822)
+- Gabriel Stepien - [gabriel-inf](https://github.com/gabriel-inf)
+- Cassiano Jaeger Stradolini - [gabriel-inf](https://github.com/cassianojaeger)
+- GuilhermeChaves - [gabriel-inf](https://github.com/GuilhermeChaves)
