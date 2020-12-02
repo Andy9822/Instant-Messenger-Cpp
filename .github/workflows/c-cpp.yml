@@ -9,10 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: Instant-Messenger
-
     steps:
     - uses: actions/checkout@v2
     - name: make
